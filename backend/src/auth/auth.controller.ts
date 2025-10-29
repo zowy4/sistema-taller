@@ -22,7 +22,12 @@ export class AuthController {
 		const user = await this.authService.validateUserByEmail(dto.email, dto.password);
 		if (!user) throw new UnauthorizedException('Credenciales inválidas');
 
-		return this.authService.generateToken({ id: (user as any).id ?? (user as any).id_cliente, email: user.email });
+		return this.authService.generateToken({ 
+			id: user.id, 
+			email: user.email,
+			rol: user.rol,
+			permissions: user.permissions
+		});
 	}
 
 	/**

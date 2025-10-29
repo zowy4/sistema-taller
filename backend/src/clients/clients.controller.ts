@@ -3,13 +3,23 @@ import {
   Get,
   Post,
   Body,
-  Param, // 1. Importa Param para leer la URL
-  ParseIntPipe, // 2. Importa ParseIntPipe para convertir el ID a número
+  Param,
+  ParseIntPipe,
+  UseGuards,
+  Patch,
+  Delete,
 } from '@nestjs/common';
 import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
+import { UpdateClientDto } from './dto/update-client.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/roles.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 
 @Controller('clientes')
+@UseGuards(AuthGuard('jwt'))
 export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
@@ -18,6 +28,9 @@ export class ClientsController {
    * POST /clientes
    */
   @Post()
+  @UseGuards(RolesGuard, PermissionsGuard)
+  @Roles('admin', 'supervisor', 'recepcion')
+  @RequirePermissions('clientes:create')
   create(@Body() createClientDto: CreateClientDto) {
     return this.clientsService.createClient(createClientDto);
   }
@@ -27,20 +40,46 @@ export class ClientsController {
    * GET /clientes
    */
   @Get()
+  @UseGuards(RolesGuard, PermissionsGuard)
+  @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
+  @RequirePermissions('clientes:read')
   findAll() {
     return this.clientsService.getAllClients();
   }
 
-  // --- ¡AQUÍ ESTÁ EL ENDPOINT CORREGIDO! ---
   /**
    * Ruta para LEER UN cliente por ID
    * GET /clientes/:id
    */
-  @Get(':id') // 3. :id es un parámetro dinámico en la URL
-  findOne(
-    @Param('id', ParseIntPipe) id: number, // 4. @Param extrae el ID y ParseIntPipe lo convierte en número
-  ) {
-    // 5. Ahora esto sí funciona, porque 'getClientById' ya existe
-  return this.clientsService.getClientById(id);
+  @Get(':id')
+  @UseGuards(RolesGuard, PermissionsGuard)
+  @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
+  @RequirePermissions('clientes:read')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.clientsService.getClientById(id);
+  }
+
+  /**
+   * Ruta para ACTUALIZAR un cliente
+   * PATCH /clientes/:id
+   */
+  @Patch(':id')
+  @UseGuards(RolesGuard, PermissionsGuard)
+  @Roles('admin', 'supervisor', 'recepcion')
+  @RequirePermissions('clientes:update')
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateClientDto: UpdateClientDto) {
+    return this.clientsService.updateClient(id, updateClientDto);
+  }
+
+  /**
+   * Ruta para ELIMINAR un cliente
+   * DELETE /clientes/:id
+   */
+  @Delete(':id')
+  @UseGuards(RolesGuard, PermissionsGuard)
+  @Roles('admin')
+  @RequirePermissions('clientes:delete')
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.clientsService.deleteClient(id);
   }
 }

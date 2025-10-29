@@ -59,12 +59,15 @@ model Empleados {
   apellido      String
   email         String?  @unique
   password      String?
-  rol           String   // (técnico, recepción, etc)
+  rol           String   // (admin, tecnico, recepcion, supervisor)
   fecha_ingreso DateTime @default(now())
   activo        Boolean  @default(true)
 
   // Relación: Un empleado puede estar a cargo de muchas órdenes
   ordenes_responsable OrdenesDeTrabajo[]
+  
+  // Relación con permisos
+  permisos      Empleado_Permiso[]
 }
 
 // Modelo basado en tu tabla "Órdenes de Trabajo"
@@ -190,4 +193,51 @@ model Historial_Vehiculo {
 
   id_orden    Int
   orden       OrdenesDeTrabajo @relation(fields: [id_orden], references: [id_orden])
+}
+
+// --- Sistema de Roles y Permisos ---
+
+model Roles {
+  id_rol      Int      @id @default(autoincrement())
+  nombre      String   @unique
+  descripcion String?
+  activo      Boolean  @default(true)
+  
+  // Relación con permisos
+  permisos    Rol_Permiso[]
+}
+
+model Permisos {
+  id_permiso  Int      @id @default(autoincrement())
+  nombre      String   @unique
+  descripcion String?
+  modulo      String   // (clientes, vehiculos, ordenes, facturas, etc)
+  accion      String   // (crear, leer, actualizar, eliminar)
+  
+  // Relación con roles
+  roles       Rol_Permiso[]
+  // Relación con empleados
+  empleados   Empleado_Permiso[]
+}
+
+// Tabla pivote: Roles - Permisos
+model Rol_Permiso {
+  id_rol      Int
+  rol         Roles @relation(fields: [id_rol], references: [id_rol])
+  
+  id_permiso  Int
+  permiso     Permisos @relation(fields: [id_permiso], references: [id_permiso])
+  
+  @@id([id_rol, id_permiso])
+}
+
+// Tabla pivote: Empleados - Permisos (permisos específicos por empleado)
+model Empleado_Permiso {
+  id_empleado Int
+  empleado    Empleados @relation(fields: [id_empleado], references: [id_empleado])
+  
+  id_permiso  Int
+  permiso     Permisos @relation(fields: [id_permiso], references: [id_permiso])
+  
+  @@id([id_empleado, id_permiso])
 }
