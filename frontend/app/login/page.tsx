@@ -46,7 +46,25 @@ export default function LoginPage() {
       
       if (success) {
         // Redirigir según el rol del usuario
-        router.push('/');
+        // Si tiene rol admin -> /admin, tecnico -> /tecnico, sino dashboard genérico
+        const raw = localStorage.getItem('token');
+        try {
+          if (raw) {
+            const payload = JSON.parse(atob(raw.split('.')[1]));
+            const rol = payload.rol as string | undefined;
+            if (rol === 'admin') {
+              router.push('/admin');
+            } else if (rol === 'tecnico') {
+              router.push('/tecnico');
+            } else {
+              router.push('/dashboard');
+            }
+          } else {
+            router.push('/dashboard');
+          }
+        } catch {
+          router.push('/dashboard');
+        }
       } else {
         setError('Credenciales inválidas');
       }

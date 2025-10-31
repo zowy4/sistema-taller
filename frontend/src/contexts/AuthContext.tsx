@@ -93,6 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   };
 
   const hasPermission = (permission: string): boolean => {
