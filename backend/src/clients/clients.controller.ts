@@ -41,7 +41,7 @@ export class ClientsController {
    */
   @Get()
   @UseGuards(RolesGuard, PermissionsGuard)
-  @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
+  @Roles('admin')
   @RequirePermissions('clientes:read')
   findAll() {
     return this.clientsService.getAllClients();
