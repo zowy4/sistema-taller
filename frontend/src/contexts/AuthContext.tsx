@@ -82,7 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('token', token);
         return true;
       }
-      return false;
+        // Log server response body to help debugging (e.g. 401 reasons)
+        try {
+          const text = await response.text();
+          console.error('Login failed, response:', response.status, text);
+        } catch (e) {
+          console.error('Login failed, status:', response.status);
+        }
+        return false;
     } catch (error) {
       console.error('Error en login:', error);
       return false;

@@ -22,6 +22,10 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Usuario no autenticado');
     }
 
+    console.log('🔍 RolesGuard - User object:', JSON.stringify(user, null, 2));
+    console.log('🔍 RolesGuard - Required roles:', requiredRoles);
+    console.log('🔍 RolesGuard - User rol:', user.rol);
+
     const hasRole = requiredRoles.some((role) => user.rol === role);
     
     if (!hasRole) {

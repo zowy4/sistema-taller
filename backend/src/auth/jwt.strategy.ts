@@ -18,21 +18,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const userId = payload.sub ?? payload.id;
     if (!userId) throw new UnauthorizedException();
 
-    // Try empleados first
-    const empleado = await this.prisma.empleados.findUnique({
-      where: { id_empleado: Number(userId) } as any,
-    });
-    if (empleado) {
-      return { id: empleado.id_empleado, email: (empleado as any).email, nombre: empleado.nombre, _type: 'empleado' };
-    }
-
-    const cliente = await this.prisma.clientes.findUnique({
-      where: { id_cliente: Number(userId) },
-    });
-    if (cliente) {
-      return { id: cliente.id_cliente, email: cliente.email, nombre: cliente.nombre, _type: 'cliente' };
-    }
-
-    throw new UnauthorizedException();
+    // Return the payload data including rol and permissions
+    // The JWT already contains all the user info we need
+    return {
+      id: userId,
+      email: payload.email,
+      rol: payload.rol,
+      permissions: payload.permissions || [],
+    };
   }
 }

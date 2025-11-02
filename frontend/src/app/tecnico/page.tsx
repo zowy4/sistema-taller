@@ -1,7 +1,7 @@
 'use client';
 
-import { ProtectedRoute } from '../../components/ProtectedRoute';
-import { useAuth } from '../../contexts/AuthContext';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function TecnicoDashboard() {
   const { user } = useAuth();
