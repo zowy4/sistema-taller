@@ -5,9 +5,7 @@ export const API_BASE_URL =
   (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) ||
   'http://localhost:3002';
 
-type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
-
-async function request<T = any>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -32,8 +30,8 @@ async function request<T = any>(path: string, options: RequestInit = {}): Promis
   if (!res.ok) {
     let message = 'Error en la solicitud';
     try {
-      const err = await res.json();
-      message = err?.message || JSON.stringify(err) || message;
+      const err: unknown = await res.json();
+      message = (err as { message?: string })?.message || JSON.stringify(err) || message;
     } catch {}
     throw new Error(message);
   }
@@ -44,10 +42,10 @@ async function request<T = any>(path: string, options: RequestInit = {}): Promis
 }
 
 export const api = {
-  get: <T = any>(path: string, init: RequestInit = {}) => request<T>(path, { ...init, method: 'GET' }),
-  post: <T = any>(path: string, body?: any, init: RequestInit = {}) =>
+  get: <T = unknown>(path: string, init: RequestInit = {}) => request<T>(path, { ...init, method: 'GET' }),
+  post: <T = unknown>(path: string, body?: unknown, init: RequestInit = {}) =>
     request<T>(path, { ...init, method: 'POST', body: body !== undefined ? JSON.stringify(body) : undefined }),
-  patch: <T = any>(path: string, body?: any, init: RequestInit = {}) =>
+  patch: <T = unknown>(path: string, body?: unknown, init: RequestInit = {}) =>
     request<T>(path, { ...init, method: 'PATCH', body: body !== undefined ? JSON.stringify(body) : undefined }),
-  delete: <T = any>(path: string, init: RequestInit = {}) => request<T>(path, { ...init, method: 'DELETE' }),
+  delete: <T = unknown>(path: string, init: RequestInit = {}) => request<T>(path, { ...init, method: 'DELETE' }),
 };

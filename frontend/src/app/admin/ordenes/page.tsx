@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import ErrorAlert from '@/components/ui/ErrorAlert';
 import Loader from '@/components/ui/Loader';
@@ -34,13 +33,14 @@ interface Orden {
   } | null;
 }
 
+type EstadoFiltro = 'todos' | 'pendiente' | 'en_proceso' | 'completado' | 'entregado' | 'cancelado';
+
 export default function OrdenesPage() {
   const [ordenes, setOrdenes] = useState<Orden[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState<'todos' | 'pendiente' | 'en_proceso' | 'completado' | 'entregado' | 'cancelado'>('todos');
-  const router = useRouter();
+  const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro>('todos');
 
   useEffect(() => {
     fetchOrdenes();
@@ -53,8 +53,9 @@ export default function OrdenesPage() {
       const data = await api.get<Orden[]>('/ordenes');
       setOrdenes(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar órdenes');
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al cargar órdenes';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -140,7 +141,7 @@ export default function OrdenesPage() {
         <div className="w-full md:w-56">
           <select
             value={filtroEstado}
-            onChange={(e) => setFiltroEstado(e.target.value as any)}
+            onChange={(e) => setFiltroEstado(e.target.value as EstadoFiltro)}
             className="w-full px-3 py-2 border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="todos">Todos los estados</option>
