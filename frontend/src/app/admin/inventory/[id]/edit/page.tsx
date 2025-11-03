@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { api } from '@/lib/api';
+import Loader from '@/components/ui/Loader';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 
 interface Repuesto {
   id_repuesto: number;
@@ -30,42 +33,9 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
     nivel_minimo_alerta: 5
   });
 
-  useEffect(() => {
-    fetchRepuesto();
-  }, [params.id]);
-
-  const fetchRepuesto = async () => {
+  const fetchRepuestoData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const response = await fetch(`http://localhost:3002/repuestos/${params.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (response.status === 404) {
-        setError('Repuesto no encontrado');
-        setLoading(false);
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Error al cargar el repuesto');
-      }
-
-      const data: Repuesto = await response.json();
+      const data = await api.get<Repuesto>(`/repuestos/${params.id}`);
       setRepuesto(data);
       setFormData({
         nombre: data.nombre,
@@ -73,14 +43,22 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
         unidad_medida: data.unidad_medida,
         cantidad_existente: data.cantidad_existente,
         precio_unitario: data.precio_unitario,
-        nivel_minimo_alerta: data.nivel_minimo_alerta
+        nivel_minimo_alerta: data.nivel_minimo_alerta,
       });
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar el repuesto');
+      setError(null);
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al cargar el repuesto';
+      setError(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    fetchRepuestoData();
+  }, [fetchRepuestoData]);
+
+  // old fetchRepuesto removed in favor of fetchRepuestoData
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -97,42 +75,12 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const response = await fetch(`http://localhost:3002/repuestos/${params.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (response.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (response.status === 403) {
-        setError('No tienes permiso para editar repuestos.');
-        setSaving(false);
-        return;
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al actualizar el repuesto');
-      }
-
+      await api.patch(`/repuestos/${params.id}`, formData);
       alert('✅ Repuesto actualizado exitosamente');
       router.push('/admin/inventory');
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar el repuesto');
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al actualizar el repuesto';
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -140,8 +88,8 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white p-6 flex items-center justify-center">
-        <p>Cargando repuesto...</p>
+      <div className="min-h-screen bg-white p-6">
+        <Loader text="Cargando repuesto..." />
       </div>
     );
   }
@@ -178,11 +126,7 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
           )}
         </div>
 
-        {error && (
-          <div className="bg-red-100 text-red-800 p-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+        <ErrorAlert message={error} onClose={() => setError(null)} />
 
         <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded shadow">
           <div className="space-y-4">

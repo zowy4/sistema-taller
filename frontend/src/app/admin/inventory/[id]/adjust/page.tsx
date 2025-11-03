@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { api } from '@/lib/api';
+import Loader from '@/components/ui/Loader';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 
 interface Repuesto {
   id_repuesto: number;
@@ -27,49 +30,22 @@ export default function AdjustStockPage({ params }: { params: { id: string } }) 
   const [cantidad, setCantidad] = useState<number>(1);
   const [motivo, setMotivo] = useState<string>('');
 
-  useEffect(() => {
-    fetchRepuesto();
-  }, [params.id]);
-
-  const fetchRepuesto = async () => {
+  const fetchRepuestoData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const response = await fetch(`http://localhost:3002/repuestos/${params.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (response.status === 404) {
-        setError('Repuesto no encontrado');
-        setLoading(false);
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Error al cargar el repuesto');
-      }
-
-      const data: Repuesto = await response.json();
+      const data = await api.get<Repuesto>(`/repuestos/${params.id}`);
       setRepuesto(data);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar el repuesto');
+      setError(null);
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al cargar el repuesto';
+      setError(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    fetchRepuestoData();
+  }, [fetchRepuestoData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,42 +65,13 @@ export default function AdjustStockPage({ params }: { params: { id: string } }) 
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
       // Cantidad positiva para entradas, negativa para salidas
       const cantidadAjuste = tipoMovimiento === 'entrada' ? cantidad : -cantidad;
 
-      const response = await fetch(`http://localhost:3002/repuestos/${params.id}/ajustar-stock`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ cantidad: cantidadAjuste })
-      });
-
-      if (response.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (response.status === 403) {
-        setError('No tienes permiso para ajustar el stock.');
-        setSaving(false);
-        return;
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al ajustar el stock');
-      }
-
-      const updatedRepuesto: Repuesto = await response.json();
+      const updatedRepuesto = await api.patch<Repuesto>(
+        `/repuestos/${params.id}/ajustar-stock`,
+        { cantidad: cantidadAjuste }
+      );
       
       alert(`✅ Stock ajustado exitosamente\n\n` +
             `Stock anterior: ${repuesto?.cantidad_existente}\n` +
@@ -132,8 +79,9 @@ export default function AdjustStockPage({ params }: { params: { id: string } }) 
             `Stock nuevo: ${updatedRepuesto.cantidad_existente}`);
       
       router.push('/admin/inventory');
-    } catch (err: any) {
-      setError(err.message || 'Error al ajustar el stock');
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al ajustar el stock';
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -147,14 +95,14 @@ export default function AdjustStockPage({ params }: { params: { id: string } }) 
   };
 
   const stockFinal = calcularStockFinal();
-  const quedaBajoMinimo = repuesto && stockFinal <= repuesto.nivel_minimo_alerta;
+  const quedaBajoMinimo = repuesto ? stockFinal <= repuesto.nivel_minimo_alerta : false;
   const quedaEnCero = stockFinal === 0;
   const quedaNegativo = stockFinal < 0;
 
   if (loading) {
     return (
       <div className="min-h-screen bg-white p-6 flex items-center justify-center">
-        <p>Cargando repuesto...</p>
+        <Loader text="Cargando repuesto..." />
       </div>
     );
   }
@@ -166,8 +114,8 @@ export default function AdjustStockPage({ params }: { params: { id: string } }) 
           <Link href="/admin/inventory" className="text-blue-600 hover:underline text-sm">
             ← Volver al inventario
           </Link>
-          <div className="bg-red-100 text-red-800 p-4 rounded mt-4">
-            {error}
+          <div className="mt-4">
+            <ErrorAlert message={error} onClose={() => setError(null)} />
           </div>
         </div>
       </div>
@@ -226,11 +174,7 @@ export default function AdjustStockPage({ params }: { params: { id: string } }) 
           </div>
         )}
 
-        {error && (
-          <div className="bg-red-100 text-red-800 p-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+        <ErrorAlert message={error} onClose={() => setError(null)} />
 
         {/* Formulario de ajuste */}
         <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded-lg shadow">

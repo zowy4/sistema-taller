@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { api } from '@/lib/api';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 
 export default function NewInventoryPage() {
   const router = useRouter();
@@ -33,42 +35,13 @@ export default function NewInventoryPage() {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const response = await fetch('http://localhost:3002/repuestos', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (response.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (response.status === 403) {
-        setError('No tienes permiso para crear repuestos.');
-        setLoading(false);
-        return;
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al crear el repuesto');
-      }
+      await api.post('/repuestos', formData);
 
       alert('✅ Repuesto creado exitosamente');
       router.push('/admin/inventory');
-    } catch (err: any) {
-      setError(err.message || 'Error al crear el repuesto');
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al crear el repuesto';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -84,11 +57,7 @@ export default function NewInventoryPage() {
           <h2 className="text-2xl font-semibold mt-2">Nuevo Repuesto</h2>
         </div>
 
-        {error && (
-          <div className="bg-red-100 text-red-800 p-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+        <ErrorAlert message={error} onClose={() => setError(null)} />
 
         <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded shadow">
           <div className="space-y-4">

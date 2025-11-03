@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { api } from '@/lib/api';
+import Loader from '@/components/ui/Loader';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 
 interface Repuesto {
   id_repuesto: number;
@@ -15,61 +17,32 @@ interface Repuesto {
 }
 
 export default function InventoryPage() {
-  const router = useRouter();
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'low-stock'>('all');
 
-  useEffect(() => {
-    fetchRepuestos();
-  }, [router, filterType]);
-
-  const fetchRepuestos = async () => {
+  const fetchRepuestos = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const endpoint = filterType === 'low-stock' 
-        ? 'http://localhost:3002/repuestos/stock-bajo'
-        : 'http://localhost:3002/repuestos';
-
-      const response = await fetch(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (response.status === 403) {
-        setError('No tienes permiso para ver el inventario.');
-        setLoading(false);
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Error al cargar el inventario');
-      }
-
-      const data: Repuesto[] = await response.json();
+      setLoading(true);
+      const path = filterType === 'low-stock' ? '/repuestos/stock-bajo' : '/repuestos';
+      const data = await api.get<Repuesto[]>(path);
       setRepuestos(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar el inventario');
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al cargar el inventario';
+      setError(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterType]);
+
+  useEffect(() => {
+    fetchRepuestos();
+  }, [fetchRepuestos]);
+
+  // old fetchRepuestos removed in favor of api helper above
 
   const handleDelete = async (id: number, nombre: string) => {
     if (!confirm(`¿Estás seguro de eliminar el repuesto "${nombre}"?`)) {
@@ -78,32 +51,11 @@ export default function InventoryPage() {
 
     setDeleteLoading(id);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const response = await fetch(`http://localhost:3002/repuestos/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('token');
-          router.push('/login');
-          return;
-        }
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al eliminar el repuesto');
-      }
-
+      await api.delete(`/repuestos/${id}`);
       setRepuestos(prev => prev.filter(r => r.id_repuesto !== id));
-    } catch (err: any) {
-      alert(err.message || 'Error al eliminar el repuesto');
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al eliminar el repuesto';
+      alert(message);
     } finally {
       setDeleteLoading(null);
     }
@@ -162,11 +114,9 @@ export default function InventoryPage() {
         </button>
       </div>
 
-      {loading && <p className="text-center py-8">Cargando inventario...</p>}
+      {loading && <Loader text="Cargando inventario..." />}
 
-      {error && (
-        <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>
-      )}
+      <ErrorAlert message={error} onClose={() => setError(null)} />
 
       {!loading && !error && (
         <div className="overflow-x-auto bg-gray-50 rounded shadow">
