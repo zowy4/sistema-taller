@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { api } from '@/lib/api';
+import Loader from '@/components/ui/Loader';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 
 interface Empleado {
   id_empleado: number;
@@ -15,66 +17,39 @@ interface Empleado {
 }
 
 export default function EmpleadosPage() {
-  const router = useRouter();
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchEmpleados();
-  }, []);
-
-  const fetchEmpleados = async () => {
+  const fetchEmpleados = useCallback(async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const res = await fetch('http://localhost:3002/admin/empleados', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (res.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (res.status === 403) {
-        setError('No tienes permisos para acceder a esta sección');
-        return;
-      }
-
-      if (!res.ok) throw new Error('Error al cargar empleados');
-
-      const data = await res.json();
+      const data = await api.get<Empleado[]>('/admin/empleados');
       setEmpleados(data);
-    } catch (err: any) {
-      setError(err.message);
+      setError(null);
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al cargar empleados';
+      setError(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchEmpleados();
+  }, [fetchEmpleados]);
 
   const handleDelete = async (id: number) => {
     if (!confirm('¿Estás seguro de desactivar este empleado?')) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:3002/admin/empleados/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!res.ok) throw new Error('Error al desactivar empleado');
+      await api.delete(`/admin/empleados/${id}`);
 
       alert('Empleado desactivado exitosamente');
       fetchEmpleados();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al desactivar empleado';
+      alert(message);
     }
   };
 
@@ -96,8 +71,8 @@ export default function EmpleadosPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Cargando empleados...</div>
+      <div className="min-h-screen p-8">
+        <Loader text="Cargando empleados..." />
       </div>
     );
   }
@@ -126,11 +101,7 @@ export default function EmpleadosPage() {
           </div>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
+        <ErrorAlert message={error} onClose={() => setError(null)} />
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">

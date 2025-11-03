@@ -3,10 +3,23 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { api } from '@/lib/api';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 
 export default function NuevoEmpleadoPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  type FormData = {
+    nombre: string;
+    apellido: string;
+    email: string;
+    password: string;
+    telefono: string;
+    direccion: string;
+    rol: 'tecnico' | 'recepcionista' | 'supervisor' | 'admin';
+    estado: 'activo' | 'inactivo';
+  };
+
+  const [formData, setFormData] = useState<FormData>({
     nombre: '',
     apellido: '',
     email: '',
@@ -25,36 +38,13 @@ export default function NuevoEmpleadoPage() {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const res = await fetch('http://localhost:3002/admin/empleados', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (res.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || 'Error al crear empleado');
-      }
+      await api.post('/admin/empleados', formData);
 
       alert('Empleado creado exitosamente');
       router.push('/admin/empleados');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al crear empleado';
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -75,11 +65,7 @@ export default function NuevoEmpleadoPage() {
           <p className="text-gray-600 mt-2">Completa el formulario para registrar un nuevo empleado</p>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
+        <ErrorAlert message={error} onClose={() => setError(null)} />
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
           <div className="grid grid-cols-2 gap-4">

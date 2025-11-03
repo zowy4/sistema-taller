@@ -1,55 +1,45 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { api } from '@/lib/api';
+import Loader from '@/components/ui/Loader';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 
 export default function EditarEmpleadoPage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
 
-  const [formData, setFormData] = useState({
+  type FormData = {
+    nombre: string;
+    apellido: string;
+    email: string;
+    password?: string;
+    telefono: string;
+    direccion?: string;
+    rol: 'tecnico' | 'recepcionista' | 'supervisor' | 'admin';
+    estado: 'activo' | 'inactivo';
+  };
+
+  const [formData, setFormData] = useState<FormData>({
     nombre: '',
     apellido: '',
     email: '',
     password: '',
     telefono: '',
     direccion: '',
-    rol: '',
-    estado: '',
+    rol: 'tecnico',
+    estado: 'activo',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      fetchEmpleado();
-    }
-  }, [id]);
-
-  const fetchEmpleado = async () => {
+  const fetchEmpleado = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const res = await fetch(`http://localhost:3002/admin/empleados/${id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (res.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (!res.ok) throw new Error('Error al cargar empleado');
-
-      const data = await res.json();
+      const data = await api.get<FormData & { password?: string }>(`/admin/empleados/${id}`);
       setFormData({
         nombre: data.nombre,
         apellido: data.apellido,
@@ -60,12 +50,18 @@ export default function EditarEmpleadoPage() {
         rol: data.rol,
         estado: data.estado,
       });
-    } catch (err: any) {
-      setError(err.message);
+      setError(null);
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al cargar empleado';
+      setError(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) fetchEmpleado();
+  }, [id, fetchEmpleado]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,42 +69,16 @@ export default function EditarEmpleadoPage() {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
       // Si no se proporciona contraseña, no enviarla
-      const dataToSend: any = { ...formData };
-      if (!dataToSend.password) {
-        delete dataToSend.password;
-      }
-
-      const res = await fetch(`http://localhost:3002/admin/empleados/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(dataToSend)
-      });
-
-      if (res.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || 'Error al actualizar empleado');
-      }
+      const { password, ...rest } = formData;
+      const payload = password ? { ...rest, password } : rest;
+      await api.patch(`/admin/empleados/${id}`, payload);
 
       alert('Empleado actualizado exitosamente');
       router.push('/admin/empleados');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al actualizar empleado';
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -123,8 +93,8 @@ export default function EditarEmpleadoPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Cargando empleado...</div>
+      <div className="min-h-screen p-8">
+        <Loader text="Cargando empleado..." />
       </div>
     );
   }
@@ -137,11 +107,7 @@ export default function EditarEmpleadoPage() {
           <p className="text-gray-600 mt-2">Modifica los datos del empleado</p>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
+        <ErrorAlert message={error} onClose={() => setError(null)} />
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
           <div className="grid grid-cols-2 gap-4">
