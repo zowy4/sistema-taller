@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
@@ -17,7 +17,8 @@ interface Repuesto {
   nivel_minimo_alerta: number;
 }
 
-export default function EditInventoryPage({ params }: { params: { id: string } }) {
+export default function EditInventoryPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -35,7 +36,7 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
 
   const fetchRepuestoData = useCallback(async () => {
     try {
-      const data = await api.get<Repuesto>(`/repuestos/${params.id}`);
+      const data = await api.get<Repuesto>(`/repuestos/${id}`);
       setRepuesto(data);
       setFormData({
         nombre: data.nombre,
@@ -52,7 +53,7 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
     } finally {
       setLoading(false);
     }
-  }, [params.id]);
+  }, [id]);
 
   useEffect(() => {
     fetchRepuestoData();
@@ -75,7 +76,7 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
     setError(null);
 
     try {
-      await api.patch(`/repuestos/${params.id}`, formData);
+      await api.patch(`/repuestos/${id}`, formData);
       alert('✅ Repuesto actualizado exitosamente');
       router.push('/admin/inventory');
     } catch (err: unknown) {
@@ -117,7 +118,7 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
             ← Volver al inventario
           </Link>
           <h2 className="text-2xl font-semibold mt-2">
-            Editar Repuesto #{params.id}
+            Editar Repuesto #{id}
           </h2>
           {repuesto && (
             <p className="text-gray-600 text-sm mt-1">
@@ -268,7 +269,7 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
               Cancelar
             </Link>
             <Link
-              href={`/admin/inventory/${params.id}/adjust`}
+              href={`/admin/inventory/${id}/adjust`}
               className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 transition-colors inline-block ml-auto"
             >
               📦 Ajustar Stock

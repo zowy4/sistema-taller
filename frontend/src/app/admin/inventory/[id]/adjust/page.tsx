@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
@@ -19,7 +19,8 @@ interface Repuesto {
 
 type TipoMovimiento = 'entrada' | 'salida';
 
-export default function AdjustStockPage({ params }: { params: { id: string } }) {
+export default function AdjustStockPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -32,7 +33,7 @@ export default function AdjustStockPage({ params }: { params: { id: string } }) 
 
   const fetchRepuestoData = useCallback(async () => {
     try {
-      const data = await api.get<Repuesto>(`/repuestos/${params.id}`);
+      const data = await api.get<Repuesto>(`/repuestos/${id}`);
       setRepuesto(data);
       setError(null);
     } catch (err: unknown) {
@@ -41,7 +42,7 @@ export default function AdjustStockPage({ params }: { params: { id: string } }) 
     } finally {
       setLoading(false);
     }
-  }, [params.id]);
+  }, [id]);
 
   useEffect(() => {
     fetchRepuestoData();
@@ -69,7 +70,7 @@ export default function AdjustStockPage({ params }: { params: { id: string } }) 
       const cantidadAjuste = tipoMovimiento === 'entrada' ? cantidad : -cantidad;
 
       const updatedRepuesto = await api.patch<Repuesto>(
-        `/repuestos/${params.id}/ajustar-stock`,
+        `/repuestos/${id}/ajustar-stock`,
         { cantidad: cantidadAjuste }
       );
       
