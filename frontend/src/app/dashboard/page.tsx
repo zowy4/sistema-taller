@@ -1,7 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'; // Usando next/navigation
+import { api } from '@/lib/api';
+import Loader from '@/components/ui/Loader';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 
 // Definimos la "forma" de nuestros datos de cliente
 interface Client {
@@ -22,16 +25,16 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState<string>(''); // Para mostrar el nombre del usuario
 
   // Función para cerrar sesión
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('token');
     localStorage.removeItem('user_name'); // Limpiamos también el nombre
     router.push('/login');
-  };
+  }, [router]);
 
   // Este useEffect se ejecuta 1 vez cuando la página carga
   useEffect(() => {
     // 1. Leer el access_token de localStorage
-    const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem('token');
     const storedName = localStorage.getItem('user_name');
     
     setUserName(storedName || 'Usuario');
@@ -48,55 +51,28 @@ export default function DashboardPage() {
     // Ahora, llamamos a la API protegida.
     const fetchClients = async () => {
       try {
-        // 4. Añadir ese token al header de la petición fetch
-        const response = await fetch('http://localhost:3000/clientes', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`, // ¡La autenticación!
-          },
-        });
-
-        // 5. Manejar errores (401 o 403)
-        if (response.status === 401) {
-          // Token expirado o inválido
-          handleLogout(); // Desloguear al usuario
-          return;
-        }
-
-        if (response.status === 403) {
-          // Error de Rol (ej. 'tecnico' intentando acceder)
-          throw new Error('No tienes permisos (rol) para ver esta información.');
-        }
-
-        if (!response.ok) {
-          throw new Error('Error al cargar los clientes.');
-        }
-
-        // 6. Si todo OK (ej. admin@taller.com), guardar los datos
-        const data: Client[] = await response.json();
+        // 4. Usar el helper de API (maneja token y 401 automáticamente)
+        const data = await api.get<Client[]>('/clientes');
         setClients(data);
         setError(null); // Limpiar errores previos
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('Ocurrió un error desconocido');
-        }
+      } catch (err: unknown) {
+        const message = (err as { message?: string })?.message || 'Ocurrió un error desconocido';
+        setError(message);
       } finally {
         setIsLoading(false); // Dejar de cargar
       }
     };
 
     fetchClients(); // Llamar a la función que acabamos de definir
-  }, [router]);
+  }, [router, handleLogout]);
 
   // --- Renderizado ---
 
   // Mostrar "Cargando..." mientras se verifica el token y se cargan los datos
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
-        <p className="text-xl animate-pulse">Verificando sesión y cargando datos...</p>
+      <div className="min-h-screen bg-gray-900 text-white p-8">
+        <Loader text="Verificando sesión y cargando datos..." />
       </div>
     );
   }
@@ -122,12 +98,12 @@ export default function DashboardPage() {
 
         {/* Mostrar el error si existe (ej. Error 403) */}
         {error && (
-          <div className="bg-red-800 border border-red-600 text-white p-4 rounded-lg mb-6">
-            <p><strong className="font-bold">Error:</strong> {error}</p>
-            <p className="text-sm text-red-200">
-              (Si iniciaste sesión como 'tecnico', este error es esperado. Solo los 'administradores' pueden ver clientes).
+          <>
+            <ErrorAlert message={error} />
+            <p className="text-sm text-red-200 mb-6">
+              (Si iniciaste sesión como &apos;tecnico&apos;, este error es esperado. Solo los &apos;administradores&apos; pueden ver clientes).
             </p>
-          </div>
+          </>
         )}
 
         {/* Mostrar la tabla SOLO si NO hay error */}
