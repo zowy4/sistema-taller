@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'; // Usando next/navigation
@@ -6,7 +6,6 @@ import { api } from '@/lib/api';
 import Loader from '@/components/ui/Loader';
 import ErrorAlert from '@/components/ui/ErrorAlert';
 
-// Definimos la "forma" de nuestros datos de cliente
 interface Client {
   id_cliente: number;
   nombre: string;
@@ -18,7 +17,6 @@ interface Client {
 export default function DashboardPage() {
   const router = useRouter();
 
-  // Estados
   const [clients, setClients] = useState<Client[]>([]); // Para guardar la lista de clientes
   const [error, setError] = useState<string | null>(null); // Para mostrar errores (ej. 403)
   const [isLoading, setIsLoading] = useState(true); // Para mostrar "Cargando..."
@@ -31,27 +29,21 @@ export default function DashboardPage() {
     router.push('/login');
   }, [router]);
 
-  // Este useEffect se ejecuta 1 vez cuando la página carga
   useEffect(() => {
-    // 1. Leer el access_token de localStorage
   const token = localStorage.getItem('token');
     const storedName = localStorage.getItem('user_name');
     
     setUserName(storedName || 'Usuario');
 
-    // 2. Verificar si el usuario está logueado
     if (!token) {
-      // Si no hay token, redirigir a login
       router.push('/login');
       return; // Detener la ejecución
     }
 
-    // 3. Este componente se ejecutará después de que el Dashboard
     // haya verificado que el usuario está logueado.
     // Ahora, llamamos a la API protegida.
     const fetchClients = async () => {
       try {
-        // 4. Usar el helper de API (maneja token y 401 automáticamente)
         const data = await api.get<Client[]>('/clientes');
         setClients(data);
         setError(null); // Limpiar errores previos
@@ -68,7 +60,6 @@ export default function DashboardPage() {
 
   // --- Renderizado ---
 
-  // Mostrar "Cargando..." mientras se verifica el token y se cargan los datos
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-900 text-white p-8">

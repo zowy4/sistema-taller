@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -34,7 +34,6 @@ export function ProtectedRoute({
     return null; // El useEffect redirigirá
   }
 
-  // Verificar roles
   if (requiredRoles.length > 0) {
     const hasRequiredRole = requiredRoles.some(role => hasRole(role));
     if (!hasRequiredRole) {
@@ -66,7 +65,6 @@ export function ProtectedRoute({
     }
   }
 
-  // Verificar permisos
   if (requiredPermissions.length > 0) {
     const hasRequiredPermission = requiredPermissions.some(permission => hasPermission(permission));
     if (!hasRequiredPermission) {
@@ -100,3 +98,4 @@ export function ProtectedRoute({
 
   return <>{children}</>;
 }
+

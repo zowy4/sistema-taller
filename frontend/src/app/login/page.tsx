@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -45,7 +45,6 @@ export default function LoginPage() {
       const success = await login(formData.email, formData.password);
       
       if (success) {
-        // Redirigir según el rol del usuario
         // Si tiene rol admin -> /admin, tecnico -> /tecnico, sino dashboard genérico
         const raw = localStorage.getItem('token');
         try {

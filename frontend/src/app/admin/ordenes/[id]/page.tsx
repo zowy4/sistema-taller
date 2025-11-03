@@ -1,460 +1,478 @@
-'use client';
+﻿"use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
-interface Orden {
-  id_orden: number;
-  fecha_apertura: string;
-  fecha_entrega_estimada: string;
-  fecha_entrega_real: string | null;
-  estado: string;
-  total_estimado: number;
-  total_real: number | null;
-  cliente: {
-    id_cliente: number;
-    nombre: string;
-    apellido: string;
-    telefono: string;
-    email: string;
-  };
-  vehiculo: {
-    id_vehiculo: number;
-    placa: string;
-    marca: string;
-    modelo: string;
-    anio: number;
-  };
-  empleado_responsable: {
-    id_empleado: number;
-    nombre: string;
-    apellido: string;
-  };
-  servicios_asignados: Array<{
-    id: number;
-    cantidad: number;
-    precio_unitario: number;
-    subtotal: number;
-    servicio: {
-      id_servicio: number;
-      nombre: string;
-      descripcion: string;
-    };
-  }>;
-  repuestos_usados: Array<{
-    id: number;
-    cantidad: number;
-    precio_unitario: number;
-    subtotal: number;
-    repuesto: {
-      id_repuesto: number;
-      nombre: string;
-      descripcion: string;
-    };
-  }>;
-  factura?: {
-    id_factura: number;
-    fecha_factura: string;
-    monto: number;
-    estado_pago: string;
-    metodo_pago: string | null;
-  };
+interface Cliente {
+  id_cliente: number;
+  nombre: string;
+  apellido: string;
 }
 
-export default function OrdenDetallePage() {
-  const params = useParams();
-  const router = useRouter();
-  const id = params.id as string;
+interface Vehiculo {
+  id_vehiculo: number;
+  placa: string;
+  marca: string;
+  modelo: string;
+  anio: number;
+}
 
-  const [orden, setOrden] = useState<Orden | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [cambiandoEstado, setCambiandoEstado] = useState(false);
-  const [facturando, setFacturando] = useState(false);
-  const [mostrarModalFactura, setMostrarModalFactura] = useState(false);
-  const [metodoPago, setMetodoPago] = useState('');
+interface Servicio {
+  id_servicio: number;
+  nombre: string;
+  descripcion?: string;
+  precio_estandar: number;
+}
+
+interface Repuesto {
+  id_repuesto: number;
+  nombre: string;
+  precio_unitario: number;
+  cantidad_existente: number;
+}
+
+interface ServicioItem {
+  id_servicio: number;
+  nombre: string;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
+}
+
+interface RepuestoItem {
+  id_repuesto: number;
+  nombre: string;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
+}
+
+export default function NuevaOrdenPage() {
+  const router = useRouter();
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
+  const [servicios, setServicios] = useState<Servicio[]>([]);
+  const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
+  
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<number>(0);
+  const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState<number>(0);
+  const [fechaEntrega, setFechaEntrega] = useState('');
+  const [estado, setEstado] = useState('pendiente');
+  
+  const [serviciosCarrito, setServiciosCarrito] = useState<ServicioItem[]>([]);
+  const [repuestosCarrito, setRepuestosCarrito] = useState<RepuestoItem[]>([]);
+  
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) {
-      fetchOrden();
-    }
-  }, [id]);
+    fetchClientes();
+    fetchServicios();
+    fetchRepuestos();
+  }, []);
 
-  const fetchOrden = async () => {
+  useEffect(() => {
+    if (clienteSeleccionado > 0) {
+      fetchVehiculos(clienteSeleccionado);
+    }
+  }, [clienteSeleccionado]);
+
+  const fetchClientes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3002/ordenes/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const res = await fetch('http://localhost:3002/clientes', {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setOrden(data);
-      } else {
-        alert('Error al cargar la orden');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error al cargar la orden');
-    } finally {
-      setLoading(false);
+      if (!res.ok) throw new Error('Error al cargar clientes');
+      const data = await res.json();
+      setClientes(data);
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
-  const cambiarEstado = async (nuevoEstado: string) => {
-    if (!confirm(`¿Cambiar estado a "${nuevoEstado}"?`)) return;
-
-    setCambiandoEstado(true);
+  const fetchVehiculos = async (id_cliente: number) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3002/ordenes/${id}/estado`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ estado: nuevoEstado }),
+      const res = await fetch('http://localhost:3002/vehiculos', {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setOrden(data);
-        alert('Estado actualizado correctamente');
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Error al cambiar estado');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error al cambiar estado');
-    } finally {
-      setCambiandoEstado(false);
+      if (!res.ok) throw new Error('Error al cargar vehículos');
+      const data = await res.json();
+      setVehiculos(data.filter((v: Vehiculo & { id_cliente: number }) => v.id_cliente === id_cliente));
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
-  const generarFactura = async () => {
-    if (!metodoPago) {
-      alert('Selecciona un método de pago');
-      return;
-    }
-
-    setFacturando(true);
+  const fetchServicios = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3002/facturas/facturar/${id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ metodo_pago: metodoPago }),
+      const res = await fetch('http://localhost:3002/servicios', {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      if (response.ok) {
-        const factura = await response.json();
-        alert(`Factura #${factura.id_factura} generada correctamente`);
-        setMostrarModalFactura(false);
-        fetchOrden(); // Recargar orden
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Error al generar factura');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error al generar factura');
-    } finally {
-      setFacturando(false);
+      if (!res.ok) throw new Error('Error al cargar servicios');
+      const data = await res.json();
+      setServicios(data);
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
-  const getEstadoBadge = (estado: string) => {
-    const estilos: Record<string, string> = {
-      pendiente: 'bg-yellow-100 text-yellow-800',
-      en_proceso: 'bg-blue-100 text-blue-800',
-      completado: 'bg-green-100 text-green-800',
-      entregado: 'bg-gray-100 text-gray-800',
-      cancelado: 'bg-red-100 text-red-800',
-    };
-
-    return estilos[estado] || 'bg-gray-100 text-gray-800';
+  const fetchRepuestos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:3002/repuestos', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Error al cargar repuestos');
+      const data = await res.json();
+      setRepuestos(data);
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
-  const formatFecha = (fecha: string | null) => {
-    if (!fecha) return '-';
-    return new Date(fecha).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const agregarServicio = (servicio: Servicio) => {
+    const existe = serviciosCarrito.find(s => s.id_servicio === servicio.id_servicio);
+    if (existe) {
+      setServiciosCarrito(serviciosCarrito.map(s => 
+        s.id_servicio === servicio.id_servicio 
+          ? { ...s, cantidad: s.cantidad + 1, subtotal: (s.cantidad + 1) * s.precio_unitario }
+          : s
+      ));
+    } else {
+      setServiciosCarrito([...serviciosCarrito, {
+        id_servicio: servicio.id_servicio,
+        nombre: servicio.nombre,
+        cantidad: 1,
+        precio_unitario: servicio.precio_estandar,
+        subtotal: servicio.precio_estandar
+      }]);
+    }
   };
 
-  const formatMonto = (monto: number) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(monto);
+  const agregarRepuesto = (repuesto: Repuesto) => {
+    const existe = repuestosCarrito.find(r => r.id_repuesto === repuesto.id_repuesto);
+    if (existe) {
+      if (existe.cantidad + 1 > repuesto.cantidad_existente) {
+        alert(`Stock insuficiente para ${repuesto.nombre}. Disponible: ${repuesto.cantidad_existente}`);
+        return;
+      }
+      setRepuestosCarrito(repuestosCarrito.map(r => 
+        r.id_repuesto === repuesto.id_repuesto 
+          ? { ...r, cantidad: r.cantidad + 1, subtotal: (r.cantidad + 1) * r.precio_unitario }
+          : r
+      ));
+    } else {
+      if (repuesto.cantidad_existente < 1) {
+        alert(`No hay stock disponible para ${repuesto.nombre}`);
+        return;
+      }
+      setRepuestosCarrito([...repuestosCarrito, {
+        id_repuesto: repuesto.id_repuesto,
+        nombre: repuesto.nombre,
+        cantidad: 1,
+        precio_unitario: repuesto.precio_unitario,
+        subtotal: repuesto.precio_unitario
+      }]);
+    }
+  };
+
+  const eliminarServicio = (id_servicio: number) => {
+    setServiciosCarrito(serviciosCarrito.filter(s => s.id_servicio !== id_servicio));
+  };
+
+  const eliminarRepuesto = (id_repuesto: number) => {
+    setRepuestosCarrito(repuestosCarrito.filter(r => r.id_repuesto !== id_repuesto));
   };
 
   const calcularTotal = () => {
-    if (!orden) return 0;
-    const serviciosTotal = orden.servicios_asignados.reduce((sum, s) => sum + s.subtotal, 0);
-    const repuestosTotal = orden.repuestos_usados.reduce((sum, r) => sum + r.subtotal, 0);
-    return serviciosTotal + repuestosTotal;
+    const totalServicios = serviciosCarrito.reduce((sum, s) => sum + s.subtotal, 0);
+    const totalRepuestos = repuestosCarrito.reduce((sum, r) => sum + r.subtotal, 0);
+    return totalServicios + totalRepuestos;
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-xl">Cargando orden...</div>
-      </div>
-    );
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (clienteSeleccionado === 0 || vehiculoSeleccionado === 0) {
+      alert('Debe seleccionar un cliente y un vehículo');
+      return;
+    }
+    if (serviciosCarrito.length === 0 && repuestosCarrito.length === 0) {
+      alert('Debe agregar al menos un servicio o repuesto');
+      return;
+    }
 
-  if (!orden) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Orden no encontrada</h1>
-          <button
-            onClick={() => router.push('/admin/ordenes')}
-            className="text-blue-600 hover:underline"
-          >
-            Volver a órdenes
-          </button>
-        </div>
-      </div>
-    );
-  }
+    setSaving(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
 
-  const puedeFacturar = orden.estado === 'completado' && !orden.factura;
-  const total = orden.total_real || calcularTotal();
+      const profileRes = await fetch('http://localhost:3002/auth/profile', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!profileRes.ok) throw new Error('Error al obtener perfil');
+      const profile = await profileRes.json();
+
+      const ordenData = {
+        id_cliente: Number(clienteSeleccionado) || 0,
+        id_vehiculo: Number(vehiculoSeleccionado) || 0,
+        id_empleado_responsable: Number(profile.id_empleado) || 0,
+        fecha_entrega_estimada: fechaEntrega,
+        estado,
+        total_estimado: Number(calcularTotal()) || 0,
+        servicios: serviciosCarrito.map(s => ({
+          id_servicio: Number(s.id_servicio) || 0,
+          cantidad: Number(s.cantidad) || 1,
+          precio_unitario: Number(s.precio_unitario) || 0
+        })),
+        repuestos: repuestosCarrito.map(r => ({
+          id_repuesto: Number(r.id_repuesto) || 0,
+          cantidad: Number(r.cantidad) || 1,
+          precio_unitario: Number(r.precio_unitario) || 0
+        }))
+      };
+
+      console.log('Datos de la orden a enviar:', JSON.stringify(ordenData, null, 2));
+
+      const res = await fetch('http://localhost:3002/ordenes', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(ordenData)
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem('token');
+        router.push('/login');
+        return;
+      }
+      if (!res.ok) {
+        const errData = await res.json();
+        console.error('Error del servidor:', errData);
+        throw new Error(JSON.stringify(errData) || 'Error al crear orden');
+      }
+      alert('✅ Orden creada exitosamente');
+      router.push('/admin/ordenes');
+    } catch (err: any) {
+      setError(err.message || 'Error al crear orden');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <div className="container mx-auto p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <button
-          onClick={() => router.push('/admin/ordenes')}
-          className="text-blue-600 hover:underline mb-4 inline-block"
-        >
-          ← Volver a órdenes
-        </button>
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold">Orden #{orden.id_orden}</h1>
-            <p className="text-gray-600 mt-1">
-              Creada el {formatFecha(orden.fecha_apertura)}
-            </p>
-          </div>
-          <div className="text-right">
-            <div className={`inline-block px-4 py-2 rounded-lg font-medium ${getEstadoBadge(orden.estado)}`}>
-              {orden.estado.toUpperCase()}
-            </div>
-            {orden.factura && (
-              <div className="mt-2 text-sm text-green-600 font-medium">
-                ✓ Facturada
+    <div className="min-h-screen bg-white p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <Link href="/admin/ordenes" className="text-blue-600 hover:underline text-sm">
+            ← Volver a órdenes
+          </Link>
+          <h2 className="text-2xl font-semibold mt-2">Nueva Orden de Trabajo</h2>
+        </div>
+        
+        {error && <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>}
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Panel izquierdo: Selección */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Cliente y Vehículo */}
+            <div className="bg-gray-50 p-6 rounded shadow">
+              <h3 className="text-lg font-semibold mb-4">Cliente y Vehículo</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Cliente *</label>
+                  <select 
+                    value={clienteSeleccionado} 
+                    onChange={(e) => setClienteSeleccionado(Number(e.target.value))} 
+                    required 
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  >
+                    <option value={0}>Seleccione un cliente</option>
+                    {clientes.map(c => (
+                      <option key={c.id_cliente} value={c.id_cliente}>
+                        {c.nombre} {c.apellido}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Vehículo *</label>
+                  <select 
+                    value={vehiculoSeleccionado} 
+                    onChange={(e) => setVehiculoSeleccionado(Number(e.target.value))} 
+                    required 
+                    disabled={clienteSeleccionado === 0}
+                    className="w-full border border-gray-300 rounded px-3 py-2 disabled:bg-gray-200"
+                  >
+                    <option value={0}>Seleccione un vehículo</option>
+                    {vehiculos.map(v => (
+                      <option key={v.id_vehiculo} value={v.id_vehiculo}>
+                        {v.placa} - {v.marca} {v.modelo} ({v.anio})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Fecha Entrega Estimada *</label>
+                  <input 
+                    type="date" 
+                    value={fechaEntrega} 
+                    onChange={(e) => setFechaEntrega(e.target.value)} 
+                    required 
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Estado *</label>
+                  <select 
+                    value={estado} 
+                    onChange={(e) => setEstado(e.target.value)} 
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  >
+                    <option value="pendiente">Pendiente</option>
+                    <option value="en proceso">En Proceso</option>
+                    <option value="completada">Completada</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Servicios */}
+            <div className="bg-gray-50 p-6 rounded shadow">
+              <h3 className="text-lg font-semibold mb-4">Servicios Disponibles</h3>
+              <div className="max-h-64 overflow-y-auto space-y-2">
+                {servicios.map(s => (
+                  <div key={s.id_servicio} className="flex justify-between items-center bg-white p-3 rounded border">
+                    <div>
+                      <p className="font-medium">{s.nombre}</p>
+                      <p className="text-sm text-gray-600">${s.precio_estandar.toFixed(2)}</p>
+                    </div>
+                    <button 
+                      onClick={() => agregarServicio(s)} 
+                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
+                    >
+                      + Agregar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Repuestos */}
+            <div className="bg-gray-50 p-6 rounded shadow">
+              <h3 className="text-lg font-semibold mb-4">Repuestos Disponibles</h3>
+              <div className="max-h-64 overflow-y-auto space-y-2">
+                {repuestos.map(r => (
+                  <div key={r.id_repuesto} className="flex justify-between items-center bg-white p-3 rounded border">
+                    <div>
+                      <p className="font-medium">{r.nombre}</p>
+                      <p className="text-sm text-gray-600">${r.precio_unitario.toFixed(2)} - Stock: {r.cantidad_existente}</p>
+                    </div>
+                    <button 
+                      onClick={() => agregarRepuesto(r)} 
+                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
+                      disabled={r.cantidad_existente === 0}
+                    >
+                      + Agregar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Panel derecho: Carrito y Total */}
+          <div className="space-y-6">
+            {/* Carrito de Servicios */}
+            <div className="bg-gray-50 p-6 rounded shadow">
+              <h3 className="text-lg font-semibold mb-4">Servicios Agregados</h3>
+              {serviciosCarrito.length === 0 ? (
+                <p className="text-gray-500 text-sm">No hay servicios agregados</p>
+              ) : (
+                <div className="space-y-2">
+                  {serviciosCarrito.map(s => (
+                    <div key={s.id_servicio} className="bg-white p-3 rounded border">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{s.nombre}</p>
+                          <p className="text-xs text-gray-600">Cantidad: {s.cantidad} x ${s.precio_unitario.toFixed(2)}</p>
+                        </div>
+                        <button 
+                          onClick={() => eliminarServicio(s.id_servicio)} 
+                          className="text-red-600 hover:text-red-800 text-xs ml-2"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <p className="text-sm font-semibold mt-1">${s.subtotal.toFixed(2)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Carrito de Repuestos */}
+            <div className="bg-gray-50 p-6 rounded shadow">
+              <h3 className="text-lg font-semibold mb-4">Repuestos Agregados</h3>
+              {repuestosCarrito.length === 0 ? (
+                <p className="text-gray-500 text-sm">No hay repuestos agregados</p>
+              ) : (
+                <div className="space-y-2">
+                  {repuestosCarrito.map(r => (
+                    <div key={r.id_repuesto} className="bg-white p-3 rounded border">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{r.nombre}</p>
+                          <p className="text-xs text-gray-600">Cantidad: {r.cantidad} x ${r.precio_unitario.toFixed(2)}</p>
+                        </div>
+                        <button 
+                          onClick={() => eliminarRepuesto(r.id_repuesto)} 
+                          className="text-red-600 hover:text-red-800 text-xs ml-2"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <p className="text-sm font-semibold mt-1">${r.subtotal.toFixed(2)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Total y Acciones */}
+            <div className="bg-blue-50 p-6 rounded shadow">
+              <h3 className="text-2xl font-bold mb-4">Total: ${calcularTotal().toFixed(2)}</h3>
+              <div className="space-y-2">
+                <button 
+                  onClick={handleSubmit} 
+                  disabled={saving || clienteSeleccionado === 0 || vehiculoSeleccionado === 0}
+                  className="w-full bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                >
+                  {saving ? 'Creando...' : '✓ Crear Orden'}
+                </button>
+                <Link 
+                  href="/admin/ordenes" 
+                  className="block w-full text-center bg-gray-300 text-gray-700 px-6 py-3 rounded hover:bg-gray-400 transition-colors"
+                >
+                  Cancelar
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Información del Cliente y Vehículo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Cliente</h2>
-          <div className="space-y-2">
-            <div>
-              <span className="text-gray-600">Nombre:</span>
-              <span className="ml-2 font-medium">
-                {orden.cliente.nombre} {orden.cliente.apellido}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-600">Email:</span>
-              <span className="ml-2">{orden.cliente.email}</span>
-            </div>
-            <div>
-              <span className="text-gray-600">Teléfono:</span>
-              <span className="ml-2">{orden.cliente.telefono}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Vehículo</h2>
-          <div className="space-y-2">
-            <div>
-              <span className="text-gray-600">Placa:</span>
-              <span className="ml-2 font-medium">{orden.vehiculo.placa}</span>
-            </div>
-            <div>
-              <span className="text-gray-600">Marca/Modelo:</span>
-              <span className="ml-2">
-                {orden.vehiculo.marca} {orden.vehiculo.modelo}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-600">Año:</span>
-              <span className="ml-2">{orden.vehiculo.anio}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Servicios */}
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
-        <h2 className="text-xl font-semibold mb-4">Servicios</h2>
-        {orden.servicios_asignados.length > 0 ? (
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left">Servicio</th>
-                <th className="px-4 py-2 text-center">Cantidad</th>
-                <th className="px-4 py-2 text-right">Precio Unit.</th>
-                <th className="px-4 py-2 text-right">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orden.servicios_asignados.map((item) => (
-                <tr key={item.id} className="border-t">
-                  <td className="px-4 py-2">{item.servicio.nombre}</td>
-                  <td className="px-4 py-2 text-center">{item.cantidad}</td>
-                  <td className="px-4 py-2 text-right">{formatMonto(item.precio_unitario)}</td>
-                  <td className="px-4 py-2 text-right font-medium">{formatMonto(item.subtotal)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="text-gray-500">No hay servicios asignados</p>
-        )}
-      </div>
-
-      {/* Repuestos */}
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
-        <h2 className="text-xl font-semibold mb-4">Repuestos</h2>
-        {orden.repuestos_usados.length > 0 ? (
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left">Repuesto</th>
-                <th className="px-4 py-2 text-center">Cantidad</th>
-                <th className="px-4 py-2 text-right">Precio Unit.</th>
-                <th className="px-4 py-2 text-right">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orden.repuestos_usados.map((item) => (
-                <tr key={item.id} className="border-t">
-                  <td className="px-4 py-2">{item.repuesto.nombre}</td>
-                  <td className="px-4 py-2 text-center">{item.cantidad}</td>
-                  <td className="px-4 py-2 text-right">{formatMonto(item.precio_unitario)}</td>
-                  <td className="px-4 py-2 text-right font-medium">{formatMonto(item.subtotal)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="text-gray-500">No hay repuestos usados</p>
-        )}
-      </div>
-
-      {/* Total */}
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
-        <div className="flex justify-between items-center text-2xl font-bold">
-          <span>Total:</span>
-          <span className="text-green-600">{formatMonto(total)}</span>
-        </div>
-      </div>
-
-      {/* Acciones */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Acciones</h2>
-        <div className="flex gap-4 flex-wrap">
-          {orden.estado === 'pendiente' && (
-            <button
-              onClick={() => cambiarEstado('en_proceso')}
-              disabled={cambiandoEstado}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              Iniciar Trabajo
-            </button>
-          )}
-
-          {orden.estado === 'en_proceso' && (
-            <button
-              onClick={() => cambiarEstado('completado')}
-              disabled={cambiandoEstado}
-              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
-            >
-              Marcar como Completado
-            </button>
-          )}
-
-          {puedeFacturar && (
-            <button
-              onClick={() => setMostrarModalFactura(true)}
-              className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700"
-            >
-              Generar Factura
-            </button>
-          )}
-
-          {orden.factura && (
-            <button
-              onClick={() => router.push(`/admin/facturas/${orden.factura?.id_factura}`)}
-              className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700"
-            >
-              Ver Factura
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Modal Facturar */}
-      {mostrarModalFactura && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4">Generar Factura</h2>
-            <p className="text-gray-600 mb-4">
-              Total a facturar: <span className="font-bold text-lg">{formatMonto(total)}</span>
-            </p>
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">Método de Pago</label>
-              <select
-                value={metodoPago}
-                onChange={(e) => setMetodoPago(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-              >
-                <option value="">Seleccionar...</option>
-                <option value="efectivo">Efectivo</option>
-                <option value="tarjeta">Tarjeta</option>
-                <option value="transferencia">Transferencia</option>
-                <option value="cheque">Cheque</option>
-              </select>
-            </div>
-            <div className="flex gap-4">
-              <button
-                onClick={generarFactura}
-                disabled={facturando || !metodoPago}
-                className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50"
-              >
-                {facturando ? 'Generando...' : 'Confirmar'}
-              </button>
-              <button
-                onClick={() => setMostrarModalFactura(false)}
-                className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+

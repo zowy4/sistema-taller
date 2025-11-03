@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 function startOfDay(date = new Date()) {
@@ -21,7 +21,6 @@ export class StatsService {
     const todayStart = startOfDay();
     const todayEnd = endOfDay();
 
-    // Ventas de hoy: suma de facturas pagadas hoy
     const facturasHoy = await this.prisma.facturas.findMany({
       where: {
         fecha_factura: { gte: todayStart, lte: todayEnd },
@@ -31,12 +30,10 @@ export class StatsService {
     });
     const ventasHoy = facturasHoy.reduce((s, f) => s + (f.monto || 0), 0);
 
-    // Facturas pendientes: conteo
     const facturasPendientes = await this.prisma.facturas.count({
       where: { estado_pago: { not: 'pagada' } },
     });
 
-    // Ordenes en proceso: conteo
     const ordenesEnProceso = await this.prisma.ordenesDeTrabajo.count({
       where: { estado: 'en_proceso' },
     });
@@ -69,7 +66,6 @@ export class StatsService {
       orderBy: { fecha_factura: 'asc' },
     });
 
-    // Agregar por día (YYYY-MM-DD)
     const map: Record<string, number> = {};
     for (const d of days) {
       const key = d.toISOString().slice(0, 10);
@@ -104,3 +100,4 @@ export class StatsService {
     return rows;
   }
 }
+

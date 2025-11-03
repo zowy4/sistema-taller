@@ -13,13 +13,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // payload shape depends on how you sign the token in AuthService
   async validate(payload: any) {
     const userId = payload.sub ?? payload.id;
     if (!userId) throw new UnauthorizedException();
 
-    // Return the payload data including rol and permissions
-    // The JWT already contains all the user info we need
     return {
       id: userId,
       email: payload.email,

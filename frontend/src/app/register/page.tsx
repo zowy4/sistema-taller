@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -94,13 +94,11 @@ export default function RegisterPage() {
         }
       }
 
-      // Mostrar mensaje de éxito
       const successMessage = document.createElement('div');
       successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded shadow-lg';
       successMessage.textContent = '¡Registro exitoso! Redirigiendo al login...';
       document.body.appendChild(successMessage);
 
-      // Redirigir al login después de un breve delay
       setTimeout(() => {
         router.push('/login');
       }, 2000);

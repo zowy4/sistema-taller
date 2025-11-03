@@ -1,6 +1,3 @@
-// Small API helper to centralize base URL, auth header and 401 handling
-// Usage: const data = await api.get<T>("/ordenes")
-
 export const API_BASE_URL =
   (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) ||
   'http://localhost:3002';
@@ -21,7 +18,6 @@ async function request<T = unknown>(path: string, options: RequestInit = {}): Pr
   if (res.status === 401) {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
-      // Hard redirect to force auth flow
       window.location.href = '/login';
     }
     throw new Error('No autorizado');
@@ -36,7 +32,6 @@ async function request<T = unknown>(path: string, options: RequestInit = {}): Pr
     throw new Error(message);
   }
 
-  // Try to parse JSON, allow empty response
   const text = await res.text();
   return (text ? JSON.parse(text) : (undefined as unknown)) as T;
 }

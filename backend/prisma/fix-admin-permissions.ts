@@ -1,11 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+﻿import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function fixAdminPermissions() {
   console.log('🔧 Verificando permisos del admin...');
 
-  // Obtener el rol admin
   const adminRole = await prisma.roles.findFirst({
     where: { nombre: 'admin' }
   });
@@ -15,7 +14,6 @@ async function fixAdminPermissions() {
     return;
   }
 
-  // Obtener todos los permisos de repuestos
   const repuestosPermisos = await prisma.permisos.findMany({
     where: {
       nombre: {
@@ -26,7 +24,6 @@ async function fixAdminPermissions() {
 
   console.log(`📦 Permisos de repuestos encontrados: ${repuestosPermisos.length}`);
 
-  // Verificar cuáles permisos ya tiene el admin
   const existingPermissions = await prisma.rol_Permiso.findMany({
     where: {
       id_rol: adminRole.id_rol,
@@ -38,7 +35,6 @@ async function fixAdminPermissions() {
 
   console.log(`✅ Permisos ya asignados al admin: ${existingPermissions.length}`);
 
-  // Asignar los permisos faltantes
   let added = 0;
   for (const permiso of repuestosPermisos) {
     const exists = existingPermissions.find(ep => ep.id_permiso === permiso.id_permiso);
@@ -60,7 +56,6 @@ async function fixAdminPermissions() {
     console.log(`✅ Se agregaron ${added} permisos al admin`);
   }
 
-  // Mostrar todos los permisos del admin
   const allAdminPermissions = await prisma.rol_Permiso.findMany({
     where: { id_rol: adminRole.id_rol },
     include: { permiso: true }
@@ -79,3 +74,4 @@ async function fixAdminPermissions() {
 fixAdminPermissions()
   .catch(console.error)
   .finally(() => prisma.$disconnect());
+

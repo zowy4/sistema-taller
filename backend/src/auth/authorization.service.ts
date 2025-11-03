@@ -7,11 +7,9 @@ export class AuthorizationService {
 
   async getUserPermissions(userId: number, userType: 'empleado' | 'cliente'): Promise<string[]> {
     if (userType === 'cliente') {
-      // Los clientes tienen permisos limitados
       return ['clientes:read_own', 'vehiculos:read_own', 'ordenes:read_own'];
     }
 
-    // Para empleados, obtener permisos basados en rol y permisos específicos
     const empleado = await this.prisma.empleados.findUnique({
       where: { id_empleado: userId },
       include: {
@@ -29,19 +27,16 @@ export class AuthorizationService {
 
     const permissions: string[] = [];
 
-    // Agregar permisos basados en rol
     const rolePermissions = await this.getRolePermissions(empleado.rol);
     permissions.push(...rolePermissions);
 
-    // Agregar permisos específicos del empleado
     const specificPermissions = empleado.permisos.map(ep => ep.permiso.nombre);
     permissions.push(...specificPermissions);
 
-    return [...new Set(permissions)]; // Eliminar duplicados
+    return [...new Set(permissions)];
   }
 
   private async getRolePermissions(role: string): Promise<string[]> {
-    // Obtener permisos directamente desde la base de datos
     const roleData = await this.prisma.roles.findFirst({
       where: { nombre: role },
       include: {

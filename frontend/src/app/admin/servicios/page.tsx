@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -49,7 +49,6 @@ export default function ServiciosPage() {
     }
   };
 
-  // Eliminar servicio
   const handleDelete = async (id_servicio: number) => {
     if (!confirm('¿Seguro que deseas eliminar este servicio?')) return;
     try {
@@ -149,3 +148,4 @@ export default function ServiciosPage() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEmpleadoDto } from './dto/create-empleado.dto';
 import { UpdateEmpleadoDto } from './dto/update-empleado.dto';
@@ -9,7 +9,6 @@ export class EmpleadosService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createEmpleadoDto: CreateEmpleadoDto) {
-    // Verificar si el email ya existe
     const exists = await this.prisma.empleados.findUnique({
       where: { email: createEmpleadoDto.email },
     });
@@ -24,7 +23,6 @@ export class EmpleadosService {
     // Mapear estado string -> boolean activo (por esquema Prisma)
     const activo = (createEmpleadoDto.estado ?? 'activo') === 'activo';
 
-    // Crear el empleado (ahora con telefono y direccion)
     const empleado = await this.prisma.empleados.create({
       data: {
         nombre: createEmpleadoDto.nombre,
@@ -70,7 +68,6 @@ export class EmpleadosService {
   }
 
   async update(id: number, updateEmpleadoDto: UpdateEmpleadoDto) {
-    // Verificar que el empleado existe
     await this.findOne(id);
 
     // Construir data permitida según esquema Prisma (ahora incluye telefono y direccion)
@@ -118,7 +115,6 @@ export class EmpleadosService {
   }
 
   async remove(id: number) {
-    // Verificar que el empleado existe
     await this.findOne(id);
 
     // En lugar de eliminar, mejor desactivar
@@ -131,3 +127,4 @@ export class EmpleadosService {
     return { ...rest, estado: rest.activo ? 'activo' : 'inactivo' };
   }
 }
+

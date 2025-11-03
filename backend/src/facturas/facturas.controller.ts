@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+﻿import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { FacturasService } from './facturas.service';
 import { CreateFacturaDto } from './dto/create-factura.dto';
 import { UpdateFacturaDto } from './dto/update-factura.dto';
@@ -31,7 +31,6 @@ export class FacturasController {
     return this.facturasService.findOne(id);
   }
 
-  // Obtener factura por ID de orden
   @Get('orden/:id_orden')
   findByOrden(@Param('id_orden', ParseIntPipe) id_orden: number) {
     return this.facturasService.findByOrden(id_orden);
@@ -47,3 +46,4 @@ export class FacturasController {
     return this.facturasService.remove(id);
   }
 }
+

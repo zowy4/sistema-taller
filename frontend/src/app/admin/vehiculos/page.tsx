@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -56,7 +56,6 @@ export default function VehiculosPage() {
     }
   };
 
-  // Eliminar vehículo
   const handleDelete = async (id_vehiculo: number) => {
     if (!confirm('¿Seguro que deseas eliminar este vehículo? Esta acción no se puede deshacer.')) return;
     try {
@@ -160,3 +159,4 @@ export default function VehiculosPage() {
     </div>
   );
 }
+

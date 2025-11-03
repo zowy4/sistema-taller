@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -214,7 +214,6 @@ export default function NuevaOrdenPage() {
         return;
       }
 
-      // Obtener el id del empleado responsable (usuario actual)
       const profileRes = await fetch('http://localhost:3002/auth/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -476,3 +475,4 @@ export default function NuevaOrdenPage() {
     </div>
   );
 }
+

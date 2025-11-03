@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRepuestoDto } from './dto/create-repuesto.dto';
 import { UpdateRepuestoDto } from './dto/update-repuesto.dto';
@@ -70,7 +70,6 @@ export class RepuestosService {
    * Actualizar un repuesto
    */
   async updateRepuesto(id: number, updateRepuestoDto: UpdateRepuestoDto) {
-    // Verificar que existe
     await this.getRepuestoById(id);
 
     try {
@@ -90,7 +89,6 @@ export class RepuestosService {
    * Eliminar un repuesto
    */
   async deleteRepuesto(id: number) {
-    // Verificar que existe
     await this.getRepuestoById(id);
 
     try {
@@ -131,3 +129,4 @@ export class RepuestosService {
     });
   }
 }
+

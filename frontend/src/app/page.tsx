@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -7,7 +7,6 @@ export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Verificar si hay un token de autenticación
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
   }, []);
@@ -145,3 +144,4 @@ export default function Home() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+﻿import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -6,7 +6,6 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Iniciando seed de la base de datos...');
 
-  // Crear roles
   const roles = await Promise.all([
     prisma.roles.create({
       data: {
@@ -40,9 +39,7 @@ async function main() {
 
   console.log('✅ Roles creados:', roles.map(r => r.nombre));
 
-  // Crear permisos
   const permisos = await Promise.all([
-    // Permisos de clientes
     prisma.permisos.create({
       data: {
         nombre: 'clientes:create',
@@ -75,7 +72,6 @@ async function main() {
         accion: 'delete',
       },
     }),
-    // Permisos de vehículos
     prisma.permisos.create({
       data: {
         nombre: 'vehiculos:create',
@@ -108,7 +104,6 @@ async function main() {
         accion: 'delete',
       },
     }),
-    // Permisos de órdenes
     prisma.permisos.create({
       data: {
         nombre: 'ordenes:create',
@@ -141,7 +136,6 @@ async function main() {
         accion: 'delete',
       },
     }),
-    // Permisos de facturas
     prisma.permisos.create({
       data: {
         nombre: 'facturas:create',
@@ -174,7 +168,6 @@ async function main() {
         accion: 'delete',
       },
     }),
-    // Permisos de empleados
     prisma.permisos.create({
       data: {
         nombre: 'empleados:create',
@@ -207,7 +200,6 @@ async function main() {
         accion: 'delete',
       },
     }),
-    // Permisos de repuestos
     prisma.permisos.create({
       data: {
         nombre: 'repuestos:create',
@@ -240,7 +232,6 @@ async function main() {
         accion: 'delete',
       },
     }),
-    // Permisos de servicios
     prisma.permisos.create({
       data: {
         nombre: 'servicios:create',
@@ -273,7 +264,6 @@ async function main() {
         accion: 'delete',
       },
     }),
-    // Permisos de reportes
     prisma.permisos.create({
       data: {
         nombre: 'reportes:read',
@@ -282,7 +272,6 @@ async function main() {
         accion: 'read',
       },
     }),
-    // Permisos de configuración
     prisma.permisos.create({
       data: {
         nombre: 'configuracion:update',
@@ -295,13 +284,11 @@ async function main() {
 
   console.log('✅ Permisos creados:', permisos.length);
 
-  // Asignar permisos a roles
   const adminRole = roles.find(r => r.nombre === 'admin');
   const supervisorRole = roles.find(r => r.nombre === 'supervisor');
   const tecnicoRole = roles.find(r => r.nombre === 'tecnico');
   const recepcionRole = roles.find(r => r.nombre === 'recepcion');
 
-  // Admin: todos los permisos
   for (const permiso of permisos) {
     await prisma.rol_Permiso.create({
       data: {
@@ -311,7 +298,6 @@ async function main() {
     });
   }
 
-  // Supervisor: permisos de gestión (sin eliminar empleados)
   const supervisorPermissions = permisos.filter(p => 
     !p.nombre.includes('empleados:delete') && 
     !p.nombre.includes('configuracion:update')
@@ -363,7 +349,6 @@ async function main() {
 
   console.log('✅ Permisos asignados a roles');
 
-  // Crear empleados de ejemplo
   const hashedPassword = await bcrypt.hash('password123', 10);
 
   const empleados = await Promise.all([
@@ -411,7 +396,6 @@ async function main() {
 
   console.log('✅ Empleados creados:', empleados.map(e => `${e.nombre} ${e.apellido} (${e.email})`));
 
-  // Crear cliente de ejemplo
   const cliente = await prisma.clientes.create({
     data: {
       nombre: 'Cliente',
@@ -426,7 +410,6 @@ async function main() {
 
   console.log('✅ Cliente creado:', `${cliente.nombre} ${cliente.apellido} (${cliente.email})`);
 
-  // Crear repuestos de ejemplo
   const repuestos = await Promise.all([
     prisma.repuestos.create({
       data: {

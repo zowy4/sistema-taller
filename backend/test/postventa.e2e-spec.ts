@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+﻿import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
@@ -54,7 +54,6 @@ describe('Post-Venta E2E', () => {
 
     prisma = app.get(PrismaService);
 
-    // Crear fixtures directamente en BD
     const cliente = await prisma.clientes.create({ data: testData.cliente });
     ids.id_cliente = cliente.id_cliente;
 
@@ -72,7 +71,6 @@ describe('Post-Venta E2E', () => {
   });
 
   afterAll(async () => {
-    // Nota: Limpiar datos puede requerir borrar en orden por FK; lo omitimos para simplicidad.
     await app.close();
   });
 
@@ -143,3 +141,4 @@ describe('Post-Venta E2E', () => {
     expect(res3.body.estado).toBe('entregado');
   });
 });
+

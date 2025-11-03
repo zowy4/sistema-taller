@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFacturaDto } from './dto/create-factura.dto';
 import { UpdateFacturaDto } from './dto/update-factura.dto';
@@ -8,7 +8,6 @@ export class FacturasService {
   constructor(private prisma: PrismaService) {}
 
   async create(createFacturaDto: CreateFacturaDto) {
-    // Verificar que la orden existe
     const orden = await this.prisma.ordenesDeTrabajo.findUnique({
       where: { id_orden: createFacturaDto.id_orden },
       include: { factura: true },
@@ -18,17 +17,14 @@ export class FacturasService {
       throw new NotFoundException(`Orden con ID ${createFacturaDto.id_orden} no encontrada`);
     }
 
-    // Verificar que la orden esté completada
     if (orden.estado !== 'completado') {
       throw new BadRequestException('Solo se pueden facturar órdenes completadas');
     }
 
-    // Verificar que no tenga factura ya
     if (orden.factura) {
       throw new ConflictException('Esta orden ya tiene una factura generada');
     }
 
-    // Crear la factura
     const factura = await this.prisma.facturas.create({
       data: {
         id_orden: createFacturaDto.id_orden,
@@ -61,7 +57,6 @@ export class FacturasService {
   }
 
   async facturarOrden(id_orden: number, metodo_pago?: string) {
-    // Obtener la orden con todos sus detalles
     const orden = await this.prisma.ordenesDeTrabajo.findUnique({
       where: { id_orden },
       include: {
@@ -83,7 +78,6 @@ export class FacturasService {
       throw new ConflictException('Esta orden ya tiene una factura generada');
     }
 
-    // Calcular el monto total (usar total_real si existe, o calcular)
     let monto = orden.total_real;
     if (!monto) {
       const serviciosTotal = await this.prisma.ordenes_Servicios.aggregate({
@@ -99,7 +93,6 @@ export class FacturasService {
       monto = (serviciosTotal._sum.subtotal || 0) + (repuestosTotal._sum.subtotal || 0);
     }
 
-    // Crear la factura
     const factura = await this.prisma.facturas.create({
       data: {
         id_orden,
@@ -128,7 +121,6 @@ export class FacturasService {
       },
     });
 
-    // Actualizar estado de la orden a 'entregado' si se pagó
     if (metodo_pago) {
       await this.prisma.ordenesDeTrabajo.update({
         where: { id_orden },
@@ -242,3 +234,4 @@ export class FacturasService {
     });
   }
 }
+

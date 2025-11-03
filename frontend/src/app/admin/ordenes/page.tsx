@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -49,7 +49,6 @@ export default function OrdenesPage() {
   const fetchOrdenes = async () => {
     setLoading(true);
     try {
-      // El helper maneja el token y el 401 automáticamente
       const data = await api.get<Orden[]>('/ordenes');
       setOrdenes(data);
       setError(null);
@@ -61,7 +60,6 @@ export default function OrdenesPage() {
     }
   };
 
-  // Normaliza estados devueltos por el backend (soporta variantes como "en proceso"/"en_proceso" y "completada"/"completado")
   const normalizarEstado = (estado: string) => {
     let s = (estado || '').toLowerCase().trim().replace(/\s+/g, '_');
     if (s === 'enproceso') s = 'en_proceso';
@@ -228,3 +226,4 @@ export default function OrdenesPage() {
     </div>
   );
 }
+

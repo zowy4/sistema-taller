@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrdenDto } from './dto/create-orden.dto';
 import { UpdateOrdenDto } from './dto/update-orden.dto';
@@ -8,9 +8,7 @@ export class OrdenesService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateOrdenDto) {
-    // Usar transacción para asegurar integridad de datos
     return this.prisma.$transaction(async (prisma) => {
-      // 1. Crear la orden de trabajo
       const orden = await prisma.ordenesDeTrabajo.create({
         data: {
           id_cliente: data.id_cliente,
@@ -24,7 +22,6 @@ export class OrdenesService {
         },
       });
 
-      // 2. Crear registros en Ordenes_Servicios
       for (const servicio of data.servicios) {
         const subtotal = servicio.cantidad * servicio.precio_unitario;
         await prisma.ordenes_Servicios.create({
@@ -38,9 +35,7 @@ export class OrdenesService {
         });
       }
 
-      // 3. Crear registros en Ordenes_Repuestos y actualizar inventario
       for (const repuesto of data.repuestos) {
-        // Verificar que hay suficiente inventario
         const repuestoActual = await prisma.repuestos.findUnique({
           where: { id_repuesto: repuesto.id_repuesto },
         });
@@ -55,7 +50,6 @@ export class OrdenesService {
           );
         }
 
-        // Crear el registro de repuesto en la orden
         const subtotal = repuesto.cantidad * repuesto.precio_unitario;
         await prisma.ordenes_Repuestos.create({
           data: {
@@ -67,7 +61,6 @@ export class OrdenesService {
           },
         });
 
-        // Actualizar inventario (descontar)
         await prisma.repuestos.update({
           where: { id_repuesto: repuesto.id_repuesto },
           data: {
@@ -147,7 +140,6 @@ export class OrdenesService {
   }
 
   async update(id_orden: number, data: UpdateOrdenDto) {
-    // Actualizar solo los campos básicos de la orden (sin servicios/repuestos)
     return this.prisma.ordenesDeTrabajo.update({
       where: { id_orden },
       data: {
@@ -193,7 +185,6 @@ export class OrdenesService {
     let fecha_entrega_real = orden.fecha_entrega_real;
 
     if (estado === 'completado' && orden.estado !== 'completado') {
-      // Calcular total real automáticamente
       const serviciosTotal = await this.prisma.ordenes_Servicios.aggregate({
         where: { id_orden },
         _sum: { subtotal: true },
@@ -235,10 +226,10 @@ export class OrdenesService {
   }
 
   async remove(id_orden: number) {
-    // Nota: Eliminar una orden es complejo porque afecta inventario
     // En producción, considera marcar como "cancelada" en lugar de eliminar
     return this.prisma.ordenesDeTrabajo.delete({
       where: { id_orden },
     });
   }
 }
+

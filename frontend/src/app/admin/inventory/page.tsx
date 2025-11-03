@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -42,7 +42,6 @@ export default function InventoryPage() {
     fetchRepuestos();
   }, [fetchRepuestos]);
 
-  // old fetchRepuestos removed in favor of api helper above
 
   const handleDelete = async (id: number, nombre: string) => {
     if (!confirm(`¿Estás seguro de eliminar el repuesto "${nombre}"?`)) {
@@ -211,3 +210,4 @@ export default function InventoryPage() {
     </div>
   );
 }
+

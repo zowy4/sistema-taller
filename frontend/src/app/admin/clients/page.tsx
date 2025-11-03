@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -36,7 +36,6 @@ export default function AdminClientsPage() {
         });
 
         if (res.status === 401) {
-          // Token inválido / expirado
           localStorage.removeItem('token');
           localStorage.removeItem('access_token');
           router.push('/login');
@@ -96,7 +95,6 @@ export default function AdminClientsPage() {
         throw new Error('Error al eliminar el cliente');
       }
 
-      // Actualizar la lista eliminando el cliente
       setClients(prev => prev.filter(c => c.id_cliente !== clientId));
     } catch (err: any) {
       alert(err.message || 'Error al eliminar el cliente');
@@ -179,3 +177,4 @@ export default function AdminClientsPage() {
     </div>
   );
 }
+

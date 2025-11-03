@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 
@@ -30,7 +30,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar si hay un token guardado
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
       setToken(savedToken);
@@ -135,3 +134,4 @@ export function useAuth() {
   }
   return context;
 }
+

@@ -23,10 +23,6 @@ import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
-  /**
-   * Ruta para CREAR un cliente
-   * POST /clientes
-   */
   @Post()
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin', 'supervisor', 'recepcion')
@@ -35,10 +31,6 @@ export class ClientsController {
     return this.clientsService.createClient(createClientDto);
   }
 
-  /**
-   * Ruta para LEER todos los clientes
-   * GET /clientes
-   */
   @Get()
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin')
@@ -47,10 +39,6 @@ export class ClientsController {
     return this.clientsService.getAllClients();
   }
 
-  /**
-   * Ruta para LEER UN cliente por ID
-   * GET /clientes/:id
-   */
   @Get(':id')
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
@@ -59,10 +47,6 @@ export class ClientsController {
     return this.clientsService.getClientById(id);
   }
 
-  /**
-   * Ruta para ACTUALIZAR un cliente
-   * PATCH /clientes/:id
-   */
   @Patch(':id')
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin', 'supervisor', 'recepcion')
@@ -71,10 +55,6 @@ export class ClientsController {
     return this.clientsService.updateClient(id, updateClientDto);
   }
 
-  /**
-   * Ruta para ELIMINAR un cliente
-   * DELETE /clientes/:id
-   */
   @Delete(':id')
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin')
