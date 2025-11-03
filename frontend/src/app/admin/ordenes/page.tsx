@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
+import ErrorAlert from '@/components/ui/ErrorAlert';
+import Loader from '@/components/ui/Loader';
+import StatsCard from '@/components/ui/StatsCard';
 
 interface Orden {
   id_orden: number;
@@ -45,21 +49,8 @@ export default function OrdenesPage() {
   const fetchOrdenes = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-      const res = await fetch('http://localhost:3002/ordenes', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-      if (!res.ok) throw new Error('Error al cargar órdenes');
-      const data = await res.json();
+      // El helper maneja el token y el 401 automáticamente
+      const data = await api.get<Orden[]>('/ordenes');
       setOrdenes(data);
       setError(null);
     } catch (err: any) {
@@ -164,26 +155,14 @@ export default function OrdenesPage() {
 
       {/* Tarjetas de estadísticas */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="p-4 rounded border">
-          <div className="text-sm text-gray-500">Total</div>
-          <div className="text-2xl font-semibold">{stats.total}</div>
-        </div>
-        <div className="p-4 rounded border">
-          <div className="text-sm text-gray-500">Pendientes</div>
-          <div className="text-2xl font-semibold text-yellow-600">{stats.pendientes}</div>
-        </div>
-        <div className="p-4 rounded border">
-          <div className="text-sm text-gray-500">En proceso</div>
-          <div className="text-2xl font-semibold text-blue-600">{stats.enProceso}</div>
-        </div>
-        <div className="p-4 rounded border">
-          <div className="text-sm text-gray-500">Completadas</div>
-          <div className="text-2xl font-semibold text-green-600">{stats.completadas}</div>
-        </div>
+        <StatsCard title="Total" value={stats.total} />
+        <StatsCard title="Pendientes" value={stats.pendientes} valueClassName="text-yellow-600" />
+        <StatsCard title="En proceso" value={stats.enProceso} valueClassName="text-blue-600" />
+        <StatsCard title="Completadas" value={stats.completadas} valueClassName="text-green-600" />
       </div>
 
-      {loading && <p className="text-center py-8">Cargando órdenes...</p>}
-      {error && <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>}
+      {loading && <Loader text="Cargando órdenes..." />}
+      <ErrorAlert message={error} onClose={() => setError(null)} />
 
       {!loading && !error && (
         <div className="overflow-x-auto bg-gray-50 rounded shadow">

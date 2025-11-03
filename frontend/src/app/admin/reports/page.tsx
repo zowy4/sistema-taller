@@ -13,6 +13,10 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import { api } from "@/lib/api";
+import ErrorAlert from "@/components/ui/ErrorAlert";
+import StatsCard from "@/components/ui/StatsCard";
+import Loader from "@/components/ui/Loader";
 
 ChartJS.register(
   CategoryScale,
@@ -62,33 +66,12 @@ export default function ReportsPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          router.push("/login");
-          return;
-        }
-
-        const headers = { Authorization: `Bearer ${token}` } as HeadersInit;
-
-        const [kpisRes, ventasRes, stockRes] = await Promise.all([
-          fetch("http://localhost:3002/stats/kpis", { headers }),
-          fetch("http://localhost:3002/stats/ventas-semana", { headers }),
-          fetch("http://localhost:3002/stats/stock-bajo", { headers }),
+        // Use the centralized API helper (handles 401 and base URL)
+        const [kpisData, ventasData, stockData] = await Promise.all([
+          api.get<Kpis>("/stats/kpis"),
+          api.get<VentasSemana>("/stats/ventas-semana"),
+          api.get<RepuestoBajo[]>("/stats/stock-bajo"),
         ]);
-
-        if (kpisRes.status === 401 || ventasRes.status === 401 || stockRes.status === 401) {
-          localStorage.removeItem("token");
-          router.push("/login");
-          return;
-        }
-
-        if (!kpisRes.ok || !ventasRes.ok || !stockRes.ok) {
-          throw new Error("No se pudieron cargar las estadísticas");
-        }
-
-        const kpisData: Kpis = await kpisRes.json();
-        const ventasData: VentasSemana = await ventasRes.json();
-        const stockData: RepuestoBajo[] = await stockRes.json();
 
         setKpis(kpisData);
         setVentasSemana(ventasData);
@@ -119,33 +102,16 @@ export default function ReportsPage() {
         </button>
       </div>
 
-      {loading && <p className="py-8 text-center">Cargando estadísticas...</p>}
-      {error && (
-        <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>
-      )}
+      {loading && <Loader text="Cargando estadísticas..." />}
+      <ErrorAlert message={error} onClose={() => setError(null)} />
 
       {!loading && !error && (
         <>
           {/* KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <div className="p-4 rounded border">
-              <div className="text-sm text-gray-500">Ventas de hoy</div>
-              <div className="text-2xl font-semibold text-green-700">
-                {formatCurrency(kpis?.ventasHoy || 0)}
-              </div>
-            </div>
-            <div className="p-4 rounded border">
-              <div className="text-sm text-gray-500">Facturas pendientes</div>
-              <div className="text-2xl font-semibold text-yellow-700">
-                {kpis?.facturasPendientes ?? 0}
-              </div>
-            </div>
-            <div className="p-4 rounded border">
-              <div className="text-sm text-gray-500">Órdenes en proceso</div>
-              <div className="text-2xl font-semibold text-blue-700">
-                {kpis?.ordenesEnProceso ?? 0}
-              </div>
-            </div>
+            <StatsCard title="Ventas de hoy" value={formatCurrency(kpis?.ventasHoy || 0)} valueClassName="text-green-700" />
+            <StatsCard title="Facturas pendientes" value={kpis?.facturasPendientes ?? 0} valueClassName="text-yellow-700" />
+            <StatsCard title="Órdenes en proceso" value={kpis?.ordenesEnProceso ?? 0} valueClassName="text-blue-700" />
           </div>
 
           {/* Ventas últimos 7 días */}
