@@ -18,10 +18,11 @@ async function bootstrap() {
       credentials: true,
     });
 
-    // Listen on port 3002
-    console.log('Starting to listen on port 3002...');
-    await app.listen(3002);
-    console.log(`✅ Backend is running on: http://localhost:3002`);
+  // Listen on configurable port (default 3002)
+  const port = parseInt(process.env.PORT || '3002', 10);
+  console.log(`Starting to listen on port ${port}...`);
+  await app.listen(port);
+  console.log(`✅ Backend is running on: http://localhost:${port}`);
     console.log(`Server is ready to accept connections`);
   } catch (error) {
     console.error('❌ Error during bootstrap:', error);

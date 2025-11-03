@@ -51,12 +51,13 @@ export class AuthService {
 	}
 
 	// Create a JWT for a given user payload (expects at least id and email)
-	async generateToken(payload: { id: number; email: string; rol?: string; permissions?: string[] }) {
+	async generateToken(payload: { id: number; email: string; rol?: string; permissions?: string[]; id_empleado?: number }) {
 		const token = await this.jwtService.signAsync({ 
 			sub: payload.id, 
 			email: payload.email,
 			rol: payload.rol,
-			permissions: payload.permissions
+			permissions: payload.permissions,
+			id_empleado: payload.id_empleado
 		});
 		return { access_token: token };
 	}

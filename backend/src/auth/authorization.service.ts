@@ -41,37 +41,23 @@ export class AuthorizationService {
   }
 
   private async getRolePermissions(role: string): Promise<string[]> {
-    const rolePermissions: { [key: string]: string[] } = {
-      'admin': [
-        'clientes:create', 'clientes:read', 'clientes:update', 'clientes:delete',
-        'vehiculos:create', 'vehiculos:read', 'vehiculos:update', 'vehiculos:delete',
-        'ordenes:create', 'ordenes:read', 'ordenes:update', 'ordenes:delete',
-        'facturas:create', 'facturas:read', 'facturas:update', 'facturas:delete',
-        'empleados:create', 'empleados:read', 'empleados:update', 'empleados:delete',
-        'reportes:read', 'configuracion:update'
-      ],
-      'supervisor': [
-        'clientes:create', 'clientes:read', 'clientes:update',
-        'vehiculos:create', 'vehiculos:read', 'vehiculos:update',
-        'ordenes:create', 'ordenes:read', 'ordenes:update',
-        'facturas:create', 'facturas:read', 'facturas:update',
-        'empleados:read', 'reportes:read'
-      ],
-      'tecnico': [
-        'clientes:read',
-        'vehiculos:read',
-        'ordenes:read', 'ordenes:update',
-        'facturas:read'
-      ],
-      'recepcion': [
-        'clientes:create', 'clientes:read', 'clientes:update',
-        'vehiculos:create', 'vehiculos:read', 'vehiculos:update',
-        'ordenes:create', 'ordenes:read', 'ordenes:update',
-        'facturas:create', 'facturas:read'
-      ]
-    };
+    // Obtener permisos directamente desde la base de datos
+    const roleData = await this.prisma.roles.findFirst({
+      where: { nombre: role },
+      include: {
+        permisos: {
+          include: {
+            permiso: true
+          }
+        }
+      }
+    });
 
-    return rolePermissions[role] || [];
+    if (!roleData) {
+      return [];
+    }
+
+    return roleData.permisos.map(rp => rp.permiso.nombre);
   }
 
   async hasPermission(userId: number, userType: 'empleado' | 'cliente', permission: string): Promise<boolean> {

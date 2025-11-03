@@ -26,7 +26,8 @@ export class AuthController {
 			id: user.id, 
 			email: user.email,
 			rol: user.rol,
-			permissions: user.permissions
+			permissions: user.permissions,
+			id_empleado: user.id_empleado || user.id // Para empleados, usar id_empleado; para clientes, usar id
 		});
 	}
 

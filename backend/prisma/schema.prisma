@@ -59,6 +59,8 @@ model Empleados {
   apellido      String
   email         String?  @unique
   password      String?
+  telefono      String?
+  direccion     String?
   rol           String   // (admin, tecnico, recepcion, supervisor)
   fecha_ingreso DateTime @default(now())
   activo        Boolean  @default(true)
