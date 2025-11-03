@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { api } from '@/lib/api';
+import Loader from '@/components/ui/Loader';
+import ErrorAlert from '@/components/ui/ErrorAlert';
 
 interface FacturaOrdenServicio {
   id: number;
@@ -68,24 +71,11 @@ export default function FacturaDetallePage() {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-      const res = await fetch(`http://localhost:3002/facturas/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-      if (!res.ok) throw new Error('Error al cargar la factura');
-      const data = await res.json();
+      const data = await api.get<Factura>(`/facturas/${id}`);
       setFactura(data);
-    } catch (e: any) {
-      setError(e.message || 'Error al cargar la factura');
+    } catch (e: unknown) {
+      const message = (e as { message?: string })?.message || 'Error al cargar la factura';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -103,11 +93,15 @@ export default function FacturaDetallePage() {
   const totalServicios = useMemo(() => (factura?.orden.servicios_asignados || []).reduce((s, it) => s + it.subtotal, 0), [factura]);
   const totalRepuestos = useMemo(() => (factura?.orden.repuestos_usados || []).reduce((s, it) => s + it.subtotal, 0), [factura]);
 
-  if (loading) return <div className="min-h-screen p-6 flex items-center justify-center">Cargando factura...</div>;
+  if (loading) return (
+    <div className="min-h-screen p-6">
+      <Loader text="Cargando factura..." />
+    </div>
+  );
   if (error) return (
     <div className="min-h-screen p-6">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>
+        <ErrorAlert message={error} />
         <button className="text-blue-600 hover:underline" onClick={() => router.back()}>← Volver</button>
       </div>
     </div>

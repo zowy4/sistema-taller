@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
+import ErrorAlert from '@/components/ui/ErrorAlert';
+import Loader from '@/components/ui/Loader';
+import StatsCard from '@/components/ui/StatsCard';
 
 interface FacturaListItem {
   id_factura: number;
@@ -24,7 +27,6 @@ export default function FacturasListPage() {
   const [error, setError] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState('');
   const [estadoPago, setEstadoPago] = useState<'todos' | 'pagado' | 'pendiente'>('todos');
-  const router = useRouter();
 
   useEffect(() => {
     fetchFacturas();
@@ -33,25 +35,12 @@ export default function FacturasListPage() {
   const fetchFacturas = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-      const res = await fetch('http://localhost:3002/facturas', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-      if (!res.ok) throw new Error('Error al cargar facturas');
-      const data = await res.json();
+      const data = await api.get<FacturaListItem[]>('/facturas');
       setFacturas(data);
       setError(null);
-    } catch (e: any) {
-      setError(e.message || 'Error al cargar facturas');
+    } catch (e: unknown) {
+      const message = (e as { message?: string })?.message || 'Error al cargar facturas';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -117,26 +106,14 @@ export default function FacturasListPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="p-4 rounded border">
-          <div className="text-sm text-gray-500">Total</div>
-          <div className="text-2xl font-semibold">{stats.total}</div>
-        </div>
-        <div className="p-4 rounded border">
-          <div className="text-sm text-gray-500">Pagadas</div>
-          <div className="text-2xl font-semibold text-green-600">{stats.pagadas}</div>
-        </div>
-        <div className="p-4 rounded border">
-          <div className="text-sm text-gray-500">Pendientes</div>
-          <div className="text-2xl font-semibold text-yellow-600">{stats.pendientes}</div>
-        </div>
-        <div className="p-4 rounded border">
-          <div className="text-sm text-gray-500">Monto total</div>
-          <div className="text-2xl font-semibold">{new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'USD' }).format(stats.montoTotal)}</div>
-        </div>
+        <StatsCard title="Total" value={stats.total} />
+        <StatsCard title="Pagadas" value={stats.pagadas} valueClassName="text-green-600" />
+        <StatsCard title="Pendientes" value={stats.pendientes} valueClassName="text-yellow-600" />
+        <StatsCard title="Monto total" value={new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'USD' }).format(stats.montoTotal)} />
       </div>
 
-      {loading && <p className="text-center py-8">Cargando facturas...</p>}
-      {error && <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>}
+      {loading && <Loader text="Cargando facturas..." />}
+      <ErrorAlert message={error} onClose={() => setError(null)} />
 
       {!loading && !error && (
         <div className="overflow-x-auto bg-gray-50 rounded shadow">
