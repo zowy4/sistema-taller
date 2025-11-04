@@ -1,28 +1,35 @@
 datasource db {
   
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL") // Esto se carga desde un archivo .env
 }
 
 generator client {
   provider = "prisma-client-js"
 }
 
+
+// Modelo basado en tu tabla "Clientes"
 model Clientes {
   id_cliente  Int      @id @default(autoincrement())
   nombre      String
   apellido    String
-  empresa     String?
+  empresa     String? // El '?' significa que es nullable (opcional)
   telefono    String
-  email       String   @unique
-  password    String?
+  email       String   @unique // Buena práctica hacer el email único
+  password    String?  // contraseña hasheada (nullable para compatibilidad)
   direccion   String
-  fecha_alta  DateTime @default(now())
+  fecha_alta  DateTime @default(now()) // Se genera automáticamente
 
+  // --- Relaciones ---
+  // Un cliente puede tener múltiples vehículos 
   vehiculos   Vehiculos[]
+  
+  // Un cliente puede tener múltiples órdenes de trabajo
   ordenes_trabajo OrdenesDeTrabajo[]
 }
 
+// Modelo basado en tu tabla "Vehículos"
 model Vehiculos {
   id_vehiculo Int      @id @default(autoincrement())
   placa       String   @unique
@@ -32,13 +39,20 @@ model Vehiculos {
   anio        Int
   detalles    String?
 
-  id_cliente  Int
+  // --- Relaciones (la FK) ---
+  id_cliente  Int // El campo de la clave foránea
+  
+  // La definición de la relación con Prisma
   cliente     Clientes @relation(fields: [id_cliente], references: [id_cliente])
 
+  // Un vehículo puede estar en múltiples órdenes de trabajo
   ordenes_trabajo OrdenesDeTrabajo[]
+  
+  // Relación con el historial
   historial Historial_Vehiculo[]
 }
 
+// Modelo basado en tu tabla "Empleados"
 model Empleados {
   id_empleado   Int      @id @default(autoincrement())
   nombre        String
@@ -47,23 +61,28 @@ model Empleados {
   password      String?
   telefono      String?
   direccion     String?
-  rol           String
+  rol           String   // (admin, tecnico, recepcion, supervisor)
   fecha_ingreso DateTime @default(now())
   activo        Boolean  @default(true)
 
+  // Relación: Un empleado puede estar a cargo de muchas órdenes
   ordenes_responsable OrdenesDeTrabajo[]
+  
+  // Relación con permisos
   permisos      Empleado_Permiso[]
 }
 
+// Modelo basado en tu tabla "Órdenes de Trabajo"
 model OrdenesDeTrabajo {
   id_orden                Int      @id @default(autoincrement())
   fecha_apertura          DateTime @default(now())
   fecha_entrega_estimada  DateTime
-  fecha_entrega_real      DateTime?
-  estado                  String
+  fecha_entrega_real      DateTime? // nullable
+  estado                  String    // (pendiente, en proceso, etc)
   total_estimado          Float
-  total_real              Float?
+  total_real              Float?    // nullable
   
+  // --- Relaciones (FKs) ---
   id_cliente  Int
   cliente     Clientes @relation(fields: [id_cliente], references: [id_cliente])
 
@@ -73,11 +92,20 @@ model OrdenesDeTrabajo {
   id_empleado_responsable Int
   empleado_responsable  Empleados @relation(fields: [id_empleado_responsable], references: [id_empleado])
 
+  // Relaciones "muchos a muchos" (tablas pivote)
   servicios_asignados Ordenes_Servicios[]
   repuestos_usados    Ordenes_Repuestos[]
-  factura     Facturas?
+
+  // Relación a Facturas
+  factura     Facturas? // Una orden puede tener una factura
+
+  // Relación con el historial
   historial   Historial_Vehiculo[]
 }
+
+
+// --- Modelos para el resto de tus tablas ---
+// (He incluido el esquema completo basado en tu diseño)
 
 model Repuestos {
   id_repuesto         Int      @id @default(autoincrement())
@@ -88,6 +116,7 @@ model Repuestos {
   precio_unitario     Float
   nivel_minimo_alerta Int
 
+  // Relación: Un repuesto puede estar en muchas órdenes
   ordenes_donde_usa   Ordenes_Repuestos[]
 }
 
@@ -98,50 +127,63 @@ model Servicios {
   precio_estandar Float
   activo          Boolean  @default(true)
 
+  // Relación: Un servicio puede estar en muchas órdenes
   ordenes_donde_aplica Ordenes_Servicios[]
 }
 
+// --- Tablas Pivote (Muchos a Muchos) ---
+
+// Tu tabla "Órdenes_Servicios"
 model Ordenes_Servicios {
   id          Int   @id @default(autoincrement())
   cantidad    Int
-  precio_unitario Float
+  precio_unitario Float // Precio al momento de la orden
   subtotal    Float
 
+  // Relación a Órdenes
   id_orden    Int
   orden       OrdenesDeTrabajo @relation(fields: [id_orden], references: [id_orden])
 
+  // Relación a Servicios
   id_servicio Int
   servicio    Servicios @relation(fields: [id_servicio], references: [id_servicio])
   
-  @@unique([id_orden, id_servicio])
+  @@unique([id_orden, id_servicio]) // Evita duplicados en la misma orden
 }
 
+// Tu tabla "Órdenes_Repuestos"
 model Ordenes_Repuestos {
   id          Int   @id @default(autoincrement())
   cantidad    Int
-  precio_unitario Float
+  precio_unitario Float // Precio al momento de la orden
   subtotal    Float
 
+  // Relación a Órdenes
   id_orden    Int
   orden       OrdenesDeTrabajo @relation(fields: [id_orden], references: [id_orden])
 
+  // Relación a Repuestos
   id_repuesto Int
   repuesto    Repuestos @relation(fields: [id_repuesto], references: [id_repuesto])
 
-  @@unique([id_orden, id_repuesto])
+  @@unique([id_orden, id_repuesto]) // Evita duplicados
 }
 
+// Modelo basado en tu tabla "Facturas / Pagos"
 model Facturas {
   id_factura   Int      @id @default(autoincrement())
   fecha_factura DateTime @default(now())
   monto         Float
-  estado_pago   String
+  estado_pago   String   // (pagada, pendiente)
   metodo_pago   String?
 
-  id_orden    Int      @unique
+  // --- Relación (1 a 1 con Orden) ---
+  id_orden    Int      @unique // Asegura que una orden solo tenga una factura
   orden       OrdenesDeTrabajo @relation(fields: [id_orden], references: [id_orden])
 }
 
+// Historial (Este es opcional si ya tienes las órdenes,
+// pero lo incluyo como lo diseñaste)
 model Historial_Vehiculo {
   id_hist     Int      @id @default(autoincrement())
   fecha       DateTime
@@ -155,12 +197,15 @@ model Historial_Vehiculo {
   orden       OrdenesDeTrabajo @relation(fields: [id_orden], references: [id_orden])
 }
 
+// --- Sistema de Roles y Permisos ---
+
 model Roles {
   id_rol      Int      @id @default(autoincrement())
   nombre      String   @unique
   descripcion String?
   activo      Boolean  @default(true)
   
+  // Relación con permisos
   permisos    Rol_Permiso[]
 }
 
@@ -168,13 +213,16 @@ model Permisos {
   id_permiso  Int      @id @default(autoincrement())
   nombre      String   @unique
   descripcion String?
-  modulo      String
-  accion      String
+  modulo      String   // (clientes, vehiculos, ordenes, facturas, etc)
+  accion      String   // (crear, leer, actualizar, eliminar)
   
+  // Relación con roles
   roles       Rol_Permiso[]
+  // Relación con empleados
   empleados   Empleado_Permiso[]
 }
 
+// Tabla pivote: Roles - Permisos
 model Rol_Permiso {
   id_rol      Int
   rol         Roles @relation(fields: [id_rol], references: [id_rol])
@@ -185,6 +233,7 @@ model Rol_Permiso {
   @@id([id_rol, id_permiso])
 }
 
+// Tabla pivote: Empleados - Permisos (permisos específicos por empleado)
 model Empleado_Permiso {
   id_empleado Int
   empleado    Empleados @relation(fields: [id_empleado], references: [id_empleado])

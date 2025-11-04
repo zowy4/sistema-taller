@@ -12,8 +12,10 @@ export class AuthService {
 		private readonly authorizationService: AuthorizationService,
 	) {}
 
+	// Validates a user by email + password. Returns user object or null
 	async validateUserByEmail(email: string, plainTextPassword: string) {
 
+		// Try to authenticate an employee first
 		const empleado = await this.prisma.empleados.findUnique({ where: { email } as any });
 		if (empleado && (empleado as any).password) {
 			const isMatchEmp = await bcrypt.compare(plainTextPassword, (empleado as any).password);
@@ -29,6 +31,7 @@ export class AuthService {
 			}
 		}
 
+		// Fallback to clientes
 		const cliente = await this.prisma.clientes.findUnique({ where: { email } });
 		if (cliente && (cliente as any).password) {
 			const isMatchCli = await bcrypt.compare(plainTextPassword, (cliente as any).password);
@@ -47,6 +50,7 @@ export class AuthService {
 		return null;
 	}
 
+	// Create a JWT for a given user payload (expects at least id and email)
 	async generateToken(payload: { id: number; email: string; rol?: string; permissions?: string[]; id_empleado?: number }) {
 		const token = await this.jwtService.signAsync({ 
 			sub: payload.id, 
@@ -58,6 +62,7 @@ export class AuthService {
 		return { access_token: token };
 	}
 
+	// Utility used by JwtStrategy if needed
 	async validateUserById(id: number) {
 		const empleado = await this.prisma.empleados.findUnique({ where: { id_empleado: id } as any });
 		if (empleado) {

@@ -1,46 +1,52 @@
-export const API_BASE_URL =
-  (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) ||
-  'http://localhost:3002';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
-async function request<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...(options.headers || {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...options.headers,
   };
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
   });
 
-  if (res.status === 401) {
+  if (response.status === 401) {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
-    throw new Error('No autorizado');
+    throw new Error('Unauthorized');
   }
 
-  if (!res.ok) {
-    let message = 'Error en la solicitud';
-    try {
-      const err: unknown = await res.json();
-      message = (err as { message?: string })?.message || JSON.stringify(err) || message;
-    } catch {}
-    throw new Error(message);
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error || `HTTP error! status: ${response.status}`);
   }
 
-  const text = await res.text();
-  return (text ? JSON.parse(text) : (undefined as unknown)) as T;
+  return response.json();
 }
 
 export const api = {
-  get: <T = unknown>(path: string, init: RequestInit = {}) => request<T>(path, { ...init, method: 'GET' }),
-  post: <T = unknown>(path: string, body?: unknown, init: RequestInit = {}) =>
-    request<T>(path, { ...init, method: 'POST', body: body !== undefined ? JSON.stringify(body) : undefined }),
-  patch: <T = unknown>(path: string, body?: unknown, init: RequestInit = {}) =>
-    request<T>(path, { ...init, method: 'PATCH', body: body !== undefined ? JSON.stringify(body) : undefined }),
-  delete: <T = unknown>(path: string, init: RequestInit = {}) => request<T>(path, { ...init, method: 'DELETE' }),
+  get: <T>(endpoint: string) => request<T>(endpoint, { method: 'GET' }),
+  
+  post: <T>(endpoint: string, data: unknown) =>
+    request<T>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  
+  patch: <T>(endpoint: string, data: unknown) =>
+    request<T>(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  
+  delete: <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
 };
