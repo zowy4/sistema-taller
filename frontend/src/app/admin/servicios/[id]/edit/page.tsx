@@ -1,8 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 interface Servicio {
   id_servicio: number;
@@ -12,7 +14,8 @@ interface Servicio {
   activo: boolean;
 }
 
-export default function EditarServicioPage({ params }: { params: { id: string } }) {
+export default function EditarServicioPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [servicio, setServicio] = useState<Servicio | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +24,7 @@ export default function EditarServicioPage({ params }: { params: { id: string } 
 
   useEffect(() => {
     fetchServicio();
-  }, [params.id]);
+  }, [id]);
 
   const fetchServicio = async () => {
     try {
@@ -30,7 +33,7 @@ export default function EditarServicioPage({ params }: { params: { id: string } 
         router.push('/login');
         return;
       }
-      const res = await fetch(`http://localhost:3002/servicios/${params.id}`, {
+      const res = await fetch(`${API_URL}/servicios/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.status === 401) {
@@ -72,7 +75,7 @@ export default function EditarServicioPage({ params }: { params: { id: string } 
         router.push('/login');
         return;
       }
-      const res = await fetch(`http://localhost:3002/servicios/${params.id}`, {
+      const res = await fetch(`${API_URL}/servicios/${id}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

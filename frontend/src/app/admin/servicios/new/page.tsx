@@ -1,8 +1,10 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 export default function NuevoServicioPage() {
   const router = useRouter();
@@ -23,7 +25,7 @@ export default function NuevoServicioPage() {
         router.push('/login');
         return;
       }
-      const res = await fetch('http://localhost:3002/servicios', {
+      const res = await fetch(`${API_URL}/servicios`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

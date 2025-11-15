@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
 interface Client {
   id_cliente: number;
   nombre: string;
@@ -28,7 +30,7 @@ export default function AdminClientsPage() {
 
     const fetchClients = async () => {
       try {
-        const res = await fetch('http://localhost:3002/clientes', {
+        const res = await fetch(`${API_URL}/clientes`, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -79,7 +81,7 @@ export default function AdminClientsPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:3002/clientes/${clientId}`, {
+      const response = await fetch(`${API_URL}/clientes/${clientId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  turbopack: {
-    root: 'C:\\Users\\zowya\\OneDrive\\Escritorio\\zowy\\PortafolioWeb\\formulario-react\\sistema_taller\\frontend',
-  },
+  output: 'standalone', // Necesario para Docker
 };
 
 module.exports = nextConfig;

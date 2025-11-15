@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
 interface Vehiculo {
   id_vehiculo: number;
   placa: string;
@@ -34,22 +36,32 @@ export default function VehiculosPage() {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
+        console.log('No token found, redirecting to login');
         router.push('/login');
         return;
       }
-      const res = await fetch('http://localhost:3002/vehiculos', {
+      console.log('Fetching vehiculos...');
+      const res = await fetch(`${API_URL}/vehiculos`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      console.log('Response status:', res.status);
       if (res.status === 401) {
+        console.log('Unauthorized, redirecting to login');
         localStorage.removeItem('token');
         router.push('/login');
         return;
       }
-      if (!res.ok) throw new Error('Error al cargar vehículos');
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Error response:', errorText);
+        throw new Error('Error al cargar vehículos: ' + errorText);
+      }
       const data = await res.json();
+      console.log('Vehiculos loaded:', data);
       setVehiculos(data);
       setError(null);
     } catch (err: any) {
+      console.error('Error in fetchVehiculos:', err);
       setError(err.message || 'Error al cargar vehículos');
     } finally {
       setLoading(false);
@@ -64,7 +76,7 @@ export default function VehiculosPage() {
         router.push('/login');
         return;
       }
-      const res = await fetch(`http://localhost:3002/vehiculos/${id_vehiculo}`, {
+      const res = await fetch(`${API_URL}/vehiculos/${id_vehiculo}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

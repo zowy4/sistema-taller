@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -68,7 +70,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:3002/auth/register', {
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

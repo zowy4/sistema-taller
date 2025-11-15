@@ -17,6 +17,7 @@ export class VehiculosService {
           modelo: createVehiculoDto.modelo,
           anio: createVehiculoDto.anio,
           id_cliente: createVehiculoDto.id_cliente,
+          detalles: createVehiculoDto.detalles || null,
         },
       });
     } catch (error) {
@@ -45,13 +46,28 @@ export class VehiculosService {
 
   async update(id: number, dto: UpdateVehiculoDto) {
     try {
+      // Mapear solo campos permitidos para evitar errores por propiedades desconocidas
+      const data: any = {
+        ...(dto.placa !== undefined ? { placa: dto.placa } : {}),
+        ...(dto.vin !== undefined ? { vin: dto.vin } : {}),
+        ...(dto.marca !== undefined ? { marca: dto.marca } : {}),
+        ...(dto.modelo !== undefined ? { modelo: dto.modelo } : {}),
+        ...(dto.anio !== undefined ? { anio: dto.anio } : {}),
+        ...(dto.id_cliente !== undefined ? { id_cliente: dto.id_cliente } : {}),
+        ...(dto.detalles !== undefined ? { detalles: dto.detalles ?? null } : {}),
+      };
+
       return await this.prisma.vehiculos.update({
         where: { id_vehiculo: id },
-        data: dto,
+        data,
       });
     } catch (error) {
       if (error.code === 'P2025') {
         throw new NotFoundException('Vehículo no encontrado');
+      }
+      if (error.code === 'P2002') {
+        // Conflictos de unicidad (placa, vin, etc.)
+        throw new BadRequestException('Ya existe un registro con los mismos datos únicos (placa o VIN)');
       }
       throw error;
     }

@@ -1,8 +1,10 @@
-﻿"use client";
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 interface Servicio {
   id_servicio: number;
@@ -30,7 +32,7 @@ export default function ServiciosPage() {
         router.push('/login');
         return;
       }
-      const res = await fetch('http://localhost:3002/servicios', {
+      const res = await fetch(`${API_URL}/servicios`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.status === 401) {
@@ -57,7 +59,7 @@ export default function ServiciosPage() {
         router.push('/login');
         return;
       }
-      const res = await fetch(`http://localhost:3002/servicios/${id_servicio}`, {
+      const res = await fetch(`${API_URL}/servicios/${id_servicio}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

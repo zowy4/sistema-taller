@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
 export default function NewClientPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -37,7 +39,7 @@ export default function NewClientPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:3002/clientes', {
+      const response = await fetch(`${API_URL}/clientes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

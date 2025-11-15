@@ -2,6 +2,8 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
 interface User {
   id: number;
   email: string;
@@ -53,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('http://localhost:3002/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

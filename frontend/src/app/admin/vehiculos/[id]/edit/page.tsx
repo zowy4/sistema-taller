@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 interface Cliente {
   id_cliente: number;
@@ -20,7 +22,8 @@ interface Vehiculo {
   id_cliente: number;
 }
 
-export default function EditarVehiculoPage({ params }: { params: { id: string } }) {
+export default function EditarVehiculoPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [vehiculo, setVehiculo] = useState<Vehiculo | null>(null);
@@ -31,7 +34,7 @@ export default function EditarVehiculoPage({ params }: { params: { id: string } 
   useEffect(() => {
     fetchVehiculo();
     fetchClientes();
-  }, [params.id]);
+  }, [id]);
 
   const fetchVehiculo = async () => {
     try {
@@ -40,7 +43,7 @@ export default function EditarVehiculoPage({ params }: { params: { id: string } 
         router.push('/login');
         return;
       }
-      const res = await fetch(`http://localhost:3002/vehiculos/${params.id}`, {
+      const res = await fetch(`${API_URL}/vehiculos/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.status === 401) {
@@ -66,7 +69,7 @@ export default function EditarVehiculoPage({ params }: { params: { id: string } 
         router.push('/login');
         return;
       }
-      const res = await fetch('http://localhost:3002/clientes', {
+      const res = await fetch(`${API_URL}/clientes`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.status === 401) {
@@ -86,7 +89,7 @@ export default function EditarVehiculoPage({ params }: { params: { id: string } 
     const { name, value, type } = e.target;
     setVehiculo(v => v ? ({
       ...v,
-      [name]: type === 'number' ? parseInt(value) || 0 : value
+      [name]: (type === 'number' || name === 'id_cliente' || name === 'anio') ? parseInt(value) || 0 : value
     }) : v);
   };
 
@@ -101,13 +104,23 @@ export default function EditarVehiculoPage({ params }: { params: { id: string } 
         router.push('/login');
         return;
       }
-      const res = await fetch(`http://localhost:3002/vehiculos/${params.id}`, {
+      // Enviar solo los campos permitidos
+      const payload: any = {
+        placa: vehiculo.placa,
+        vin: vehiculo.vin,
+        marca: vehiculo.marca,
+        modelo: vehiculo.modelo,
+        anio: parseInt(String(vehiculo.anio)),
+        id_cliente: parseInt(String(vehiculo.id_cliente)),
+      };
+
+      const res = await fetch(`${API_URL}/vehiculos/${id}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(vehiculo)
+        body: JSON.stringify(payload)
       });
       if (res.status === 401) {
         localStorage.removeItem('token');

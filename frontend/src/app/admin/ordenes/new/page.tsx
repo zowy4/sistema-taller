@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
 interface Cliente {
   id_cliente: number;
   nombre: string;
@@ -81,7 +83,7 @@ export default function NuevaOrdenPage() {
   const fetchClientes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:3002/clientes', {
+      const res = await fetch(`${API_URL}/clientes`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar clientes');
@@ -95,7 +97,7 @@ export default function NuevaOrdenPage() {
   const fetchVehiculos = async (id_cliente: number) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:3002/vehiculos', {
+      const res = await fetch(`${API_URL}/vehiculos`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar vehículos');
@@ -109,7 +111,7 @@ export default function NuevaOrdenPage() {
   const fetchServicios = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:3002/servicios', {
+      const res = await fetch(`${API_URL}/servicios`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar servicios');
@@ -123,7 +125,7 @@ export default function NuevaOrdenPage() {
   const fetchRepuestos = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:3002/repuestos', {
+      const res = await fetch(`${API_URL}/repuestos`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar repuestos');
@@ -214,7 +216,7 @@ export default function NuevaOrdenPage() {
         return;
       }
 
-      const profileRes = await fetch('http://localhost:3002/auth/profile', {
+      const profileRes = await fetch(`${API_URL}/auth/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!profileRes.ok) throw new Error('Error al obtener perfil');
@@ -241,7 +243,7 @@ export default function NuevaOrdenPage() {
 
       console.log('Datos de la orden a enviar:', JSON.stringify(ordenData, null, 2));
 
-      const res = await fetch('http://localhost:3002/ordenes', {
+      const res = await fetch(`${API_URL}/ordenes`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

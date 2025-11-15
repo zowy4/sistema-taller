@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
 interface Client {
   id_cliente: number;
   nombre: string;
@@ -41,7 +43,7 @@ export default function EditClientPage() {
           return;
         }
 
-        const response = await fetch(`http://localhost:3002/clientes/${clientId}`, {
+        const response = await fetch(`${API_URL}/clientes/${clientId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -95,7 +97,7 @@ export default function EditClientPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:3002/clientes/${clientId}`, {
+      const response = await fetch(`${API_URL}/clientes/${clientId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
