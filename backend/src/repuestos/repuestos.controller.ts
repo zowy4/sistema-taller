@@ -8,6 +8,7 @@ import {
   UseGuards,
   Patch,
   Delete,
+  Request,
 } from '@nestjs/common';
 import { RepuestosService } from './repuestos.service';
 import { CreateRepuestoDto } from './dto/create-repuesto.dto';
@@ -42,10 +43,17 @@ export class RepuestosController {
    */
   @Get()
   @UseGuards(RolesGuard, PermissionsGuard)
-  @Roles('admin', 'supervisor', 'tecnico')
+  @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
   @RequirePermissions('repuestos:read')
-  findAll() {
-    return this.repuestosService.getAllRepuestos();
+  async findAll(@Request() req) {
+    const repuestos = await this.repuestosService.getAllRepuestos();
+    
+    // Si el usuario es técnico o recepcionista, ocultar precio_compra
+    if (req.user?.rol === 'tecnico' || req.user?.rol === 'recepcion') {
+      return repuestos.map(({ precio_compra, ...rest }) => rest);
+    }
+    
+    return repuestos;
   }
 
   /**
@@ -54,10 +62,17 @@ export class RepuestosController {
    */
   @Get('stock-bajo')
   @UseGuards(RolesGuard, PermissionsGuard)
-  @Roles('admin', 'supervisor', 'tecnico')
+  @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
   @RequirePermissions('repuestos:read')
-  findStockBajo() {
-    return this.repuestosService.getRepuestosBajoStock();
+  async findStockBajo(@Request() req) {
+    const repuestos = await this.repuestosService.getRepuestosBajoStock();
+    
+    // Si el usuario es técnico o recepcionista, ocultar precio_compra
+    if (req.user?.rol === 'tecnico' || req.user?.rol === 'recepcion') {
+      return repuestos.map(({ precio_compra, ...rest }) => rest);
+    }
+    
+    return repuestos;
   }
 
   /**
@@ -66,10 +81,18 @@ export class RepuestosController {
    */
   @Get(':id')
   @UseGuards(RolesGuard, PermissionsGuard)
-  @Roles('admin', 'supervisor', 'tecnico')
+  @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
   @RequirePermissions('repuestos:read')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.repuestosService.getRepuestoById(id);
+  async findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    const repuesto = await this.repuestosService.getRepuestoById(id);
+    
+    // Si el usuario es técnico o recepcionista, ocultar precio_compra
+    if (req.user?.rol === 'tecnico' || req.user?.rol === 'recepcion') {
+      const { precio_compra, ...rest } = repuesto;
+      return rest;
+    }
+    
+    return repuesto;
   }
 
   /**
@@ -93,7 +116,7 @@ export class RepuestosController {
    */
   @Patch(':id/ajustar-stock')
   @UseGuards(RolesGuard, PermissionsGuard)
-  @Roles('admin', 'supervisor', 'tecnico')
+  @Roles('admin', 'supervisor')
   @RequirePermissions('repuestos:update')
   adjustStock(
     @Param('id', ParseIntPipe) id: number,

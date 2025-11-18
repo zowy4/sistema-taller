@@ -12,6 +12,9 @@ import { OrdenesModule } from './ordenes/ordenes.module';
 import { EmpleadosModule } from './empleados/empleados.module';
 import { FacturasModule } from './facturas/facturas.module';
 import { StatsModule } from './stats/stats.module';
+import { ProveedoresModule } from './proveedores/proveedores.module';
+import { ComprasModule } from './compras/compras.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -28,6 +31,9 @@ import { StatsModule } from './stats/stats.module';
     EmpleadosModule,
     FacturasModule,
     StatsModule,
+    ProveedoresModule,
+    ComprasModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

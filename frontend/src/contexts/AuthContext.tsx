@@ -55,6 +55,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      // Debug: Log what we're sending
+      console.log('🔐 Frontend sending login:', {
+        url: `${API_URL}/auth/login`,
+        email,
+        emailLength: email.length,
+        emailTrimmed: email.trim(),
+        passwordLength: password.length,
+        hasSpaces: email !== email.trim() || password !== password.trim()
+      });
+      
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {

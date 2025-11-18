@@ -90,13 +90,15 @@ export class StatsService {
       nombre: string;
       descripcion: string | null;
       unidad_medida: string;
-      cantidad_existente: number;
-      precio_unitario: number;
-      nivel_minimo_alerta: number;
-    }>>`SELECT id_repuesto, nombre, descripcion, unidad_medida, cantidad_existente, precio_unitario, nivel_minimo_alerta
+      stock_actual: number;
+      precio_venta: number;
+      stock_minimo: number;
+      codigo: string;
+      precio_compra: number;
+    }>>`SELECT id_repuesto, nombre, descripcion, unidad_medida, stock_actual, precio_venta, stock_minimo, codigo, precio_compra
          FROM "Repuestos"
-         WHERE cantidad_existente <= nivel_minimo_alerta
-         ORDER BY cantidad_existente ASC`;
+         WHERE stock_actual <= stock_minimo
+         ORDER BY stock_actual ASC`;
     return rows;
   }
 }

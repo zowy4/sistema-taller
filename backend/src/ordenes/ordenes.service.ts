@@ -9,32 +9,64 @@ export class OrdenesService {
 
   async create(data: CreateOrdenDto) {
     return this.prisma.$transaction(async (prisma) => {
+      // Calcular total estimado sumando servicios y repuestos
+      let total_estimado = 0;
+
+      // Calcular total de servicios
+      for (const servicio of data.servicios) {
+        const servicioData = await prisma.servicios.findUnique({
+          where: { id_servicio: servicio.id_servicio },
+        });
+        if (!servicioData) {
+          throw new NotFoundException(`Servicio con ID ${servicio.id_servicio} no encontrado`);
+        }
+        total_estimado += servicioData.precio * servicio.cantidad;
+      }
+
+      // Calcular total de repuestos
+      for (const repuesto of data.repuestos) {
+        const repuestoData = await prisma.repuestos.findUnique({
+          where: { id_repuesto: repuesto.id_repuesto },
+        });
+        if (!repuestoData) {
+          throw new NotFoundException(`Repuesto con ID ${repuesto.id_repuesto} no encontrado`);
+        }
+        total_estimado += repuestoData.precio_venta * repuesto.cantidad;
+      }
+
       const orden = await prisma.ordenesDeTrabajo.create({
         data: {
           id_cliente: data.id_cliente,
           id_vehiculo: data.id_vehiculo,
-          id_empleado_responsable: data.id_empleado_responsable,
-          fecha_entrega_estimada: new Date(data.fecha_entrega_estimada),
-          fecha_entrega_real: data.total_real ? new Date() : null,
-          estado: data.estado,
-          total_estimado: data.total_estimado,
-          total_real: data.total_real || null,
+          notas: data.notas,
+          estado: 'pendiente',
+          total_estimado,
         },
       });
 
+      // Crear registros de servicios
       for (const servicio of data.servicios) {
-        const subtotal = servicio.cantidad * servicio.precio_unitario;
+        const servicioData = await prisma.servicios.findUnique({
+          where: { id_servicio: servicio.id_servicio },
+        });
+        
+        if (!servicioData) {
+          throw new NotFoundException(`Servicio con ID ${servicio.id_servicio} no encontrado`);
+        }
+
+        const subtotal = servicioData.precio * servicio.cantidad;
         await prisma.ordenes_Servicios.create({
           data: {
             id_orden: orden.id_orden,
             id_servicio: servicio.id_servicio,
             cantidad: servicio.cantidad,
-            precio_unitario: servicio.precio_unitario,
+            precio_unitario: servicioData.precio,
             subtotal,
           },
         });
       }
 
+      // Crear registros de repuestos y decrementar stock
       for (const repuesto of data.repuestos) {
         const repuestoActual = await prisma.repuestos.findUnique({
           where: { id_repuesto: repuesto.id_repuesto },
@@ -44,27 +76,28 @@ export class OrdenesService {
           throw new NotFoundException(`Repuesto con ID ${repuesto.id_repuesto} no encontrado`);
         }
 
-        if (repuestoActual.cantidad_existente < repuesto.cantidad) {
+        if (repuestoActual.stock_actual < repuesto.cantidad) {
           throw new BadRequestException(
-            `Stock insuficiente para ${repuestoActual.nombre}. Disponible: ${repuestoActual.cantidad_existente}, Solicitado: ${repuesto.cantidad}`
+            `Stock insuficiente para ${repuestoActual.nombre}. Disponible: ${repuestoActual.stock_actual}, Solicitado: ${repuesto.cantidad}`
           );
         }
 
-        const subtotal = repuesto.cantidad * repuesto.precio_unitario;
+        const subtotal = repuestoActual.precio_venta * repuesto.cantidad;
         await prisma.ordenes_Repuestos.create({
           data: {
             id_orden: orden.id_orden,
             id_repuesto: repuesto.id_repuesto,
             cantidad: repuesto.cantidad,
-            precio_unitario: repuesto.precio_unitario,
+            precio_unitario: repuestoActual.precio_venta,
             subtotal,
           },
         });
 
+        // Decrementar stock del repuesto
         await prisma.repuestos.update({
           where: { id_repuesto: repuesto.id_repuesto },
           data: {
-            cantidad_existente: {
+            stock_actual: {
               decrement: repuesto.cantidad,
             },
           },
@@ -116,6 +149,104 @@ export class OrdenesService {
     });
   }
 
+  async findByTecnico(id_usuario: number) {
+    return this.prisma.ordenesDeTrabajo.findMany({
+      where: {
+        id_empleado_responsable: id_usuario,
+      },
+      include: {
+        cliente: true,
+        vehiculo: true,
+        empleado_responsable: true,
+        servicios_asignados: {
+          include: {
+            servicio: true,
+          },
+        },
+        repuestos_usados: {
+          include: {
+            repuesto: true,
+          },
+        },
+      },
+      orderBy: {
+        fecha_apertura: 'desc',
+      },
+    });
+  }
+
+  async getTecnicoStats(id_usuario: number) {
+    const ahora = new Date();
+    const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    const inicioSemana = new Date();
+    inicioSemana.setDate(ahora.getDate() - 7);
+
+    const [
+      totalOrdenes,
+      ordenesCompletadas,
+      ordenesMes,
+      ordenesSemana,
+      tiempoPromedio,
+    ] = await Promise.all([
+      // Total de órdenes asignadas
+      this.prisma.ordenesDeTrabajo.count({
+        where: { id_empleado_responsable: id_usuario },
+      }),
+      // Órdenes completadas
+      this.prisma.ordenesDeTrabajo.count({
+        where: {
+          id_empleado_responsable: id_usuario,
+          estado: { in: ['completada', 'facturada'] },
+        },
+      }),
+      // Órdenes este mes
+      this.prisma.ordenesDeTrabajo.count({
+        where: {
+          id_empleado_responsable: id_usuario,
+          fecha_apertura: { gte: inicioMes },
+        },
+      }),
+      // Órdenes esta semana
+      this.prisma.ordenesDeTrabajo.count({
+        where: {
+          id_empleado_responsable: id_usuario,
+          fecha_apertura: { gte: inicioSemana },
+        },
+      }),
+      // Calcular tiempo promedio (órdenes completadas)
+      this.prisma.ordenesDeTrabajo.findMany({
+        where: {
+          id_empleado_responsable: id_usuario,
+          estado: { in: ['completada', 'facturada'] },
+          fecha_entrega_real: { not: null },
+        },
+        select: {
+          fecha_apertura: true,
+          fecha_entrega_real: true,
+        },
+      }),
+    ]);
+
+    // Calcular tiempo promedio en horas
+    let tiempoPromedioHoras = 0;
+    if (tiempoPromedio.length > 0) {
+      const tiempoTotal = tiempoPromedio.reduce((sum, orden) => {
+        const diff = new Date(orden.fecha_entrega_real!).getTime() - new Date(orden.fecha_apertura).getTime();
+        return sum + diff;
+      }, 0);
+      tiempoPromedioHoras = Math.round(tiempoTotal / tiempoPromedio.length / (1000 * 60 * 60));
+    }
+
+    return {
+      totalOrdenes,
+      ordenesCompletadas,
+      ordenesMes,
+      ordenesSemana,
+      tiempoPromedioHoras,
+      tasaCompletitud: totalOrdenes > 0 ? ((ordenesCompletadas / totalOrdenes) * 100).toFixed(1) : '0',
+    };
+  }
+
   async findOne(id_orden: number) {
     const orden = await this.prisma.ordenesDeTrabajo.findUnique({
       where: { id_orden },
@@ -140,12 +271,11 @@ export class OrdenesService {
   }
 
   async update(id_orden: number, data: UpdateOrdenDto) {
+    // Método simplificado - usa updateEstado para cambios de estado
     return this.prisma.ordenesDeTrabajo.update({
       where: { id_orden },
       data: {
-        estado: data.estado,
-        fecha_entrega_real: data.total_real ? new Date() : undefined,
-        total_real: data.total_real,
+        notas: data.notas,
       },
       include: {
         cliente: true,

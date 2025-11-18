@@ -6,6 +6,10 @@ export class CreateRepuestoDto {
   nombre: string;
 
   @IsString()
+  @IsNotEmpty()
+  codigo: string;
+
+  @IsString()
   @IsOptional()
   descripcion?: string;
 
@@ -15,13 +19,17 @@ export class CreateRepuestoDto {
 
   @IsNumber()
   @Min(0)
-  cantidad_existente: number;
+  stock_actual: number;
 
   @IsNumber()
   @Min(0)
-  precio_unitario: number;
+  stock_minimo: number;
 
   @IsNumber()
   @Min(0)
-  nivel_minimo_alerta: number;
+  precio_compra: number;
+
+  @IsNumber()
+  @Min(0)
+  precio_venta: number;
 }

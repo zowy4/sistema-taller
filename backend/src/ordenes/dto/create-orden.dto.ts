@@ -8,10 +8,6 @@ export class ServicioItemDto {
   @IsInt()
   @Min(1)
   cantidad: number;
-
-  @IsNumber()
-  @Min(0)
-  precio_unitario: number;
 }
 
 export class RepuestoItemDto {
@@ -21,10 +17,6 @@ export class RepuestoItemDto {
   @IsInt()
   @Min(1)
   cantidad: number;
-
-  @IsNumber()
-  @Min(0)
-  precio_unitario: number;
 }
 
 export class CreateOrdenDto {
@@ -34,23 +26,9 @@ export class CreateOrdenDto {
   @IsInt()
   id_vehiculo: number;
 
-  @IsInt()
-  id_empleado_responsable: number;
-
-  @IsDateString()
-  fecha_entrega_estimada: string;
-
-  @IsString()
-  estado: string; // pendiente, en proceso, completada, etc.
-
-  @IsNumber()
-  @Min(0)
-  total_estimado: number;
-
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  total_real?: number;
+  @IsString()
+  notas?: string;
 
   @IsArray()
   @ValidateNested({ each: true })

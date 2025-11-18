@@ -39,16 +39,17 @@ export class RepuestosService {
    * Obtener repuestos con stock bajo (por debajo del nivel mínimo)
    */
   async getRepuestosBajoStock() {
-    return await this.prisma.repuestos.findMany({
+    const repuestos = await this.prisma.repuestos.findMany({
       where: {
-        cantidad_existente: {
-          lte: this.prisma.repuestos.fields.nivel_minimo_alerta,
+        stock_actual: {
+          lte: this.prisma.repuestos.fields.stock_minimo,
         },
       },
       orderBy: {
-        cantidad_existente: 'asc',
+        stock_actual: 'asc',
       },
     });
+    return repuestos;
   }
 
   /**
@@ -113,18 +114,18 @@ export class RepuestosService {
   async adjustStock(id: number, adjustStockDto: AdjustStockDto) {
     const repuesto = await this.getRepuestoById(id);
 
-    const newStock = repuesto.cantidad_existente + adjustStockDto.cantidad;
+    const newStock = repuesto.stock_actual + adjustStockDto.cantidad;
 
     if (newStock < 0) {
       throw new BadRequestException(
-        `No hay suficiente stock. Stock actual: ${repuesto.cantidad_existente}`,
+        `No hay suficiente stock. Stock actual: ${repuesto.stock_actual}`,
       );
     }
 
     return await this.prisma.repuestos.update({
       where: { id_repuesto: id },
       data: {
-        cantidad_existente: newStock,
+        stock_actual: newStock,
       },
     });
   }

@@ -10,7 +10,8 @@ interface Servicio {
   id_servicio: number;
   nombre: string;
   descripcion?: string;
-  precio_estandar: number;
+  precio: number;
+  tiempo_estimado: number;
   activo: boolean;
 }
 
@@ -116,7 +117,7 @@ export default function ServiciosPage() {
                 <tr key={s.id_servicio} className="border-t hover:bg-gray-100">
                   <td className="px-4 py-2 font-medium">{s.nombre}</td>
                   <td className="px-4 py-2">{s.descripcion || '-'}</td>
-                  <td className="px-4 py-2">${s.precio_estandar.toFixed(2)}</td>
+                  <td className="px-4 py-2">${s.precio.toFixed(2)}</td>
                   <td className="px-4 py-2">{s.activo ? 'Sí' : 'No'}</td>
                   <td className="px-4 py-2">
                     <div className="flex gap-2 justify-center">

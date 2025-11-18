@@ -10,6 +10,8 @@ interface Cliente {
   id_cliente: number;
   nombre: string;
   apellido: string;
+  email: string;
+  telefono: string;
 }
 
 interface Vehiculo {
@@ -17,21 +19,24 @@ interface Vehiculo {
   placa: string;
   marca: string;
   modelo: string;
-  anio: number;
+  año: number;
+  color: string;
 }
 
 interface Servicio {
   id_servicio: number;
   nombre: string;
   descripcion?: string;
-  precio_estandar: number;
+  precio: number;
+  tiempo_estimado: number;
 }
 
 interface Repuesto {
   id_repuesto: number;
   nombre: string;
-  precio_unitario: number;
-  cantidad_existente: number;
+  codigo: string;
+  precio_venta: number;
+  stock_actual: number;
 }
 
 interface ServicioItem {
@@ -97,12 +102,12 @@ export default function NuevaOrdenPage() {
   const fetchVehiculos = async (id_cliente: number) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/vehiculos`, {
+      const res = await fetch(`${API_URL}/vehiculos/cliente/${id_cliente}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar vehículos');
       const data = await res.json();
-      setVehiculos(data.filter((v: Vehiculo & { id_cliente: number }) => v.id_cliente === id_cliente));
+      setVehiculos(data);
     } catch (err: any) {
       setError(err.message);
     }
@@ -149,8 +154,8 @@ export default function NuevaOrdenPage() {
         id_servicio: servicio.id_servicio,
         nombre: servicio.nombre,
         cantidad: 1,
-        precio_unitario: servicio.precio_estandar,
-        subtotal: servicio.precio_estandar
+        precio_unitario: servicio.precio,
+        subtotal: servicio.precio
       }]);
     }
   };
@@ -158,8 +163,8 @@ export default function NuevaOrdenPage() {
   const agregarRepuesto = (repuesto: Repuesto) => {
     const existe = repuestosCarrito.find(r => r.id_repuesto === repuesto.id_repuesto);
     if (existe) {
-      if (existe.cantidad + 1 > repuesto.cantidad_existente) {
-        alert(`Stock insuficiente para ${repuesto.nombre}. Disponible: ${repuesto.cantidad_existente}`);
+      if (existe.cantidad + 1 > repuesto.stock_actual) {
+        alert(`Stock insuficiente para ${repuesto.nombre}. Disponible: ${repuesto.stock_actual}`);
         return;
       }
       setRepuestosCarrito(repuestosCarrito.map(r => 
@@ -168,7 +173,7 @@ export default function NuevaOrdenPage() {
           : r
       ));
     } else {
-      if (repuesto.cantidad_existente < 1) {
+      if (repuesto.stock_actual < 1) {
         alert(`No hay stock disponible para ${repuesto.nombre}`);
         return;
       }
@@ -176,8 +181,8 @@ export default function NuevaOrdenPage() {
         id_repuesto: repuesto.id_repuesto,
         nombre: repuesto.nombre,
         cantidad: 1,
-        precio_unitario: repuesto.precio_unitario,
-        subtotal: repuesto.precio_unitario
+        precio_unitario: repuesto.precio_venta,
+        subtotal: repuesto.precio_venta
       }]);
     }
   };
@@ -223,21 +228,16 @@ export default function NuevaOrdenPage() {
       const profile = await profileRes.json();
 
       const ordenData = {
-        id_cliente: Number(clienteSeleccionado) || 0,
-        id_vehiculo: Number(vehiculoSeleccionado) || 0,
-        id_empleado_responsable: Number(profile.id_empleado) || 0,
-        fecha_entrega_estimada: fechaEntrega,
-        estado,
-        total_estimado: Number(calcularTotal()) || 0,
+        id_cliente: Number(clienteSeleccionado),
+        id_vehiculo: Number(vehiculoSeleccionado),
+        notas: `Fecha entrega: ${fechaEntrega}`,
         servicios: serviciosCarrito.map(s => ({
-          id_servicio: Number(s.id_servicio) || 0,
-          cantidad: Number(s.cantidad) || 1,
-          precio_unitario: Number(s.precio_unitario) || 0
+          id_servicio: Number(s.id_servicio),
+          cantidad: Number(s.cantidad)
         })),
         repuestos: repuestosCarrito.map(r => ({
-          id_repuesto: Number(r.id_repuesto) || 0,
-          cantidad: Number(r.cantidad) || 1,
-          precio_unitario: Number(r.precio_unitario) || 0
+          id_repuesto: Number(r.id_repuesto),
+          cantidad: Number(r.cantidad)
         }))
       };
 
@@ -318,7 +318,7 @@ export default function NuevaOrdenPage() {
                     <option value={0}>Seleccione un vehículo</option>
                     {vehiculos.map(v => (
                       <option key={v.id_vehiculo} value={v.id_vehiculo}>
-                        {v.placa} - {v.marca} {v.modelo} ({v.anio})
+                        {v.placa} - {v.marca} {v.modelo} ({v.año})
                       </option>
                     ))}
                   </select>
@@ -358,7 +358,7 @@ export default function NuevaOrdenPage() {
                   <div key={s.id_servicio} className="flex justify-between items-center bg-white p-3 rounded border">
                     <div>
                       <p className="font-medium">{s.nombre}</p>
-                      <p className="text-sm text-gray-600">${s.precio_estandar.toFixed(2)}</p>
+                      <p className="text-sm text-gray-600">${s.precio.toFixed(2)}</p>
                     </div>
                     <button 
                       onClick={() => agregarServicio(s)} 
@@ -379,12 +379,13 @@ export default function NuevaOrdenPage() {
                   <div key={r.id_repuesto} className="flex justify-between items-center bg-white p-3 rounded border">
                     <div>
                       <p className="font-medium">{r.nombre}</p>
-                      <p className="text-sm text-gray-600">${r.precio_unitario.toFixed(2)} - Stock: {r.cantidad_existente}</p>
+                      <p className="text-xs text-gray-500">Código: {r.codigo}</p>
+                      <p className="text-sm text-gray-600">${r.precio_venta.toFixed(2)} - Stock: {r.stock_actual}</p>
                     </div>
                     <button 
                       onClick={() => agregarRepuesto(r)} 
-                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
-                      disabled={r.cantidad_existente === 0}
+                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm disabled:bg-gray-400"
+                      disabled={r.stock_actual === 0}
                     >
                       + Agregar
                     </button>

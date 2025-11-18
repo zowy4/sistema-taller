@@ -45,14 +45,14 @@ export default function LoginPage() {
       const success = await login(formData.email, formData.password);
       
       if (success) {
-        // Si tiene rol admin -> /admin, tecnico -> /tecnico, sino dashboard genérico
+        // Redirigir según el rol del usuario
         const raw = localStorage.getItem('token');
         try {
           if (raw) {
             const payload = JSON.parse(atob(raw.split('.')[1]));
             const rol = payload.rol as string | undefined;
-            if (rol === 'admin') {
-              router.push('/admin');
+            if (rol === 'admin' || rol === 'supervisor' || rol === 'recepcion') {
+              router.push('/admin/dashboard');
             } else if (rol === 'tecnico') {
               router.push('/tecnico');
             } else {

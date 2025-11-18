@@ -85,4 +85,55 @@ export class VehiculosService {
       throw error;
     }
   }
+
+  async getHistorial(id: number) {
+    // Verificar que el vehículo existe
+    const vehiculo = await this.prisma.vehiculos.findUnique({
+      where: { id_vehiculo: id },
+    });
+    
+    if (!vehiculo) {
+      throw new NotFoundException('Vehículo no encontrado');
+    }
+
+    // Obtener todas las órdenes del vehículo con información completa
+    const ordenes = await this.prisma.ordenesDeTrabajo.findMany({
+      where: { id_vehiculo: id },
+      include: {
+        servicios_asignados: {
+          include: {
+            servicio: {
+              select: {
+                nombre: true,
+                descripcion: true,
+              },
+            },
+          },
+        },
+        repuestos_usados: {
+          include: {
+            repuesto: {
+              select: {
+                nombre: true,
+                codigo: true,
+              },
+            },
+          },
+        },
+        empleado_responsable: {
+          select: {
+            nombre: true,
+            apellido: true,
+          },
+        },
+      },
+      orderBy: { fecha_apertura: 'desc' },
+    });
+
+    // Mapear el resultado para que sea compatible con el frontend
+    return ordenes.map(orden => ({
+      ...orden,
+      tecnico: orden.empleado_responsable,
+    }));
+  }
 }

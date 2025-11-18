@@ -495,6 +495,42 @@ async function main() {
 
   console.log('✅ Repuestos creados:', repuestos.length);
 
+  // Crear proveedores de prueba
+  const proveedores = await Promise.all([
+    prisma.proveedores.create({
+      data: {
+        nombre: 'AutoPartes SA',
+        empresa: 'AutoPartes Sociedad Anónima',
+        telefono: '+1234567890',
+        email: 'ventas@autopartes.com',
+        direccion: 'Calle Principal 123, Ciudad',
+        activo: true,
+      },
+    }),
+    prisma.proveedores.create({
+      data: {
+        nombre: 'Repuestos Express',
+        empresa: 'Repuestos Express LTDA',
+        telefono: '+1234567891',
+        email: 'contacto@repuestosexpress.com',
+        direccion: 'Avenida Comercial 456, Ciudad',
+        activo: true,
+      },
+    }),
+    prisma.proveedores.create({
+      data: {
+        nombre: 'Lubricantes del Norte',
+        empresa: 'Lubricantes del Norte SRL',
+        telefono: '+1234567892',
+        email: 'info@lubricantesnorte.com',
+        direccion: 'Zona Industrial 789, Ciudad',
+        activo: true,
+      },
+    }),
+  ]);
+
+  console.log('✅ Proveedores creados:', proveedores.length);
+
   console.log('🎉 Seed completado exitosamente!');
   console.log('\n📋 Credenciales de prueba:');
   console.log('👤 Admin: admin@taller.com / password123');

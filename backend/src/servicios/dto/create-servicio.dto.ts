@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, Min, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsNumber, Min, IsBoolean, IsInt } from 'class-validator';
 
 export class CreateServicioDto {
   @IsString()
@@ -10,7 +10,11 @@ export class CreateServicioDto {
 
   @IsNumber()
   @Min(0)
-  precio_estandar: number;
+  precio: number;
+
+  @IsInt()
+  @Min(1)
+  tiempo_estimado: number; // minutos
 
   @IsOptional()
   @IsBoolean()

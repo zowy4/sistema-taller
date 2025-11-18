@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import ErrorAlert from '@/components/ui/ErrorAlert';
 import Loader from '@/components/ui/Loader';
 import StatsCard from '@/components/ui/StatsCard';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Orden {
   id_orden: number;
@@ -36,11 +37,14 @@ interface Orden {
 type EstadoFiltro = 'todos' | 'pendiente' | 'en_proceso' | 'completado' | 'entregado' | 'cancelado';
 
 export default function OrdenesPage() {
+  const { user } = useAuth();
   const [ordenes, setOrdenes] = useState<Orden[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro>('todos');
+
+  const isRecepcion = user?.rol === 'recepcion';
 
   useEffect(() => {
     fetchOrdenes();
@@ -57,6 +61,19 @@ export default function OrdenesPage() {
       setError(message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const cambiarEstado = async (id_orden: number, nuevoEstado: string) => {
+    if (!confirm(`¿Cambiar estado a "${nuevoEstado}"?`)) return;
+    
+    try {
+      await api.patch(`/ordenes/${id_orden}/estado`, { estado: nuevoEstado });
+      await fetchOrdenes(); // Recargar lista
+      alert('✅ Estado actualizado correctamente');
+    } catch (err: unknown) {
+      const message = (err as { message?: string })?.message || 'Error al cambiar estado';
+      alert('❌ ' + message);
     }
   };
 
@@ -201,13 +218,53 @@ export default function OrdenesPage() {
                     )}
                   </td>
                   <td className="px-4 py-2">
-                    <div className="flex gap-2 justify-center">
+                    <div className="flex gap-2 justify-center flex-wrap">
                       <Link
                         href={`/admin/ordenes/${o.id_orden}`}
                         className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors text-sm"
                       >
                         👁️ Ver
                       </Link>
+                      
+                      {/* Botón Iniciar Trabajo - Solo admin/supervisor/técnico */}
+                      {!isRecepcion && normalizarEstado(o.estado) === 'pendiente' && (
+                        <button
+                          onClick={() => cambiarEstado(o.id_orden, 'en_proceso')}
+                          className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
+                        >
+                          ▶️ Iniciar
+                        </button>
+                      )}
+                      
+                      {/* Botón Completar - Solo admin/supervisor/técnico */}
+                      {!isRecepcion && normalizarEstado(o.estado) === 'en_proceso' && (
+                        <button
+                          onClick={() => cambiarEstado(o.id_orden, 'completado')}
+                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors text-sm"
+                        >
+                          ✓ Completar
+                        </button>
+                      )}
+                      
+                      {/* Botón Facturar - Todos pueden facturar */}
+                      {normalizarEstado(o.estado) === 'completado' && !o.factura && (
+                        <Link
+                          href={`/admin/facturas/new?orden=${o.id_orden}`}
+                          className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 transition-colors text-sm"
+                        >
+                          💰 Facturar
+                        </Link>
+                      )}
+                      
+                      {/* Botón Cancelar - Recepción solo puede cancelar */}
+                      {(normalizarEstado(o.estado) === 'pendiente' || normalizarEstado(o.estado) === 'en_proceso') && (
+                        <button
+                          onClick={() => cambiarEstado(o.id_orden, 'cancelado')}
+                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors text-sm"
+                        >
+                          ✕ Cancelar
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

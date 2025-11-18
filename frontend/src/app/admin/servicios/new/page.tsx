@@ -34,7 +34,8 @@ export default function NuevoServicioPage() {
         body: JSON.stringify({
           nombre,
           descripcion: descripcion || undefined,
-          precio_estandar: parseFloat(precio),
+          precio: parseFloat(precio),
+          tiempo_estimado: 60, // Por defecto 60 minutos
           activo
         })
       });

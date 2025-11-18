@@ -15,7 +15,7 @@ export class VehiculosController {
 
   @Post()
   @UseGuards(RolesGuard, PermissionsGuard)
-  @Roles('admin', 'supervisor')
+  @Roles('admin', 'supervisor', 'recepcion')
   @RequirePermissions('vehiculos:create')
   create(@Body() createVehiculoDto: CreateVehiculoDto) {
     return this.vehiculosService.create(createVehiculoDto);
@@ -23,7 +23,7 @@ export class VehiculosController {
 
   @Get()
   @UseGuards(RolesGuard, PermissionsGuard)
-  @Roles('admin', 'supervisor', 'tecnico')
+  @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
   @RequirePermissions('vehiculos:read')
   findAll() {
     return this.vehiculosService.findAll();
@@ -31,15 +31,23 @@ export class VehiculosController {
 
   @Get(':id')
   @UseGuards(RolesGuard, PermissionsGuard)
-  @Roles('admin', 'supervisor', 'tecnico')
+  @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
   @RequirePermissions('vehiculos:read')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.vehiculosService.findOne(id);
   }
 
+  @Get(':id/historial')
+  @UseGuards(RolesGuard, PermissionsGuard)
+  @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
+  @RequirePermissions('vehiculos:read')
+  getHistorial(@Param('id', ParseIntPipe) id: number) {
+    return this.vehiculosService.getHistorial(id);
+  }
+
   @Patch(':id')
   @UseGuards(RolesGuard, PermissionsGuard)
-  @Roles('admin', 'supervisor')
+  @Roles('admin', 'supervisor', 'recepcion')
   @RequirePermissions('vehiculos:update')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateVehiculoDto) {
     return this.vehiculosService.update(id, dto);

@@ -1,26 +1,26 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database - COMENTADO: Usando base de datos local del host
-  # postgres:
-  #   image: postgres:16-alpine
-  #   container_name: taller_postgres
-  #   restart: unless-stopped
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: zowy3427
-  #     POSTGRES_DB: taller_db
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   networks:
-  #     - taller_network
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: taller_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: zowy3427
+      POSTGRES_DB: taller_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - taller_network
 
   # NestJS Backend API
   backend:
@@ -29,16 +29,19 @@ services:
       dockerfile: Dockerfile
     container_name: taller_backend
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
-      # Usar host.docker.internal para conectar a PostgreSQL en el host
-      DATABASE_URL: postgresql://postgres:zowy3427@host.docker.internal:5432/taller_db
+      # Conectar al servicio postgres dentro de Docker
+      DATABASE_URL: postgresql://postgres:zowy3427@postgres:5432/taller_db
       JWT_SECRET: tu-secreto-super-seguro-cambialo-en-produccion-12345
       JWT_EXPIRATION: 7d
       NODE_ENV: production
     ports:
       - "3002:3002"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - taller_network
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3002 || exit 1"]
       interval: 30s
@@ -62,3 +65,13 @@ services:
       NEXT_PUBLIC_API_URL: http://localhost:3002
     ports:
       - "3000:3000"
+    networks:
+      - taller_network
+
+networks:
+  taller_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

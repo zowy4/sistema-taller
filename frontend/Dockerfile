@@ -36,7 +36,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Copiar archivos necesarios para standalone
-COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/next.config.* ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static

@@ -1,0 +1,210 @@
+{
+  "info": {
+    "name": "Sistema Taller - Órdenes de Trabajo",
+    "_postman_id": "sistema-taller-ordenes",
+    "description": "Colección de ejemplos para probar el módulo de órdenes de trabajo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Autenticación",
+      "item": [
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@taller.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3002/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3002",
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Órdenes de Trabajo",
+      "item": [
+        {
+          "name": "Crear Orden Completa",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_cliente\": 1,\n  \"id_vehiculo\": 1,\n  \"id_empleado_responsable\": 2,\n  \"estado\": \"pendiente\",\n  \"fecha_entrega_estimada\": \"2025-11-20T18:00:00.000Z\",\n  \"total_estimado\": 1400,\n  \"servicios\": [\n    {\n      \"id_servicio\": 1,\n      \"cantidad\": 1,\n      \"precio_unitario\": 500\n    }\n  ],\n  \"repuestos\": [\n    {\n      \"id_repuesto\": 1,\n      \"cantidad\": 2,\n      \"precio_unitario\": 150\n    },\n    {\n      \"id_repuesto\": 2,\n      \"cantidad\": 1,\n      \"precio_unitario\": 750\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3002/ordenes",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3002",
+              "path": ["ordenes"]
+            }
+          }
+        },
+        {
+          "name": "Listar Órdenes",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3002/ordenes",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3002",
+              "path": ["ordenes"]
+            }
+          }
+        },
+        {
+          "name": "Ver Orden por ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3002/ordenes/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3002",
+              "path": ["ordenes", "1"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Estado de Orden",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"en_proceso\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3002/ordenes/1/estado",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3002",
+              "path": ["ordenes", "1", "estado"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Repuestos",
+      "item": [
+        {
+          "name": "Listar Repuestos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3002/repuestos",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3002",
+              "path": ["repuestos"]
+            }
+          }
+        },
+        {
+          "name": "Repuestos con Stock Bajo",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3002/repuestos/stock-bajo",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3002",
+              "path": ["repuestos", "stock-bajo"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
