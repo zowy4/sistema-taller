@@ -1,38 +1,36 @@
 /**
- * Servicios API para Repuestos
+ * Servicio de Repuestos (Inventario)
+ * 
+ * Centraliza todas las peticiones relacionadas con repuestos e inventario.
+ * Este módulo es crítico porque maneja el control de stock del taller.
+ * 
+ * Funcionalidades especiales:
+ * - Ajuste de stock (+/-) para entrada/salida de piezas
+ * - Cálculo de margen de ganancia (precio_venta - precio_compra)
+ * - Alertas de stock bajo
+ * - Gestión de ubicaciones de almacén
  */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
-export interface Repuesto {
-  id_repuesto: number;
-  nombre: string;
-  descripcion?: string;
-  codigo: string;
-  marca?: string;
-  stock_actual: number;
-  stock_minimo: number;
-  precio_compra: number;
-  precio_venta: number;
-  id_proveedor?: number;
-  ubicacion?: string;
-  activo: boolean;
-  fecha_actualizacion: string;
-  proveedor?: {
-    nombre: string;
-    contacto: string;
-  };
+import { Repuesto, CreateRepuestoDto } from '@/types';
+
+/**
+ * Interfaz para ajuste de stock
+ * Permite sumar o restar unidades del inventario
+ */
+export interface AjusteStockDto {
+  cantidad: number; // Positivo para entrada, negativo para salida
+  motivo?: string;  // Razón del ajuste (ej: "Compra", "Venta", "Pérdida")
 }
 
-export interface StockBajo {
-  id_repuesto: number;
-  nombre: string;
-  codigo: string;
-  stock_actual: number;
-  stock_minimo: number;
-  precio_venta: number;
-}
+// ==========================================
+// CONSULTAS (GET)
+// ==========================================
 
+/**
+ * Obtiene todos los repuestos con información de proveedor
+ */
 export async function fetchRepuestos(token: string): Promise<Repuesto[]> {
   const response = await fetch(`${API_URL}/repuestos`, {
     headers: {
@@ -41,32 +39,20 @@ export async function fetchRepuestos(token: string): Promise<Repuesto[]> {
     },
   });
 
+  if (response.status === 401) throw new Error('UNAUTHORIZED');
+  if (response.status === 403) throw new Error('FORBIDDEN');
+
   if (!response.ok) {
-    if (response.status === 401) throw new Error('UNAUTHORIZED');
-    if (response.status === 403) throw new Error('FORBIDDEN');
-    throw new Error('Error al obtener repuestos');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Error al cargar repuestos');
   }
 
   return response.json();
 }
 
-export async function fetchStockBajo(token: string): Promise<StockBajo[]> {
-  const response = await fetch(`${API_URL}/repuestos/stock-bajo`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    if (response.status === 401) throw new Error('UNAUTHORIZED');
-    if (response.status === 403) throw new Error('FORBIDDEN');
-    throw new Error('Error al obtener stock bajo');
-  }
-
-  return response.json();
-}
-
+/**
+ * Obtiene un repuesto específico por ID
+ */
 export async function fetchRepuestoById(token: string, id: number): Promise<Repuesto> {
   const response = await fetch(`${API_URL}/repuestos/${id}`, {
     headers: {
@@ -75,20 +61,48 @@ export async function fetchRepuestoById(token: string, id: number): Promise<Repu
     },
   });
 
+  if (response.status === 401) throw new Error('UNAUTHORIZED');
+  if (response.status === 403) throw new Error('FORBIDDEN');
+  if (response.status === 404) throw new Error('Repuesto no encontrado');
+
   if (!response.ok) {
-    if (response.status === 401) throw new Error('UNAUTHORIZED');
-    if (response.status === 403) throw new Error('FORBIDDEN');
-    if (response.status === 404) throw new Error('Repuesto no encontrado');
-    throw new Error('Error al obtener el repuesto');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Error al cargar repuesto');
   }
 
   return response.json();
 }
 
-export async function createRepuesto(
-  token: string,
-  data: Partial<Repuesto>
-): Promise<Repuesto> {
+/**
+ * Obtiene repuestos con stock bajo (stock_actual <= stock_minimo)
+ */
+export async function fetchStockBajo(token: string): Promise<Repuesto[]> {
+  const response = await fetch(`${API_URL}/repuestos/stock-bajo`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (response.status === 401) throw new Error('UNAUTHORIZED');
+  if (response.status === 403) throw new Error('FORBIDDEN');
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Error al cargar stock bajo');
+  }
+
+  return response.json();
+}
+
+// ==========================================
+// MUTACIONES (POST, PUT, PATCH, DELETE)
+// ==========================================
+
+/**
+ * Crea un nuevo repuesto en el inventario
+ */
+export async function createRepuesto(token: string, data: CreateRepuestoDto): Promise<Repuesto> {
   const response = await fetch(`${API_URL}/repuestos`, {
     method: 'POST',
     headers: {
@@ -98,22 +112,28 @@ export async function createRepuesto(
     body: JSON.stringify(data),
   });
 
+  if (response.status === 401) throw new Error('UNAUTHORIZED');
+  if (response.status === 403) throw new Error('FORBIDDEN');
+  if (response.status === 409) throw new Error('El código de repuesto ya existe');
+
   if (!response.ok) {
-    if (response.status === 401) throw new Error('UNAUTHORIZED');
-    if (response.status === 403) throw new Error('FORBIDDEN');
-    throw new Error('Error al crear el repuesto');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Error al crear repuesto');
   }
 
   return response.json();
 }
 
+/**
+ * Actualiza un repuesto existente
+ */
 export async function updateRepuesto(
-  token: string,
-  id: number,
-  data: Partial<Repuesto>
+  token: string, 
+  id: number, 
+  data: Partial<CreateRepuestoDto>
 ): Promise<Repuesto> {
   const response = await fetch(`${API_URL}/repuestos/${id}`, {
-    method: 'PATCH',
+    method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -121,21 +141,37 @@ export async function updateRepuesto(
     body: JSON.stringify(data),
   });
 
+  if (response.status === 401) throw new Error('UNAUTHORIZED');
+  if (response.status === 403) throw new Error('FORBIDDEN');
+  if (response.status === 404) throw new Error('Repuesto no encontrado');
+  if (response.status === 409) throw new Error('El código de repuesto ya existe');
+
   if (!response.ok) {
-    if (response.status === 401) throw new Error('UNAUTHORIZED');
-    if (response.status === 403) throw new Error('FORBIDDEN');
-    if (response.status === 404) throw new Error('Repuesto no encontrado');
-    throw new Error('Error al actualizar el repuesto');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Error al actualizar repuesto');
   }
 
   return response.json();
 }
 
+/**
+ * 🔥 FUNCIÓN CRÍTICA: Ajusta el stock de un repuesto
+ * 
+ * Esta es la función más importante del módulo porque:
+ * - Se usa constantemente en el flujo diario del taller
+ * - Debe ser RÁPIDA y con feedback instantáneo
+ * - Con mutación optimista, el usuario ve el cambio inmediatamente
+ * 
+ * @param cantidad - Positivo para entrada, negativo para salida
+ * 
+ * Ejemplos:
+ * - ajustarStock(token, 5, { cantidad: +10, motivo: "Compra" }) → Suma 10 unidades
+ * - ajustarStock(token, 5, { cantidad: -3, motivo: "Venta" }) → Resta 3 unidades
+ */
 export async function ajustarStock(
   token: string,
   id: number,
-  cantidad: number,
-  tipo: 'entrada' | 'salida'
+  ajuste: AjusteStockDto
 ): Promise<Repuesto> {
   const response = await fetch(`${API_URL}/repuestos/${id}/ajustar-stock`, {
     method: 'PATCH',
@@ -143,19 +179,29 @@ export async function ajustarStock(
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ cantidad, tipo }),
+    body: JSON.stringify(ajuste),
   });
 
+  if (response.status === 401) throw new Error('UNAUTHORIZED');
+  if (response.status === 403) throw new Error('FORBIDDEN');
+  if (response.status === 404) throw new Error('Repuesto no encontrado');
+  
+  if (response.status === 400) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Stock insuficiente');
+  }
+
   if (!response.ok) {
-    if (response.status === 401) throw new Error('UNAUTHORIZED');
-    if (response.status === 403) throw new Error('FORBIDDEN');
-    if (response.status === 404) throw new Error('Repuesto no encontrado');
-    throw new Error('Error al ajustar el stock');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Error al ajustar stock');
   }
 
   return response.json();
 }
 
+/**
+ * Elimina un repuesto del inventario
+ */
 export async function deleteRepuesto(token: string, id: number): Promise<void> {
   const response = await fetch(`${API_URL}/repuestos/${id}`, {
     method: 'DELETE',
@@ -165,10 +211,34 @@ export async function deleteRepuesto(token: string, id: number): Promise<void> {
     },
   });
 
+  if (response.status === 401) throw new Error('UNAUTHORIZED');
+  if (response.status === 403) throw new Error('FORBIDDEN');
+  if (response.status === 404) throw new Error('Repuesto no encontrado');
+  if (response.status === 409) throw new Error('No se puede eliminar: repuesto en uso en órdenes activas');
+
   if (!response.ok) {
-    if (response.status === 401) throw new Error('UNAUTHORIZED');
-    if (response.status === 403) throw new Error('FORBIDDEN');
-    if (response.status === 404) throw new Error('Repuesto no encontrado');
-    throw new Error('Error al eliminar el repuesto');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Error al eliminar repuesto');
   }
+}
+
+// ==========================================
+// UTILIDADES
+// ==========================================
+
+/**
+ * Calcula el margen de ganancia de un repuesto
+ */
+export function calcularMargenGanancia(precio_compra: number, precio_venta: number): number {
+  if (precio_compra === 0) return 0;
+  return ((precio_venta - precio_compra) / precio_compra) * 100;
+}
+
+/**
+ * Determina el estado del stock de un repuesto
+ */
+export function getStockStatus(stock_actual: number, stock_minimo: number): 'ok' | 'bajo' | 'agotado' {
+  if (stock_actual === 0) return 'agotado';
+  if (stock_actual <= stock_minimo) return 'bajo';
+  return 'ok';
 }

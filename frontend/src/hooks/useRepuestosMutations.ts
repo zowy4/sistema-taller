@@ -1,27 +1,35 @@
 /**
- * Custom Hook para Mutaciones Optimistas de Repuestos
+ * Custom Hook para Mutaciones Optimistas de Repuestos (Inventario)
+ * 
+ * Este hook es especial porque maneja la funcionalidad más crítica del taller:
+ * el ajuste de stock en tiempo real.
+ * 
+ * 🔥 AJUSTE DE STOCK OPTIMISTA:
+ * Cuando un técnico añade o quita piezas del inventario, la UI se actualiza
+ * INSTANTÁNEAMENTE sin esperar al servidor. Si el servidor falla, se revierte
+ * automáticamente. Esto es crucial para mantener un flujo de trabajo rápido.
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { Repuesto, CreateRepuestoDto } from '@/types';
 import { 
-  Repuesto, 
   createRepuesto, 
   updateRepuesto, 
+  deleteRepuesto,
   ajustarStock,
-  deleteRepuesto 
+  AjusteStockDto,
 } from '@/services/repuestos.service';
 
 interface UpdateRepuestoParams {
   id: number;
-  data: Partial<Repuesto>;
+  data: Partial<CreateRepuestoDto>;
 }
 
 interface AjustarStockParams {
   id: number;
-  cantidad: number;
-  tipo: 'entrada' | 'salida';
+  ajuste: AjusteStockDto;
 }
 
 export function useRepuestosMutations() {
@@ -33,7 +41,7 @@ export function useRepuestosMutations() {
   // MUTACIÓN: CREAR REPUESTO
   // ==========================================
   const createMutation = useMutation({
-    mutationFn: (data: Partial<Repuesto>) => {
+    mutationFn: (data: CreateRepuestoDto) => {
       if (!token) throw new Error('No token found');
       return createRepuesto(token, data);
     },
@@ -56,12 +64,13 @@ export function useRepuestosMutations() {
       return { previousRepuestos };
     },
 
-    onSuccess: () => {
+    onSuccess: (newRepuesto) => {
       queryClient.invalidateQueries({ queryKey: ['repuestos'] });
-      queryClient.invalidateQueries({ queryKey: ['alertas-stock-bajo'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stock-bajo'] });
+      queryClient.invalidateQueries({ queryKey: ['stock-bajo'] });
       
-      toast.success('Repuesto creado correctamente');
+      toast.success('Repuesto creado correctamente', {
+        description: `${newRepuesto.nombre} - ${newRepuesto.codigo}`,
+      });
     },
 
     onError: (error: Error, _newRepuesto, context) => {
@@ -78,9 +87,13 @@ export function useRepuestosMutations() {
       }
 
       if (error.message === 'FORBIDDEN') {
-        toast.error('Sin permisos', { description: 'No tienes permisos para crear repuestos' });
+        toast.error('Sin permisos', {
+          description: 'No tienes permisos para crear repuestos',
+        });
       } else {
-        toast.error('Error al crear repuesto', { description: error.message });
+        toast.error('Error al crear repuesto', {
+          description: error.message,
+        });
       }
     },
   });
@@ -114,8 +127,7 @@ export function useRepuestosMutations() {
     onSuccess: (_updatedRepuesto, variables) => {
       queryClient.invalidateQueries({ queryKey: ['repuestos'] });
       queryClient.invalidateQueries({ queryKey: ['repuesto', variables.id] });
-      queryClient.invalidateQueries({ queryKey: ['alertas-stock-bajo'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stock-bajo'] });
+      queryClient.invalidateQueries({ queryKey: ['stock-bajo'] });
       
       toast.success('Repuesto actualizado correctamente');
     },
@@ -134,39 +146,39 @@ export function useRepuestosMutations() {
       }
 
       if (error.message === 'FORBIDDEN') {
-        toast.error('Sin permisos', { description: 'No tienes permisos para editar repuestos' });
+        toast.error('Sin permisos', {
+          description: 'No tienes permisos para editar repuestos',
+        });
       } else {
-        toast.error('Error al actualizar repuesto', { description: error.message });
+        toast.error('Error al actualizar repuesto', {
+          description: error.message,
+        });
       }
     },
   });
 
   // ==========================================
-  // MUTACIÓN: AJUSTAR STOCK
+  // 🔥 MUTACIÓN CRÍTICA: AJUSTAR STOCK
   // ==========================================
   const ajustarStockMutation = useMutation({
-    mutationFn: ({ id, cantidad, tipo }: AjustarStockParams) => {
+    mutationFn: ({ id, ajuste }: AjustarStockParams) => {
       if (!token) throw new Error('No token found');
-      return ajustarStock(token, id, cantidad, tipo);
+      return ajustarStock(token, id, ajuste);
     },
 
-    onMutate: async ({ id, cantidad, tipo }) => {
+    onMutate: async ({ id, ajuste }) => {
       await queryClient.cancelQueries({ queryKey: ['repuestos'] });
-      await queryClient.cancelQueries({ queryKey: ['alertas-stock-bajo'] });
 
       const previousRepuestos = queryClient.getQueryData<Repuesto[]>(['repuestos']);
 
-      // Actualización optimista del stock
+      // 🎯 ACTUALIZACIÓN OPTIMISTA DEL STOCK
       queryClient.setQueryData<Repuesto[]>(['repuestos'], (old = []) =>
         old.map((repuesto) => {
           if (repuesto.id_repuesto === id) {
-            const nuevoStock = tipo === 'entrada'
-              ? repuesto.stock_actual + cantidad
-              : repuesto.stock_actual - cantidad;
-            
+            const nuevoStock = repuesto.stock_actual + ajuste.cantidad;
             return {
               ...repuesto,
-              stock_actual: Math.max(0, nuevoStock), // No permitir stock negativo
+              stock_actual: Math.max(0, nuevoStock),
               fecha_actualizacion: new Date().toISOString(),
             };
           }
@@ -177,16 +189,20 @@ export function useRepuestosMutations() {
       return { previousRepuestos };
     },
 
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['repuestos'] });
-      queryClient.invalidateQueries({ queryKey: ['alertas-stock-bajo'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stock-bajo'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] });
+      queryClient.invalidateQueries({ queryKey: ['repuesto', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['stock-bajo'] });
       
-      toast.success('Stock ajustado correctamente');
+      const tipo = variables.ajuste.cantidad > 0 ? 'Entrada' : 'Salida';
+      const cantidad = Math.abs(variables.ajuste.cantidad);
+      
+      toast.success(`${tipo} de stock registrada`, {
+        description: `${data.nombre}: ${cantidad} unidad${cantidad !== 1 ? 'es' : ''} (Stock: ${data.stock_actual})`,
+      });
     },
 
-    onError: (error: Error, _variables, context) => {
+    onError: (error: Error, variables, context) => {
       if (context?.previousRepuestos) {
         queryClient.setQueryData(['repuestos'], context.previousRepuestos);
       }
@@ -199,10 +215,18 @@ export function useRepuestosMutations() {
         return;
       }
 
-      if (error.message.includes('stock insuficiente')) {
-        toast.error('Stock insuficiente', { description: 'No hay suficiente stock para realizar la operación' });
+      if (error.message.includes('insuficiente')) {
+        toast.error('Stock insuficiente', {
+          description: 'No hay suficientes unidades para realizar la salida',
+        });
+      } else if (error.message === 'FORBIDDEN') {
+        toast.error('Sin permisos', {
+          description: 'No tienes permisos para ajustar stock',
+        });
       } else {
-        toast.error('Error al ajustar stock', { description: error.message });
+        toast.error('Error al ajustar stock', {
+          description: error.message,
+        });
       }
     },
   });
@@ -230,8 +254,7 @@ export function useRepuestosMutations() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['repuestos'] });
-      queryClient.invalidateQueries({ queryKey: ['alertas-stock-bajo'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stock-bajo'] });
+      queryClient.invalidateQueries({ queryKey: ['stock-bajo'] });
       
       toast.success('Repuesto eliminado correctamente');
     },
@@ -249,10 +272,18 @@ export function useRepuestosMutations() {
         return;
       }
 
-      if (error.message.includes('referencia') || error.message.includes('órdenes')) {
-        toast.error('No se puede eliminar', { description: 'El repuesto está siendo usado en órdenes' });
+      if (error.message === 'FORBIDDEN') {
+        toast.error('Sin permisos', {
+          description: 'No tienes permisos para eliminar repuestos',
+        });
+      } else if (error.message.includes('en uso')) {
+        toast.error('No se puede eliminar', {
+          description: 'El repuesto está siendo usado en órdenes activas',
+        });
       } else {
-        toast.error('Error al eliminar repuesto', { description: error.message });
+        toast.error('Error al eliminar repuesto', {
+          description: error.message,
+        });
       }
     },
   });
@@ -260,7 +291,7 @@ export function useRepuestosMutations() {
   return {
     createMutation,
     updateMutation,
-    ajustarStockMutation,
+    ajustarStockMutation, // 🔥 La estrella del show
     deleteMutation,
   };
 }
