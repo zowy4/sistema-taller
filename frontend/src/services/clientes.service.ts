@@ -1,0 +1,159 @@
+/**
+ * Servicios API para Clientes
+ * Funciones limpias y reutilizables para fetching de datos
+ */
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
+/**
+ * Interfaz para Cliente
+ */
+export interface Cliente {
+  id_cliente: number;
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string;
+  direccion?: string;
+  activo: boolean;
+  fecha_registro: string;
+}
+
+/**
+ * Obtener todos los clientes
+ */
+export async function fetchClientes(token: string): Promise<Cliente[]> {
+  const response = await fetch(`${API_URL}/clientes`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('UNAUTHORIZED');
+    }
+    if (response.status === 403) {
+      throw new Error('FORBIDDEN');
+    }
+    throw new Error('Error al obtener clientes');
+  }
+
+  return response.json();
+}
+
+/**
+ * Obtener un cliente por ID
+ */
+export async function fetchClienteById(token: string, id: number): Promise<Cliente> {
+  const response = await fetch(`${API_URL}/clientes/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('UNAUTHORIZED');
+    }
+    if (response.status === 403) {
+      throw new Error('FORBIDDEN');
+    }
+    if (response.status === 404) {
+      throw new Error('Cliente no encontrado');
+    }
+    throw new Error('Error al obtener el cliente');
+  }
+
+  return response.json();
+}
+
+/**
+ * Crear un nuevo cliente
+ */
+export async function createCliente(
+  token: string,
+  data: Omit<Cliente, 'id_cliente' | 'fecha_registro'>
+): Promise<Cliente> {
+  const response = await fetch(`${API_URL}/clientes`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('UNAUTHORIZED');
+    }
+    if (response.status === 403) {
+      throw new Error('FORBIDDEN');
+    }
+    throw new Error('Error al crear el cliente');
+  }
+
+  return response.json();
+}
+
+/**
+ * Actualizar un cliente existente
+ */
+export async function updateCliente(
+  token: string,
+  id: number,
+  data: Partial<Omit<Cliente, 'id_cliente' | 'fecha_registro'>>
+): Promise<Cliente> {
+  const response = await fetch(`${API_URL}/clientes/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('UNAUTHORIZED');
+    }
+    if (response.status === 403) {
+      throw new Error('FORBIDDEN');
+    }
+    if (response.status === 404) {
+      throw new Error('Cliente no encontrado');
+    }
+    throw new Error('Error al actualizar el cliente');
+  }
+
+  return response.json();
+}
+
+/**
+ * Eliminar un cliente
+ */
+export async function deleteCliente(token: string, id: number): Promise<void> {
+  const response = await fetch(`${API_URL}/clientes/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('UNAUTHORIZED');
+    }
+    if (response.status === 403) {
+      throw new Error('FORBIDDEN');
+    }
+    if (response.status === 404) {
+      throw new Error('Cliente no encontrado');
+    }
+    throw new Error('Error al eliminar el cliente');
+  }
+}

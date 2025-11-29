@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+import { useQuery } from '@tanstack/react-query';
+import { fetchStockBajo } from '@/services/repuestos.service';
+import { fetchOrdenes, Orden as OrdenType } from '@/services/ordenes.service';
 
 interface RepuestoStockBajo {
   id_repuesto: number;
@@ -26,80 +27,68 @@ interface Proveedor {
   _count?: { compras: number };
 }
 
-interface Orden {
-  id_orden: number;
-  fecha_apertura: string;
-  estado: string;
-  cliente: { nombre: string };
-  vehiculo: { marca: string; modelo: string; placa: string };
-}
-
 type AlertFilter = 'todos' | 'stock' | 'proveedores' | 'ordenes';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
+async function fetchProveedores(token: string): Promise<Proveedor[]> {
+  const response = await fetch(`${API_URL}/proveedores`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) throw new Error('UNAUTHORIZED');
+    if (response.status === 403) throw new Error('FORBIDDEN');
+    throw new Error('Error al obtener proveedores');
+  }
+
+  return response.json();
+}
 
 export default function AlertasPage() {
   const router = useRouter();
-  const [stockBajo, setStockBajo] = useState<RepuestoStockBajo[]>([]);
-  const [proveedoresInactivos, setProveedoresInactivos] = useState<Proveedor[]>([]);
-  const [ordenesPendientes, setOrdenesPendientes] = useState<Orden[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<AlertFilter>('todos');
 
-  useEffect(() => {
-    fetchAlertas();
-  }, []);
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-  const fetchAlertas = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
+  const { data: stockBajo = [], isLoading: stockLoading, error: stockError } = useQuery({
+    queryKey: ['alertas-stock-bajo'],
+    queryFn: () => fetchStockBajo(token!),
+    enabled: !!token,
+    retry: 1,
+  });
 
-      const headers = { 'Authorization': `Bearer ${token}` };
+  const { data: proveedores = [], isLoading: proveedoresLoading } = useQuery({
+    queryKey: ['alertas-proveedores'],
+    queryFn: () => fetchProveedores(token!),
+    enabled: !!token,
+    retry: 1,
+  });
 
-      const [stockRes, provRes, ordenesRes] = await Promise.all([
-        fetch(`${API_URL}/repuestos/stock-bajo`, { headers }),
-        fetch(`${API_URL}/proveedores`, { headers }),
-        fetch(`${API_URL}/ordenes`, { headers })
-      ]);
+  const { data: ordenes = [], isLoading: ordenesLoading } = useQuery({
+    queryKey: ['alertas-ordenes'],
+    queryFn: () => fetchOrdenes(token!),
+    enabled: !!token,
+    retry: 1,
+  });
 
-      if (stockRes.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (!stockRes.ok || !provRes.ok || !ordenesRes.ok) {
-        throw new Error('Error al cargar alertas');
-      }
-
-      const [stockData, provData, ordenesData] = await Promise.all([
-        stockRes.json(),
-        provRes.json(),
-        ordenesRes.json()
-      ]);
-
-      setStockBajo(stockData);
-
-      // Filter inactive suppliers with no recent purchases
-      const inactivos = provData.filter((p: Proveedor) => !p.activo);
-      setProveedoresInactivos(inactivos);
-
-      // Filter pending/processing orders
-      const pendientes = ordenesData.filter((o: Orden) => 
-        o.estado === 'abierta' || o.estado === 'en progreso'
-      );
-      setOrdenesPendientes(pendientes);
-
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar alertas');
-    } finally {
-      setLoading(false);
+  // Handle unauthorized errors
+  if (stockError && stockError.message === 'UNAUTHORIZED') {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      router.push('/login');
     }
-  };
+  }
+
+  const proveedoresInactivos = proveedores.filter((p: Proveedor) => !p.activo);
+  const ordenesPendientes = ordenes.filter((o: OrdenType) => 
+    o.estado === 'pendiente' || o.estado === 'en_proceso'
+  );
+
+  const loading = stockLoading || proveedoresLoading || ordenesLoading;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -153,8 +142,10 @@ export default function AlertasPage() {
           </p>
         </div>
 
-        {error && (
-          <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>
+        {stockError && (
+          <div className="bg-red-100 text-red-800 p-3 rounded mb-4">
+            {stockError instanceof Error ? stockError.message : 'Error al cargar alertas'}
+          </div>
         )}
 
         {/* Filter Tabs */}
@@ -325,17 +316,17 @@ export default function AlertasPage() {
                         Orden #{orden.id_orden}
                       </Link>
                       <p className="text-sm text-gray-600 mt-1">
-                        Cliente: {orden.cliente.nombre}
+                        Cliente: {orden.cliente?.nombre} {orden.cliente?.apellido}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Vehículo: {orden.vehiculo.marca} {orden.vehiculo.modelo} - {orden.vehiculo.placa}
+                        Vehículo: {orden.vehiculo?.marca} {orden.vehiculo?.modelo} - {orden.vehiculo?.patente}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Apertura: {formatDate(orden.fecha_apertura)}
+                        Ingreso: {formatDate(orden.fecha_ingreso)}
                       </p>
                     </div>
                     <span className={`px-3 py-1 rounded text-sm font-medium ${
-                      orden.estado === 'abierta' 
+                      orden.estado === 'pendiente' 
                         ? 'bg-blue-500 text-white'
                         : 'bg-yellow-500 text-white'
                     }`}>

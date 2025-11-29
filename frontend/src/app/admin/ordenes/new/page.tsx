@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
@@ -102,12 +103,14 @@ export default function NuevaOrdenPage() {
   const fetchVehiculos = async (id_cliente: number) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/vehiculos/cliente/${id_cliente}`, {
+      const res = await fetch(`${API_URL}/vehiculos`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al cargar vehículos');
-      const data = await res.json();
-      setVehiculos(data);
+      const allVehiculos = await res.json();
+      // Filtrar vehículos del cliente seleccionado
+      const vehiculosCliente = allVehiculos.filter((v: any) => v.id_cliente === id_cliente);
+      setVehiculos(vehiculosCliente);
     } catch (err: any) {
       setError(err.message);
     }
@@ -241,8 +244,6 @@ export default function NuevaOrdenPage() {
         }))
       };
 
-      console.log('Datos de la orden a enviar:', JSON.stringify(ordenData, null, 2));
-
       const res = await fetch(`${API_URL}/ordenes`, {
         method: 'POST',
         headers: {
@@ -259,13 +260,18 @@ export default function NuevaOrdenPage() {
       }
       if (!res.ok) {
         const errData = await res.json();
-        console.error('Error del servidor:', errData);
         throw new Error(JSON.stringify(errData) || 'Error al crear orden');
       }
-      alert('✅ Orden creada exitosamente');
+      toast.success('Orden creada exitosamente', {
+        description: 'La orden de trabajo ha sido registrada correctamente'
+      });
       router.push('/admin/ordenes');
     } catch (err: any) {
-      setError(err.message || 'Error al crear orden');
+      const errorMsg = err.message || 'Error al crear orden';
+      setError(errorMsg);
+      toast.error('Error al crear orden', {
+        description: errorMsg
+      });
     } finally {
       setSaving(false);
     }

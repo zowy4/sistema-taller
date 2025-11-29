@@ -116,7 +116,7 @@ export default function TecnicoDashboard() {
         setEstadisticas(data);
       }
     } catch (err) {
-      console.error('Error al cargar estadísticas:', err);
+      // Silently fail
     }
   };
 
@@ -165,7 +165,7 @@ export default function TecnicoDashboard() {
         }
       }
     } catch (err) {
-      console.error('Error verificando nuevas órdenes:', err);
+      // Silently fail
     }
   };
 

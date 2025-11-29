@@ -200,9 +200,15 @@ export default function OrdenesPage() {
               {ordenesFiltradas.map(o => (
                 <tr key={o.id_orden} className="border-t hover:bg-gray-100">
                   <td className="px-4 py-2 font-medium">#{o.id_orden}</td>
-                  <td className="px-4 py-2">{o.cliente.nombre} {o.cliente.apellido}</td>
-                  <td className="px-4 py-2">{o.vehiculo.placa} - {o.vehiculo.marca} {o.vehiculo.modelo}</td>
-                  <td className="px-4 py-2">{o.empleado_responsable.nombre} {o.empleado_responsable.apellido}</td>
+                  <td className="px-4 py-2">
+                    {o.cliente?.nombre || 'N/A'} {o.cliente?.apellido || ''}
+                  </td>
+                  <td className="px-4 py-2">
+                    {o.vehiculo?.placa || 'N/A'} - {o.vehiculo?.marca || ''} {o.vehiculo?.modelo || ''}
+                  </td>
+                  <td className="px-4 py-2">
+                    {o.empleado_responsable?.nombre || 'Sin asignar'} {o.empleado_responsable?.apellido || ''}
+                  </td>
                   <td className="px-4 py-2">{new Date(o.fecha_apertura).toLocaleDateString()}</td>
                   <td className="px-4 py-2">
                     <span className={`px-2 py-1 rounded text-xs font-semibold ${getEstadoColor(o.estado)}`}>

@@ -241,8 +241,6 @@ export default function NuevaOrdenPage() {
         }))
       };
 
-      console.log('Datos de la orden a enviar:', JSON.stringify(ordenData, null, 2));
-
       const res = await fetch(`${API_URL}/ordenes`, {
         method: 'POST',
         headers: {
@@ -259,7 +257,6 @@ export default function NuevaOrdenPage() {
       }
       if (!res.ok) {
         const errData = await res.json();
-        console.error('Error del servidor:', errData);
         throw new Error(JSON.stringify(errData) || 'Error al crear orden');
       }
       alert('✅ Orden creada exitosamente');

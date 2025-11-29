@@ -1,114 +1,97 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { fetchDashboardKPIs, fetchStockBajo, fetchVentasSemana } from '@/services/dashboard.service';
+import { useEffect } from 'react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-
-interface DashboardKPIs {
-  ventasMes: number;
-  ordenesMes: number;
-  totalClientes: number;
-  totalRepuestos: number;
-  valorInventario: number;
-}
+/**
+ * Dashboard con Tanstack Query
+ * 
+ * ✅ Manejo automático de estado de carga
+ * ✅ Manejo automático de errores
+ * ✅ Caché inteligente (datos persisten al navegar)
+ * ✅ Deduplicación de peticiones
+ * ✅ Revalidación automática
+ */
 
 interface RepuestoStockBajo {
   id_repuesto: number;
   nombre: string;
-  codigo: string;
+  codigo?: string;
   stock_actual: number;
   stock_minimo: number;
   precio_venta: number;
-  precio_compra: number;
-  urgencia: string;
+  urgencia?: string;
 }
 
 interface VentaSemana {
-  fecha: string;
+  dia: string;
   total: number;
-  cantidad: number;
+  ordenes: number;
 }
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
-  const [kpis, setKpis] = useState<DashboardKPIs | null>(null);
-  const [stockBajo, setStockBajo] = useState<RepuestoStockBajo[]>([]);
-  const [ventasSemana, setVentasSemana] = useState<VentaSemana[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { user, isLoading: authLoading, logout } = useAuth();
 
   const isRecepcion = user?.rol === 'recepcion';
 
+  // Obtener el token una vez
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+  // ✅ Query para KPIs del dashboard
+  const {
+    data: kpis,
+    isLoading: kpisLoading,
+    isError: kpisError,
+    error: kpisErrorDetail,
+  } = useQuery({
+    queryKey: ['dashboard-kpis'],
+    queryFn: () => fetchDashboardKPIs(token!),
+    enabled: !!token && !authLoading && !!user && !isRecepcion, // Solo ejecutar si hay token y usuario
+    retry: 1,
+  });
+
+  // ✅ Query para stock bajo
+  const {
+    data: stockBajo = [],
+    isLoading: stockLoading,
+    isError: stockError,
+  } = useQuery({
+    queryKey: ['dashboard-stock-bajo'],
+    queryFn: () => fetchStockBajo(token!),
+    enabled: !!token && !authLoading && !!user && !isRecepcion,
+    retry: 1,
+  });
+
+  // ✅ Query para ventas de la semana
+  const {
+    data: ventasSemana = [],
+    isLoading: ventasLoading,
+    isError: ventasError,
+  } = useQuery({
+    queryKey: ['dashboard-ventas-semana'],
+    queryFn: () => fetchVentasSemana(token!),
+    enabled: !!token && !authLoading && !!user && !isRecepcion,
+    retry: 1,
+  });
+
+  // Manejo de errores de autenticación
   useEffect(() => {
-    // Esperar a que el usuario esté cargado
-    if (authLoading) return;
-    
-    if (!user) {
+    if (kpisErrorDetail?.message === 'UNAUTHORIZED') {
+      logout();
       router.push('/login');
-      return;
     }
+  }, [kpisErrorDetail, logout, router]);
 
-    if (isRecepcion) {
-      setLoading(false);
-    } else {
-      fetchDashboardData();
-    }
-  }, [authLoading, user, router]);
+  // Estados combinados
+  const loading = authLoading || (kpisLoading && stockLoading && ventasLoading);
+  const hasError = kpisError || stockError || ventasError;
 
-  const fetchDashboardData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const headers = { 'Authorization': `Bearer ${token}` };
-
-      const [kpisRes, stockBajoRes, ventasRes] = await Promise.all([
-        fetch(`${API_URL}/dashboard/kpis`, { headers }),
-        fetch(`${API_URL}/dashboard/stock-bajo`, { headers }),
-        fetch(`${API_URL}/dashboard/ventas-semana`, { headers })
-      ]);
-
-      if (kpisRes.status === 401 || stockBajoRes.status === 401 || ventasRes.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (!kpisRes.ok || !stockBajoRes.ok || !ventasRes.ok) {
-        const errorDetails = [];
-        if (!kpisRes.ok) errorDetails.push(`KPIs: ${kpisRes.status}`);
-        if (!stockBajoRes.ok) errorDetails.push(`Stock: ${stockBajoRes.status}`);
-        if (!ventasRes.ok) errorDetails.push(`Ventas: ${ventasRes.status}`);
-        
-        console.error('Error en dashboard:', errorDetails.join(', '));
-        throw new Error(`Error al cargar datos del dashboard (${errorDetails.join(', ')})`);
-      }
-
-      const [kpisData, stockBajoData, ventasData] = await Promise.all([
-        kpisRes.json(),
-        stockBajoRes.json(),
-        ventasRes.json()
-      ]);
-
-      setKpis(kpisData);
-      setStockBajo(stockBajoData);
-      setVentasSemana(ventasData);
-      setError(null);
-    } catch (err: any) {
-      console.error('Error completo:', err);
-      setError(err.message || 'Error al cargar dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Funciones auxiliares
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
@@ -125,11 +108,50 @@ export default function DashboardPage() {
     });
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
-      <div className="text-gray-600">Cargando dashboard...</div>
-    </div>
-  );
+  // ✅ Loading State (Mejorado con skeleton)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="h-10 bg-gray-200 rounded w-1/3 mb-6 animate-pulse"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow p-6">
+                <div className="h-4 bg-gray-200 rounded w-2/3 mb-3 animate-pulse"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Error State (Manejo específico de errores)
+  if (hasError && !isRecepcion) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-100 border border-red-300 text-red-800 p-6 rounded-lg">
+            <h2 className="text-xl font-semibold mb-2">⚠️ Error al cargar el dashboard</h2>
+            <p className="mb-4">
+              {kpisErrorDetail?.message === 'UNAUTHORIZED' 
+                ? 'Tu sesión ha expirado. Redirigiendo al login...'
+                : kpisErrorDetail?.message === 'FORBIDDEN'
+                ? 'No tienes permisos para ver esta información.'
+                : 'Hubo un problema al cargar los datos. Por favor, intenta de nuevo.'}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              Reintentar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Vista simplificada para recepcion
   if (isRecepcion) {
@@ -210,92 +232,90 @@ export default function DashboardPage() {
     );
   }
 
-  if (error || !kpis) return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="bg-red-100 text-red-800 p-4 rounded">
-        {error || 'Error al cargar dashboard'}
-      </div>
-    </div>
-  );
-
+  // ✅ Vista Principal del Dashboard (con datos del caché)
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Dashboard - Sistema de Taller</h1>
 
-        {/* KPIs Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          {/* Ventas del Mes */}
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="text-green-100 text-sm">Ventas del Mes</p>
-                <p className="text-3xl font-bold">{formatCurrency(kpis.ventasMes)}</p>
+        {/* KPIs Grid - Con datos de Tanstack Query */}
+        {kpis && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            {/* Ventas del Mes */}
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="text-green-100 text-sm">Ingresos del Mes</p>
+                  <p className="text-3xl font-bold">{formatCurrency(kpis.ingresos_mes || 0)}</p>
+                </div>
+                <div className="text-4xl">💰</div>
               </div>
-              <div className="text-4xl">💰</div>
+              <Link href="/admin/facturas" className="text-green-100 hover:text-white text-sm mt-2 inline-block">
+                Ver facturas →
+              </Link>
             </div>
-            <Link href="/admin/ventas" className="text-green-100 hover:text-white text-sm mt-2 inline-block">
-              Ver ventas →
-            </Link>
-          </div>
 
-          {/* Órdenes del Mes */}
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="text-blue-100 text-sm">Órdenes del Mes</p>
-                <p className="text-3xl font-bold">{kpis.ordenesMes}</p>
+            {/* Órdenes Completadas */}
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="text-blue-100 text-sm">Órdenes Completadas</p>
+                  <p className="text-3xl font-bold">{kpis.ordenes_completadas || 0}</p>
+                </div>
+                <div className="text-4xl">✅</div>
               </div>
-              <div className="text-4xl">🔧</div>
+              <Link href="/admin/ordenes" className="text-blue-100 hover:text-white text-sm mt-2 inline-block">
+                Ver órdenes →
+              </Link>
             </div>
-            <Link href="/admin/ordenes" className="text-blue-100 hover:text-white text-sm mt-2 inline-block">
-              Ver órdenes →
-            </Link>
-          </div>
 
-          {/* Total Clientes */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="text-gray-600 text-sm">Total Clientes</p>
-                <p className="text-3xl font-bold text-gray-800">{kpis.totalClientes}</p>
+            {/* Órdenes Pendientes */}
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="text-orange-100 text-sm">Órdenes Pendientes</p>
+                  <p className="text-3xl font-bold">{kpis.ordenes_pendientes || 0}</p>
+                </div>
+                <div className="text-4xl">⏳</div>
               </div>
-              <div className="text-4xl">👥</div>
+              <Link href="/admin/ordenes?status=pendiente" className="text-orange-100 hover:text-white text-sm mt-2 inline-block">
+                Ver pendientes →
+              </Link>
             </div>
-            <Link href="/admin/clientes" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
-              Ver clientes →
-            </Link>
-          </div>
 
-          {/* Total Repuestos */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="text-gray-600 text-sm">Total Repuestos</p>
-                <p className="text-3xl font-bold text-gray-800">{kpis.totalRepuestos}</p>
+            {/* Total Clientes */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="text-gray-600 text-sm">Clientes Activos</p>
+                  <p className="text-3xl font-bold text-gray-800">{kpis.clientes_activos || 0}</p>
+                </div>
+                <div className="text-4xl">👥</div>
               </div>
-              <div className="text-4xl">📦</div>
+              <p className="text-xs text-gray-500">
+                Total: {kpis.clientes_total || 0}
+              </p>
+              <Link href="/admin/clientes" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
+                Ver clientes →
+              </Link>
             </div>
-            <Link href="/admin/repuestos" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
-              Ver inventario →
-            </Link>
-          </div>
 
-          {/* Valor Inventario */}
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="text-purple-100 text-sm">Valor Inventario</p>
-                <p className="text-3xl font-bold">{formatCurrency(kpis.valorInventario)}</p>
+            {/* Stock Bajo */}
+            <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-6 text-white">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="text-red-100 text-sm">Alertas de Stock</p>
+                  <p className="text-3xl font-bold">{kpis.stock_bajo || 0}</p>
+                </div>
+                <div className="text-4xl">⚠️</div>
               </div>
-              <div className="text-4xl">💎</div>
+              <p className="text-red-100 text-xs mt-2">Repuestos bajo mínimo</p>
             </div>
-            <p className="text-purple-100 text-xs mt-2">Capital en stock</p>
           </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Stock Bajo Alert */}
+          {/* Stock Bajo Alert - Con datos de Tanstack Query */}
           <div className="bg-white rounded-lg shadow">
             <div className="p-6 border-b">
               <div className="flex justify-between items-center">
@@ -304,13 +324,20 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="p-6">
-              {stockBajo.length > 0 ? (
+              {stockLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-16 bg-gray-100 rounded animate-pulse"></div>
+                  ))}
+                </div>
+              ) : stockBajo.length > 0 ? (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {stockBajo.map(rep => {
+                  {stockBajo.map((rep: RepuestoStockBajo) => {
                     const deficit = rep.stock_minimo - rep.stock_actual;
+                    const urgencia = rep.urgencia || (deficit > 5 ? 'CRÍTICO' : deficit > 2 ? 'URGENTE' : 'BAJO');
                     const urgenciaColor = 
-                      rep.urgencia === 'CRÍTICO' ? 'bg-red-100 border-red-300' :
-                      rep.urgencia === 'URGENTE' ? 'bg-orange-100 border-orange-300' :
+                      urgencia === 'CRÍTICO' ? 'bg-red-100 border-red-300' :
+                      urgencia === 'URGENTE' ? 'bg-orange-100 border-orange-300' :
                       'bg-yellow-100 border-yellow-300';
                     
                     return (
@@ -324,14 +351,14 @@ export default function DashboardPage() {
                               {rep.nombre}
                             </Link>
                             <span className={`text-xs px-2 py-1 rounded font-semibold ${
-                              rep.urgencia === 'CRÍTICO' ? 'bg-red-200 text-red-800' :
-                              rep.urgencia === 'URGENTE' ? 'bg-orange-200 text-orange-800' :
+                              urgencia === 'CRÍTICO' ? 'bg-red-200 text-red-800' :
+                              urgencia === 'URGENTE' ? 'bg-orange-200 text-orange-800' :
                               'bg-yellow-200 text-yellow-800'
                             }`}>
-                              {rep.urgencia}
+                              {urgencia}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600">Código: {rep.codigo}</p>
+                          {rep.codigo && <p className="text-sm text-gray-600">Código: {rep.codigo}</p>}
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium text-red-600">
@@ -354,32 +381,36 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Ventas de la Semana */}
+          {/* Ventas de la Semana - Con datos de Tanstack Query */}
           <div className="bg-white rounded-lg shadow">
             <div className="p-6 border-b">
               <h2 className="text-xl font-semibold">📊 Ventas de la Semana</h2>
               <p className="text-sm text-gray-500 mt-1">Últimos 7 días</p>
             </div>
             <div className="p-6">
-              {ventasSemana.length > 0 ? (
+              {ventasLoading ? (
                 <div className="space-y-3">
-                  {ventasSemana.map((venta, idx) => {
-                    const fecha = new Date(venta.fecha);
-                    const diaSemana = fecha.toLocaleDateString('es-ES', { weekday: 'short' });
-                    const diaMes = fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+                  {[...Array(7)].map((_, i) => (
+                    <div key={i} className="h-14 bg-gray-100 rounded animate-pulse"></div>
+                  ))}
+                </div>
+              ) : ventasSemana.length > 0 ? (
+                <div className="space-y-3">
+                  {ventasSemana.map((venta: VentaSemana, idx: number) => {
+                    // El backend envía "dia" en lugar de "fecha"
+                    const diaNombre = venta.dia;
                     
                     return (
                       <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
                         <div>
-                          <p className="font-medium text-gray-800 capitalize">{diaSemana}</p>
-                          <p className="text-sm text-gray-600">{diaMes}</p>
+                          <p className="font-medium text-gray-800 capitalize">{diaNombre}</p>
+                          <p className="text-xs text-gray-500">
+                            {venta.ordenes} {venta.ordenes === 1 ? 'orden' : 'órdenes'}
+                          </p>
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-green-600">
                             {formatCurrency(venta.total)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {venta.cantidad} {venta.cantidad === 1 ? 'venta' : 'ventas'}
                           </p>
                         </div>
                       </div>

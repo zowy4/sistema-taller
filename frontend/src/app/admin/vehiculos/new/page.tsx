@@ -136,7 +136,6 @@ export default function NuevoVehiculoPage() {
       alert('✅ Vehículo registrado');
       router.push('/admin/vehiculos');
     } catch (err: any) {
-      console.error('Error al crear vehículo:', err);
       setError(err.message || 'Error al crear vehículo');
     } finally {
       setSaving(false);

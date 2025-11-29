@@ -51,7 +51,9 @@ export default function LoginPage() {
           if (raw) {
             const payload = JSON.parse(atob(raw.split('.')[1]));
             const rol = payload.rol as string | undefined;
-            if (rol === 'admin' || rol === 'supervisor' || rol === 'recepcion') {
+            if (rol === 'cliente') {
+              router.push('/portal');
+            } else if (rol === 'admin' || rol === 'supervisor' || rol === 'recepcion') {
               router.push('/admin/dashboard');
             } else if (rol === 'tecnico') {
               router.push('/tecnico');

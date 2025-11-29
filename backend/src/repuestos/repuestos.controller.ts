@@ -42,9 +42,8 @@ export class RepuestosController {
    * GET /repuestos
    */
   @Get()
-  @UseGuards(RolesGuard, PermissionsGuard)
+  @UseGuards(RolesGuard)
   @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
-  @RequirePermissions('repuestos:read')
   async findAll(@Request() req) {
     const repuestos = await this.repuestosService.getAllRepuestos();
     
@@ -61,9 +60,8 @@ export class RepuestosController {
    * GET /repuestos/stock-bajo
    */
   @Get('stock-bajo')
-  @UseGuards(RolesGuard, PermissionsGuard)
+  @UseGuards(RolesGuard)
   @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
-  @RequirePermissions('repuestos:read')
   async findStockBajo(@Request() req) {
     const repuestos = await this.repuestosService.getRepuestosBajoStock();
     
@@ -80,9 +78,8 @@ export class RepuestosController {
    * GET /repuestos/:id
    */
   @Get(':id')
-  @UseGuards(RolesGuard, PermissionsGuard)
+  @UseGuards(RolesGuard)
   @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
-  @RequirePermissions('repuestos:read')
   async findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
     const repuesto = await this.repuestosService.getRepuestoById(id);
     

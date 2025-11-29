@@ -14,22 +14,10 @@ export class AuthService {
 
 	// Validates a user by email + password. Returns user object or null
 	async validateUserByEmail(email: string, plainTextPassword: string) {
-		// DEBUG: Log del intento de login
-		console.log('🔐 Intento de login:', {
-			email: email,
-			emailLength: email?.length,
-			emailTrimmed: email?.trim(),
-			passwordLength: plainTextPassword?.length,
-			passwordProvided: !!plainTextPassword
-		});
-
 		// Try to authenticate an employee first
 		const empleado = await this.prisma.empleados.findUnique({ where: { email } as any });
-		console.log('👤 Empleado encontrado:', empleado ? `Sí (${empleado.email})` : 'No');
 		if (empleado && (empleado as any).password) {
-			console.log('🔑 Comparando contraseña...');
 			const isMatchEmp = await bcrypt.compare(plainTextPassword, (empleado as any).password);
-			console.log('✓ Resultado comparación:', isMatchEmp ? 'CORRECTO' : 'INCORRECTO');
 			if (isMatchEmp) {
 				const { password, ...safe } = empleado as any;
 				const permissions = await this.authorizationService.getUserPermissions(safe.id_empleado, 'empleado');
@@ -52,8 +40,10 @@ export class AuthService {
 				return { 
 					...safe, 
 					_type: 'cliente',
+					rol: 'cliente',
 					permissions,
-					id: safe.id_cliente
+					id: safe.id_cliente,
+					id_cliente: safe.id_cliente
 				};
 			}
 		}
@@ -62,13 +52,14 @@ export class AuthService {
 	}
 
 	// Create a JWT for a given user payload (expects at least id and email)
-	async generateToken(payload: { id: number; email: string; rol?: string; permissions?: string[]; id_empleado?: number }) {
+	async generateToken(payload: { id: number; email: string; rol?: string; permissions?: string[]; id_empleado?: number; id_cliente?: number }) {
 		const token = await this.jwtService.signAsync({ 
 			sub: payload.id, 
 			email: payload.email,
 			rol: payload.rol,
 			permissions: payload.permissions,
-			id_empleado: payload.id_empleado
+			id_empleado: payload.id_empleado,
+			id_cliente: payload.id_cliente
 		});
 		return { access_token: token };
 	}

@@ -15,6 +15,7 @@ import { StatsModule } from './stats/stats.module';
 import { ProveedoresModule } from './proveedores/proveedores.module';
 import { ComprasModule } from './compras/compras.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { PortalModule } from './portal/portal.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ProveedoresModule,
     ComprasModule,
     DashboardModule,
+    PortalModule,
   ],
   controllers: [AppController],
   providers: [AppService],

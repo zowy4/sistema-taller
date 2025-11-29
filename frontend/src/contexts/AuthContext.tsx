@@ -46,7 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           _type: payload.rol ? 'empleado' : 'cliente',
         });
       } catch (error) {
-        console.error('Error decodificando token:', error);
         localStorage.removeItem('token');
       }
     }
@@ -55,16 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // Debug: Log what we're sending
-      console.log('🔐 Frontend sending login:', {
-        url: `${API_URL}/auth/login`,
-        email,
-        emailLength: email.length,
-        emailTrimmed: email.trim(),
-        passwordLength: password.length,
-        hasSpaces: email !== email.trim() || password !== password.trim()
-      });
-      
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -93,16 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('token', token);
         return true;
       }
-        // Log server response body to help debugging (e.g. 401 reasons)
-        try {
-          const text = await response.text();
-          console.error('Login failed, response:', response.status, text);
-        } catch (e) {
-          console.error('Login failed, status:', response.status);
-        }
-        return false;
+      return false;
     } catch (error) {
-      console.error('Error en login:', error);
       return false;
     }
   };

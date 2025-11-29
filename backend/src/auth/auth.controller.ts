@@ -27,7 +27,8 @@ export class AuthController {
 			email: user.email,
 			rol: user.rol,
 			permissions: user.permissions,
-			id_empleado: user.id_empleado || user.id // Para empleados, usar id_empleado; para clientes, usar id
+			id_empleado: user._type === 'empleado' ? user.id_empleado || user.id : undefined,
+			id_cliente: user._type === 'cliente' ? user.id_cliente || user.id : undefined
 		});
 	}
 
