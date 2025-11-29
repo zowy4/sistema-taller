@@ -1,87 +1,55 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-
-interface Compra {
-  id_compra: number;
-  fecha_compra: string;
-  total: number;
-  estado: string;
-  notas?: string;
-  proveedor: {
-    nombre: string;
-    empresa?: string;
-  };
-  compras_repuestos: Array<{
-    cantidad: number;
-    precio_unitario: number;
-    subtotal: number;
-    repuesto: {
-      nombre: string;
-    };
-  }>;
-}
+import { useState, useMemo } from 'react';
+import { fetchCompras } from '@/services/compras.service';
+import { Compra } from '@/types';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 
 export default function ComprasPage() {
   const router = useRouter();
-  const [compras, setCompras] = useState<Compra[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState<string>('todos');
+  
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-  useEffect(() => {
-    fetchCompras();
-  }, []);
+  const { data: compras = [], isLoading, isError } = useQuery<Compra[]>({
+    queryKey: ['compras'],
+    queryFn: () => {
+      if (!token) throw new Error('No token found');
+      return fetchCompras(token);
+    },
+    enabled: !!token,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
 
-  const fetchCompras = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const res = await fetch(`${API_URL}/compras`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (res.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-        return;
-      }
-
-      if (!res.ok) throw new Error('Error al cargar compras');
-
-      const data = await res.json();
-      setCompras(data);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar compras');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+  // Filtrado y búsqueda
+  const comprasFiltradas = useMemo(() => {
+    return compras.filter(compra => {
+      const matchSearch = search === '' || 
+        compra.proveedor.nombre.toLowerCase().includes(search.toLowerCase()) ||
+        compra.notas?.toLowerCase().includes(search.toLowerCase()) ||
+        compra.id_compra.toString().includes(search);
+      
+      const matchEstado = filtroEstado === 'todos' || compra.estado === filtroEstado;
+      
+      return matchSearch && matchEstado;
     });
-  };
+  }, [compras, search, filtroEstado]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
+  // KPIs
+  const stats = useMemo(() => {
+    const totalCompras = compras.length;
+    const totalMonto = compras.reduce((sum, c) => sum + c.total, 0);
+    const completadas = compras.filter(c => c.estado === 'completada').length;
+    const pendientes = compras.filter(c => c.estado === 'pendiente').length;
+    const canceladas = compras.filter(c => c.estado === 'cancelada').length;
+    
+    return { totalCompras, totalMonto, completadas, pendientes, canceladas };
+  }, [compras]);
 
   const getEstadoBadgeClass = (estado: string) => {
     switch (estado.toLowerCase()) {
@@ -96,21 +64,27 @@ export default function ComprasPage() {
     }
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-white p-6 flex items-center justify-center">
-      <div className="text-gray-600">Cargando compras...</div>
-    </div>
-  );
+  if (!token) {
+    router.push('/login');
+    return null;
+  }
 
-  const totalCompras = compras.reduce((sum, c) => sum + c.total, 0);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white p-6 flex items-center justify-center">
+        <div className="text-gray-600">Cargando compras...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white p-6">
+      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-semibold">Compras a Proveedores</h2>
           <p className="text-gray-600 text-sm mt-1">
-            {compras.length} compra{compras.length !== 1 ? 's' : ''} registradas • Total: {formatCurrency(totalCompras)}
+            Gestión de compras e inventario
           </p>
         </div>
         <Link
@@ -121,12 +95,60 @@ export default function ComprasPage() {
         </Link>
       </div>
 
-      {error && (
-        <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div className="bg-blue-50 p-4 rounded shadow">
+          <p className="text-blue-600 text-sm font-medium">Total Compras</p>
+          <p className="text-2xl font-bold text-blue-900">{stats.totalCompras}</p>
+        </div>
+        <div className="bg-green-50 p-4 rounded shadow">
+          <p className="text-green-600 text-sm font-medium">Monto Total</p>
+          <p className="text-2xl font-bold text-green-900">{formatCurrency(stats.totalMonto)}</p>
+        </div>
+        <div className="bg-emerald-50 p-4 rounded shadow">
+          <p className="text-emerald-600 text-sm font-medium">Completadas</p>
+          <p className="text-2xl font-bold text-emerald-900">{stats.completadas}</p>
+        </div>
+        <div className="bg-yellow-50 p-4 rounded shadow">
+          <p className="text-yellow-600 text-sm font-medium">Pendientes</p>
+          <p className="text-2xl font-bold text-yellow-900">{stats.pendientes}</p>
+        </div>
+        <div className="bg-red-50 p-4 rounded shadow">
+          <p className="text-red-600 text-sm font-medium">Canceladas</p>
+          <p className="text-2xl font-bold text-red-900">{stats.canceladas}</p>
+        </div>
+      </div>
+
+      {/* Búsqueda y Filtros */}
+      <div className="flex gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="🔍 Buscar por proveedor, ID o notas..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 border border-gray-300 rounded px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+        <select
+          value={filtroEstado}
+          onChange={(e) => setFiltroEstado(e.target.value)}
+          className="border border-gray-300 rounded px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="todos">Todos</option>
+          <option value="completada">Completadas</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="cancelada">Canceladas</option>
+        </select>
+      </div>
+
+      {isError && (
+        <div className="bg-red-100 text-red-800 p-3 rounded mb-4">
+          Error al cargar compras. Por favor, intenta nuevamente.
+        </div>
       )}
 
+      {/* Lista de Compras */}
       <div className="space-y-4">
-        {compras.map(compra => (
+        {comprasFiltradas.map(compra => (
           <div key={compra.id_compra} className="bg-gray-50 rounded shadow p-4 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-3">
               <div>
@@ -134,12 +156,13 @@ export default function ComprasPage() {
                   <h3 className="font-semibold text-lg">
                     Compra #{compra.id_compra}
                   </h3>
-                  <span className={`px-2 py-1 rounded text-xs ${getEstadoBadgeClass(compra.estado)}`}>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${getEstadoBadgeClass(compra.estado)}`}>
                     {compra.estado}
                   </span>
                 </div>
                 <p className="text-gray-600 text-sm mt-1">
-                  {compra.proveedor.nombre} {compra.proveedor.empresa && `• ${compra.proveedor.empresa}`}
+                  {compra.proveedor.nombre}
+                  {compra.proveedor.empresa && ` • ${compra.proveedor.empresa}`}
                 </p>
                 <p className="text-gray-500 text-xs mt-1">
                   {formatDate(compra.fecha_compra)}
@@ -165,11 +188,13 @@ export default function ComprasPage() {
             )}
 
             <div className="border-t pt-3">
-              <p className="text-sm font-medium mb-2">Repuestos comprados:</p>
+              <p className="text-sm font-medium mb-2">
+                Repuestos comprados ({compra.compras_repuestos?.length || 0}):
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                {compra.compras_repuestos.map((item, idx) => (
+                {compra.compras_repuestos?.map((item, idx) => (
                   <div key={idx} className="bg-white rounded p-2 text-sm">
-                    <p className="font-medium">{item.repuesto.nombre}</p>
+                    <p className="font-medium">{item.repuesto?.nombre || 'Sin nombre'}</p>
                     <p className="text-gray-600">
                       {item.cantidad} unidades × {formatCurrency(item.precio_unitario)} = {formatCurrency(item.subtotal)}
                     </p>
@@ -180,7 +205,7 @@ export default function ComprasPage() {
           </div>
         ))}
 
-        {compras.length === 0 && (
+        {comprasFiltradas.length === 0 && compras.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg mb-4">No hay compras registradas</p>
             <Link
@@ -189,6 +214,12 @@ export default function ComprasPage() {
             >
               Registrar Primera Compra
             </Link>
+          </div>
+        )}
+
+        {comprasFiltradas.length === 0 && compras.length > 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">No se encontraron compras con los filtros aplicados</p>
           </div>
         )}
       </div>

@@ -263,6 +263,49 @@ export interface CreateProveedorDto {
 }
 
 // ==========================================
+// COMPRAS
+// ==========================================
+
+export type EstadoCompra = 'pendiente' | 'completada' | 'cancelada';
+
+export interface CompraRepuesto {
+  id_compra_repuesto?: number;
+  id_repuesto: number;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
+  repuesto?: {
+    nombre: string;
+    codigo: string;
+  };
+}
+
+export interface Compra {
+  id_compra: number;
+  id_proveedor: number;
+  fecha_compra: string;
+  total: number;
+  estado: EstadoCompra;
+  notas?: string;
+  proveedor: {
+    nombre: string;
+    empresa?: string;
+  };
+  compras_repuestos: CompraRepuesto[];
+}
+
+export interface CreateCompraDto {
+  id_proveedor: number;
+  fecha_compra: string;
+  notas?: string;
+  repuestos: Array<{
+    id_repuesto: number;
+    cantidad: number;
+    precio_unitario: number;
+  }>;
+}
+
+// ==========================================
 // SERVICIOS
 // ==========================================
 
