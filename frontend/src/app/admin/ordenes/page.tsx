@@ -1,292 +1,257 @@
-﻿"use client";
+﻿'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { api } from '@/lib/api';
-import ErrorAlert from '@/components/ui/ErrorAlert';
-import Loader from '@/components/ui/Loader';
-import StatsCard from '@/components/ui/StatsCard';
+import { useState, useMemo } from 'react';
+import { fetchOrdenes } from '@/services/ordenes.service';
+import { useOrdenesMutations } from '@/hooks/useOrdenesMutations';
+import { Orden } from '@/types';
+import { formatCurrency, formatShortDate } from '@/lib/formatters';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface Orden {
-  id_orden: number;
-  fecha_apertura: string;
-  fecha_entrega_estimada: string;
-  fecha_entrega_real?: string;
-  estado: string;
-  total_estimado: number;
-  total_real?: number;
-  cliente: {
-    nombre: string;
-    apellido: string;
-  };
-  vehiculo: {
-    placa: string;
-    marca: string;
-    modelo: string;
-  };
-  empleado_responsable: {
-    nombre: string;
-    apellido: string;
-  };
-  factura?: {
-    id_factura: number;
-  } | null;
-}
-
-type EstadoFiltro = 'todos' | 'pendiente' | 'en_proceso' | 'completado' | 'entregado' | 'cancelado';
+type EstadoFiltro = 'todos' | 'pendiente' | 'en_proceso' | 'completada' | 'cancelada';
 
 export default function OrdenesPage() {
+  const router = useRouter();
   const { user } = useAuth();
-  const [ordenes, setOrdenes] = useState<Orden[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [busqueda, setBusqueda] = useState('');
+  const [search, setSearch] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro>('todos');
-
+  
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const isRecepcion = user?.rol === 'recepcion';
 
-  useEffect(() => {
-    fetchOrdenes();
-  }, []);
+  const { data: ordenes = [], isLoading, isError } = useQuery<Orden[]>({
+    queryKey: ['ordenes'],
+    queryFn: () => {
+      if (!token) throw new Error('No token found');
+      return fetchOrdenes(token);
+    },
+    enabled: !!token,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
 
-  const fetchOrdenes = async () => {
-    setLoading(true);
-    try {
-      const data = await api.get<Orden[]>('/ordenes');
-      setOrdenes(data);
-      setError(null);
-    } catch (err: unknown) {
-      const message = (err as { message?: string })?.message || 'Error al cargar órdenes';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
+  const { updateEstadoMutation } = useOrdenesMutations();
+
+  // Cambiar estado con mutación optimista
+  const cambiarEstado = (id: number, estado: 'pendiente' | 'en_proceso' | 'completada' | 'cancelada') => {
+    updateEstadoMutation.mutate({ id, estado });
   };
 
-  const cambiarEstado = async (id_orden: number, nuevoEstado: string) => {
-    if (!confirm(`¿Cambiar estado a "${nuevoEstado}"?`)) return;
+  // Filtrado y búsqueda
+  const ordenesFiltradas = useMemo(() => {
+    return ordenes.filter(orden => {
+      const matchSearch = search === '' || 
+        orden.cliente?.nombre.toLowerCase().includes(search.toLowerCase()) ||
+        orden.cliente?.apellido.toLowerCase().includes(search.toLowerCase()) ||
+        orden.vehiculo?.patente?.toLowerCase().includes(search.toLowerCase()) ||
+        orden.id_orden.toString().includes(search);
+      
+      const matchEstado = filtroEstado === 'todos' || orden.estado === filtroEstado;
+      
+      return matchSearch && matchEstado;
+    });
+  }, [ordenes, search, filtroEstado]);
+
+  // KPIs
+  const stats = useMemo(() => {
+    const total = ordenes.length;
+    const pendientes = ordenes.filter(o => o.estado === 'pendiente').length;
+    const enProceso = ordenes.filter(o => o.estado === 'en_proceso').length;
+    const completadas = ordenes.filter(o => o.estado === 'completada').length;
     
-    try {
-      await api.patch(`/ordenes/${id_orden}/estado`, { estado: nuevoEstado });
-      await fetchOrdenes(); // Recargar lista
-      alert('✅ Estado actualizado correctamente');
-    } catch (err: unknown) {
-      const message = (err as { message?: string })?.message || 'Error al cambiar estado';
-      alert('❌ ' + message);
-    }
-  };
+    return { total, pendientes, enProceso, completadas };
+  }, [ordenes]);
 
-  const normalizarEstado = (estado: string) => {
-    let s = (estado || '').toLowerCase().trim().replace(/\s+/g, '_');
-    if (s === 'enproceso') s = 'en_proceso';
-    if (s === 'completada') s = 'completado';
-    return s as 'pendiente' | 'en_proceso' | 'completado' | 'entregado' | 'cancelado';
-  };
-
-  const formatearEstado = (estado: string) => {
-    const s = normalizarEstado(estado);
-    return s.replace('_', ' ');
-  };
-
-  const getEstadoColor = (estado: string) => {
-    switch (normalizarEstado(estado)) {
+  const getEstadoBadge = (estado: string) => {
+    switch (estado) {
       case 'pendiente': return 'bg-yellow-100 text-yellow-800';
       case 'en_proceso': return 'bg-blue-100 text-blue-800';
-      case 'completado': return 'bg-green-100 text-green-800';
-      case 'entregado': return 'bg-gray-100 text-gray-800';
-      case 'cancelado': return 'bg-red-100 text-red-800';
+      case 'completada': return 'bg-green-100 text-green-800';
+      case 'cancelada': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const formatCurrency = (n: number) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'USD' }).format(n || 0);
+  if (!token) {
+    router.push('/login');
+    return null;
+  }
 
-  const ordenesFiltradas = useMemo(() => {
-    const term = busqueda.toLowerCase().trim();
-    return ordenes
-      .filter(o => {
-        const estadoOk = filtroEstado === 'todos' ? true : normalizarEstado(o.estado) === filtroEstado;
-        if (!estadoOk) return false;
-        if (!term) return true;
-        const cliente = `${o.cliente?.nombre || ''} ${o.cliente?.apellido || ''}`.toLowerCase();
-        const placa = `${o.vehiculo?.placa || ''}`.toLowerCase();
-        return cliente.includes(term) || placa.includes(term);
-      });
-  }, [ordenes, busqueda, filtroEstado]);
-
-  const stats = useMemo(() => {
-    const total = ordenes.length;
-    const pendientes = ordenes.filter(o => normalizarEstado(o.estado) === 'pendiente').length;
-    const enProceso = ordenes.filter(o => normalizarEstado(o.estado) === 'en_proceso').length;
-    const completadas = ordenes.filter(o => normalizarEstado(o.estado) === 'completado').length;
-    return { total, pendientes, enProceso, completadas };
-  }, [ordenes]);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white p-6 flex items-center justify-center">
+        <div className="text-gray-600">Cargando órdenes...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white p-6">
-      <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-semibold">Órdenes de Trabajo</h2>
           <p className="text-gray-600 text-sm mt-1">
-            {ordenes.length} orden{ordenes.length !== 1 ? 'es' : ''} registradas
+            Gestión de órdenes y flujo de trabajo
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={fetchOrdenes} className="px-3 py-2 rounded-md border hover:bg-gray-50">↻ Actualizar</button>
-          <Link
-            href="/admin/ordenes/new"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-          >
-            + Nueva Orden
-          </Link>
-        </div>
+        <Link
+          href="/admin/ordenes/new"
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+        >
+          + Nueva Orden
+        </Link>
       </div>
 
-      {/* Filtros y búsqueda */}
-      <div className="bg-gray-50 rounded-md p-4 mb-6 flex flex-col md:flex-row gap-3 md:items-center">
-        <div className="flex-1">
-          <input
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por cliente o placa..."
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="w-full md:w-56">
-          <select
-            value={filtroEstado}
-            onChange={(e) => setFiltroEstado(e.target.value as EstadoFiltro)}
-            className="w-full px-3 py-2 border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="todos">Todos los estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="en_proceso">En proceso</option>
-            <option value="completado">Completado</option>
-            <option value="entregado">Entregado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Tarjetas de estadísticas */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatsCard title="Total" value={stats.total} />
-        <StatsCard title="Pendientes" value={stats.pendientes} valueClassName="text-yellow-600" />
-        <StatsCard title="En proceso" value={stats.enProceso} valueClassName="text-blue-600" />
-        <StatsCard title="Completadas" value={stats.completadas} valueClassName="text-green-600" />
+        <div className="bg-blue-50 p-4 rounded shadow">
+          <p className="text-blue-600 text-sm font-medium">Total Órdenes</p>
+          <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
+        </div>
+        <div className="bg-yellow-50 p-4 rounded shadow">
+          <p className="text-yellow-600 text-sm font-medium">Pendientes</p>
+          <p className="text-2xl font-bold text-yellow-900">{stats.pendientes}</p>
+        </div>
+        <div className="bg-purple-50 p-4 rounded shadow">
+          <p className="text-purple-600 text-sm font-medium">En Proceso</p>
+          <p className="text-2xl font-bold text-purple-900">{stats.enProceso}</p>
+        </div>
+        <div className="bg-green-50 p-4 rounded shadow">
+          <p className="text-green-600 text-sm font-medium">Completadas</p>
+          <p className="text-2xl font-bold text-green-900">{stats.completadas}</p>
+        </div>
       </div>
 
-      {loading && <Loader text="Cargando órdenes..." />}
-      <ErrorAlert message={error} onClose={() => setError(null)} />
+      {/* Búsqueda y Filtros */}
+      <div className="flex gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="🔍 Buscar por cliente o patente..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 border border-gray-300 rounded px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+        <select
+          value={filtroEstado}
+          onChange={(e) => setFiltroEstado(e.target.value as EstadoFiltro)}
+          className="border border-gray-300 rounded px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="todos">Todos</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="en_proceso">En Proceso</option>
+          <option value="completada">Completadas</option>
+          <option value="cancelada">Canceladas</option>
+        </select>
+      </div>
 
-      {!loading && !error && (
-        <div className="overflow-x-auto bg-gray-50 rounded shadow">
-          <table className="min-w-full">
-            <thead className="bg-gray-200">
-              <tr>
-                <th className="px-4 py-2 text-left">ID</th>
-                <th className="px-4 py-2 text-left">Cliente</th>
-                <th className="px-4 py-2 text-left">Vehículo</th>
-                <th className="px-4 py-2 text-left">Responsable</th>
-                <th className="px-4 py-2 text-left">Fecha Apertura</th>
-                <th className="px-4 py-2 text-left">Estado</th>
-                <th className="px-4 py-2 text-left">Total Estimado</th>
-                <th className="px-4 py-2 text-left">Factura</th>
-                <th className="px-4 py-2 text-center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ordenesFiltradas.map(o => (
-                <tr key={o.id_orden} className="border-t hover:bg-gray-100">
-                  <td className="px-4 py-2 font-medium">#{o.id_orden}</td>
-                  <td className="px-4 py-2">
-                    {o.cliente?.nombre || 'N/A'} {o.cliente?.apellido || ''}
-                  </td>
-                  <td className="px-4 py-2">
-                    {o.vehiculo?.placa || 'N/A'} - {o.vehiculo?.marca || ''} {o.vehiculo?.modelo || ''}
-                  </td>
-                  <td className="px-4 py-2">
-                    {o.empleado_responsable?.nombre || 'Sin asignar'} {o.empleado_responsable?.apellido || ''}
-                  </td>
-                  <td className="px-4 py-2">{new Date(o.fecha_apertura).toLocaleDateString()}</td>
-                  <td className="px-4 py-2">
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${getEstadoColor(o.estado)}`}>
-                      {formatearEstado(o.estado)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2">{formatCurrency(o.total_estimado)}</td>
-                  <td className="px-4 py-2">
-                    {o.factura || normalizarEstado(o.estado) === 'entregado' ? (
-                      <span className="text-green-700 font-medium">Sí</span>
-                    ) : (
-                      <span className="text-gray-500">No</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2">
-                    <div className="flex gap-2 justify-center flex-wrap">
-                      <Link
-                        href={`/admin/ordenes/${o.id_orden}`}
-                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors text-sm"
-                      >
-                        👁️ Ver
-                      </Link>
-                      
-                      {/* Botón Iniciar Trabajo - Solo admin/supervisor/técnico */}
-                      {!isRecepcion && normalizarEstado(o.estado) === 'pendiente' && (
-                        <button
-                          onClick={() => cambiarEstado(o.id_orden, 'en_proceso')}
-                          className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
-                        >
-                          ▶️ Iniciar
-                        </button>
-                      )}
-                      
-                      {/* Botón Completar - Solo admin/supervisor/técnico */}
-                      {!isRecepcion && normalizarEstado(o.estado) === 'en_proceso' && (
-                        <button
-                          onClick={() => cambiarEstado(o.id_orden, 'completado')}
-                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors text-sm"
-                        >
-                          ✓ Completar
-                        </button>
-                      )}
-                      
-                      {/* Botón Facturar - Todos pueden facturar */}
-                      {normalizarEstado(o.estado) === 'completado' && !o.factura && (
-                        <Link
-                          href={`/admin/facturas/new?orden=${o.id_orden}`}
-                          className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 transition-colors text-sm"
-                        >
-                          💰 Facturar
-                        </Link>
-                      )}
-                      
-                      {/* Botón Cancelar - Recepción solo puede cancelar */}
-                      {(normalizarEstado(o.estado) === 'pendiente' || normalizarEstado(o.estado) === 'en_proceso') && (
-                        <button
-                          onClick={() => cambiarEstado(o.id_orden, 'cancelado')}
-                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors text-sm"
-                        >
-                          ✕ Cancelar
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {ordenesFiltradas.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
-                    No hay órdenes que coincidan con los filtros.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      {isError && (
+        <div className="bg-red-100 text-red-800 p-3 rounded mb-4">
+          Error al cargar órdenes. Por favor, intenta nuevamente.
         </div>
       )}
+
+      {/* Tabla de Órdenes */}
+      <div className="overflow-x-auto bg-gray-50 rounded shadow">
+        <table className="min-w-full">
+          <thead className="bg-gray-200">
+            <tr>
+              <th className="px-4 py-2 text-left">ID</th>
+              <th className="px-4 py-2 text-left">Cliente</th>
+              <th className="px-4 py-2 text-left">Vehículo</th>
+              <th className="px-4 py-2 text-left">Empleado</th>
+              <th className="px-4 py-2 text-left">Fecha</th>
+              <th className="px-4 py-2 text-left">Estado</th>
+              <th className="px-4 py-2 text-left">Total</th>
+              <th className="px-4 py-2 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ordenesFiltradas.map(orden => (
+              <tr key={orden.id_orden} className="border-t hover:bg-gray-100">
+                <td className="px-4 py-2 font-medium">#{orden.id_orden}</td>
+                <td className="px-4 py-2">
+                  {orden.cliente?.nombre} {orden.cliente?.apellido}
+                </td>
+                <td className="px-4 py-2">
+                  {orden.vehiculo?.marca} {orden.vehiculo?.modelo}
+                  <br />
+                  <span className="text-xs text-gray-500">{orden.vehiculo?.patente}</span>
+                </td>
+                <td className="px-4 py-2">
+                  {orden.empleado?.nombre ? `${orden.empleado.nombre} ${orden.empleado.apellido}` : 'Sin asignar'}
+                </td>
+                <td className="px-4 py-2">{formatShortDate(orden.fecha_ingreso)}</td>
+                <td className="px-4 py-2">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${getEstadoBadge(orden.estado)}`}>
+                    {orden.estado.replace('_', ' ')}
+                  </span>
+                </td>
+                <td className="px-4 py-2 font-semibold">{formatCurrency(orden.total)}</td>
+                <td className="px-4 py-2">
+                  <div className="flex gap-2 justify-center flex-wrap">
+                    <Link
+                      href={`/admin/ordenes/${orden.id_orden}`}
+                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors text-sm"
+                    >
+                      Ver
+                    </Link>
+                    
+                    {/* Botón Iniciar (optimista instantáneo) */}
+                    {!isRecepcion && orden.estado === 'pendiente' && (
+                      <button
+                        onClick={() => cambiarEstado(orden.id_orden, 'en_proceso')}
+                        className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 transition-colors text-sm"
+                        disabled={updateEstadoMutation.isPending}
+                      >
+                        ▶️ Iniciar
+                      </button>
+                    )}
+                    
+                    {/* Botón Completar (optimista instantáneo) */}
+                    {!isRecepcion && orden.estado === 'en_proceso' && (
+                      <button
+                        onClick={() => cambiarEstado(orden.id_orden, 'completada')}
+                        className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors text-sm"
+                        disabled={updateEstadoMutation.isPending}
+                      >
+                        ✓ Completar
+                      </button>
+                    )}
+                    
+                    {/* Botón Cancelar */}
+                    {(orden.estado === 'pendiente' || orden.estado === 'en_proceso') && (
+                      <button
+                        onClick={() => cambiarEstado(orden.id_orden, 'cancelada')}
+                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors text-sm"
+                        disabled={updateEstadoMutation.isPending}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {ordenesFiltradas.length === 0 && ordenes.length === 0 && (
+              <tr>
+                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
+                  No hay órdenes registradas
+                </td>
+              </tr>
+            )}
+            {ordenesFiltradas.length === 0 && ordenes.length > 0 && (
+              <tr>
+                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
+                  No se encontraron órdenes con los filtros aplicados
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
-

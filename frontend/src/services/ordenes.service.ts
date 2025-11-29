@@ -1,40 +1,12 @@
 /**
- * Servicios API para Órdenes de Trabajo
+ * Servicio de Órdenes de Trabajo
+ * 
+ * Centraliza las llamadas a la API de órdenes con tipos unificados.
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+import { Orden, CreateOrdenDto } from '@/types';
 
-export interface Orden {
-  id_orden: number;
-  id_cliente: number;
-  id_vehiculo: number;
-  id_empleado_asignado?: number;
-  fecha_ingreso: string;
-  fecha_estimada?: string;
-  fecha_entrega?: string;
-  estado: 'pendiente' | 'en_proceso' | 'completada' | 'cancelada';
-  descripcion_problema: string;
-  observaciones?: string;
-  costo_mano_obra: number;
-  costo_repuestos: number;
-  total: number;
-  cliente?: {
-    nombre: string;
-    apellido: string;
-    email: string;
-    telefono: string;
-  };
-  vehiculo?: {
-    marca: string;
-    modelo: string;
-    anio: number;
-    patente: string;
-  };
-  empleado?: {
-    nombre: string;
-    apellido: string;
-  };
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 export async function fetchOrdenes(token: string): Promise<Orden[]> {
   const response = await fetch(`${API_URL}/ordenes`, {
@@ -73,7 +45,7 @@ export async function fetchOrdenById(token: string, id: number): Promise<Orden> 
 
 export async function createOrden(
   token: string,
-  data: Partial<Orden>
+  data: CreateOrdenDto
 ): Promise<Orden> {
   const response = await fetch(`${API_URL}/ordenes`, {
     method: 'POST',
@@ -117,10 +89,13 @@ export async function updateOrden(
   return response.json();
 }
 
+// ==========================================
+// PATCH: Actualizar estado (clave para UX optimista)
+// ==========================================
 export async function updateEstadoOrden(
   token: string,
   id: number,
-  estado: string
+  estado: 'pendiente' | 'en_proceso' | 'completada' | 'cancelada'
 ): Promise<Orden> {
   const response = await fetch(`${API_URL}/ordenes/${id}/estado`, {
     method: 'PATCH',

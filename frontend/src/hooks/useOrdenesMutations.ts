@@ -1,12 +1,15 @@
 /**
  * Custom Hook para Mutaciones Optimistas de Órdenes de Trabajo
+ * 
+ * Implementa actualizaciones optimistas instantáneas, especialmente
+ * en el cambio de estados (pendiente → en_proceso → completada).
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { Orden, CreateOrdenDto } from '@/types';
 import { 
-  Orden, 
   createOrden, 
   updateOrden, 
   updateEstadoOrden,
@@ -20,7 +23,7 @@ interface UpdateOrdenParams {
 
 interface UpdateEstadoParams {
   id: number;
-  estado: string;
+  estado: 'pendiente' | 'en_proceso' | 'completada' | 'cancelada';
 }
 
 export function useOrdenesMutations() {
@@ -32,7 +35,7 @@ export function useOrdenesMutations() {
   // MUTACIÓN: CREAR ORDEN
   // ==========================================
   const createMutation = useMutation({
-    mutationFn: (data: Partial<Orden>) => {
+    mutationFn: (data: CreateOrdenDto) => {
       if (!token) throw new Error('No token found');
       return createOrden(token, data);
     },
