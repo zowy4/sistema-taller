@@ -189,45 +189,50 @@ export default function ReportesPage() {
   const rentabilidadData = getRentabilidadServicios();
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">📊 Reportes y Análisis</h1>
-          <p className="text-gray-600">Análisis detallado del rendimiento del taller</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+      <div className="max-w-[1600px] mx-auto">
+        <div className="mb-10">
+          <h1 className="text-5xl font-bold text-gray-900 mb-2">📊 Reportes y Análisis</h1>
+          <p className="text-lg text-gray-600">Análisis detallado del rendimiento del taller</p>
         </div>
 
         {error && (
-          <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>
+          <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-2xl mb-6 shadow-lg">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">⚠️</span>
+              <p className="text-lg font-medium">{error}</p>
+            </div>
+          </div>
         )}
 
         {/* Report Type Selector */}
-        <div className="flex gap-2 mb-6 border-b">
+        <div className="flex gap-3 mb-8 bg-white rounded-2xl shadow-lg p-2">
           <button
             onClick={() => setReportType('rotacion')}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`flex-1 px-8 py-4 font-semibold text-lg rounded-xl transition-all duration-200 ${
               reportType === 'rotacion'
-                ? 'border-b-2 border-blue-600 text-blue-600'
-                : 'text-gray-600 hover:text-blue-600'
+                ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg'
+                : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
             📦 Rotación de Inventario
           </button>
           <button
             onClick={() => setReportType('proveedores')}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`flex-1 px-8 py-4 font-semibold text-lg rounded-xl transition-all duration-200 ${
               reportType === 'proveedores'
-                ? 'border-b-2 border-green-600 text-green-600'
-                : 'text-gray-600 hover:text-green-600'
+                ? 'bg-gradient-to-br from-green-600 to-green-700 text-white shadow-lg'
+                : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
             🏢 Compras por Proveedor
           </button>
           <button
             onClick={() => setReportType('rentabilidad')}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`flex-1 px-8 py-4 font-semibold text-lg rounded-xl transition-all duration-200 ${
               reportType === 'rentabilidad'
-                ? 'border-b-2 border-purple-600 text-purple-600'
-                : 'text-gray-600 hover:text-purple-600'
+                ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white shadow-lg'
+                : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
             💰 Rentabilidad de Servicios
@@ -237,82 +242,86 @@ export default function ReportesPage() {
         {/* Rotación de Inventario Report */}
         {reportType === 'rotacion' && (
           <div>
-            <div className="bg-blue-50 p-6 rounded mb-6">
-              <h2 className="text-2xl font-bold mb-2">Análisis de Rotación de Inventario</h2>
-              <p className="text-gray-700">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-8 rounded-2xl mb-8 shadow-xl text-white">
+              <h2 className="text-3xl font-bold mb-3">Análisis de Rotación de Inventario</h2>
+              <p className="text-blue-100 text-lg mb-6">
                 Este reporte muestra qué tan rápido se mueven los repuestos. Una rotación alta indica productos de alta demanda.
               </p>
-              <div className="grid grid-cols-3 gap-4 mt-4">
-                <div>
-                  <p className="text-sm text-gray-600">Total Repuestos</p>
-                  <p className="text-2xl font-bold">{rotacionData.length}</p>
+              <div className="grid grid-cols-3 gap-6">
+                <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
+                  <p className="text-blue-100 text-base mb-2">Total Repuestos</p>
+                  <p className="text-4xl font-bold">{rotacionData.length}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Valor Total Stock</p>
-                  <p className="text-2xl font-bold">
+                <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
+                  <p className="text-blue-100 text-base mb-2">Valor Total Stock</p>
+                  <p className="text-4xl font-bold">
                     {formatCurrency(rotacionData.reduce((sum, r) => sum + r.valorStock, 0))}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Stock Bajo</p>
-                  <p className="text-2xl font-bold text-red-600">
+                <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
+                  <p className="text-blue-100 text-base mb-2">Stock Bajo</p>
+                  <p className="text-4xl font-bold">
                     {rotacionData.filter(r => r.estadoStock === 'Bajo').length}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border rounded">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Repuesto</th>
-                    <th className="px-4 py-3 text-left">Categoría</th>
-                    <th className="px-4 py-3 text-right">Stock Actual</th>
-                    <th className="px-4 py-3 text-right">Usado (Total)</th>
-                    <th className="px-4 py-3 text-right">Rotación</th>
-                    <th className="px-4 py-3 text-right">Valor Stock</th>
-                    <th className="px-4 py-3 text-center">Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rotacionData.map(rep => (
-                    <tr key={rep.id_repuesto} className="border-t hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/admin/repuestos/${rep.id_repuesto}`}
-                          className="text-blue-600 hover:underline font-medium"
-                        >
-                          {rep.nombre}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">{rep.categoria}</td>
-                      <td className="px-4 py-3 text-right">{rep.cantidad_existente}</td>
-                      <td className="px-4 py-3 text-right">{rep.totalUsado}</td>
-                      <td className="px-4 py-3 text-right font-bold">
-                        <span className={
-                          rep.rotacion > 2 ? 'text-green-600' :
-                          rep.rotacion > 1 ? 'text-blue-600' :
-                          rep.rotacion > 0.5 ? 'text-yellow-600' :
-                          'text-red-600'
-                        }>
-                          {rep.rotacion}x
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">{formatCurrency(rep.valorStock)}</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          rep.estadoStock === 'Bajo'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}>
-                          {rep.estadoStock}
-                        </span>
-                      </td>
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gradient-to-r from-gray-800 to-gray-900 text-white">
+                    <tr>
+                      <th className="px-8 py-5 text-left text-lg font-semibold">Repuesto</th>
+                      <th className="px-8 py-5 text-left text-lg font-semibold">Categoría</th>
+                      <th className="px-8 py-5 text-right text-lg font-semibold">Stock Actual</th>
+                      <th className="px-8 py-5 text-right text-lg font-semibold">Usado (Total)</th>
+                      <th className="px-8 py-5 text-right text-lg font-semibold">Rotación</th>
+                      <th className="px-8 py-5 text-right text-lg font-semibold">Valor Stock</th>
+                      <th className="px-8 py-5 text-center text-lg font-semibold">Estado</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {rotacionData.map((rep, index) => (
+                      <tr key={rep.id_repuesto} className={`border-b border-gray-200 hover:bg-blue-50 transition-colors ${
+                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                      }`}>
+                        <td className="px-8 py-5">
+                          <Link
+                            href={`/admin/repuestos/${rep.id_repuesto}`}
+                            className="text-blue-600 hover:underline font-medium"
+                          >
+                            {rep.nombre}
+                          </Link>
+                        </td>
+                        <td className="px-8 py-5 text-gray-600">{rep.categoria}</td>
+                        <td className="px-8 py-5 text-right">{rep.cantidad_existente}</td>
+                        <td className="px-8 py-5 text-right">{rep.totalUsado}</td>
+                        <td className="px-8 py-5 text-right font-bold">
+                          <span className={
+                            rep.rotacion > 2 ? 'text-green-600' :
+                            rep.rotacion > 1 ? 'text-blue-600' :
+                            rep.rotacion > 0.5 ? 'text-yellow-600' :
+                            'text-red-600'
+                          }>
+                            {rep.rotacion}x
+                          </span>
+                        </td>
+                        <td className="px-8 py-5 text-right">{formatCurrency(rep.valorStock)}</td>
+                        <td className="px-8 py-5 text-center">
+                          <span className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                            rep.estadoStock === 'Bajo'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {rep.estadoStock}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -320,25 +329,25 @@ export default function ReportesPage() {
         {/* Compras por Proveedor Report */}
         {reportType === 'proveedores' && (
           <div>
-            <div className="bg-green-50 p-6 rounded mb-6">
-              <h2 className="text-2xl font-bold mb-2">Compras por Proveedor</h2>
-              <p className="text-gray-700">
+            <div className="bg-gradient-to-br from-green-500 to-green-600 p-8 rounded-2xl mb-8 shadow-xl text-white">
+              <h2 className="text-3xl font-bold mb-3">Compras por Proveedor</h2>
+              <p className="text-green-100 text-lg mb-6">
                 Análisis de compras realizadas a cada proveedor para identificar relaciones comerciales clave.
               </p>
-              <div className="grid grid-cols-3 gap-4 mt-4">
-                <div>
-                  <p className="text-sm text-gray-600">Total Proveedores</p>
-                  <p className="text-2xl font-bold">{proveedoresData.length}</p>
+              <div className="grid grid-cols-3 gap-6">
+                <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
+                  <p className="text-green-100 text-base mb-2">Total Proveedores</p>
+                  <p className="text-4xl font-bold">{proveedoresData.length}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total Comprado</p>
-                  <p className="text-2xl font-bold">
+                <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
+                  <p className="text-green-100 text-base mb-2">Total Comprado</p>
+                  <p className="text-4xl font-bold">
                     {formatCurrency(proveedoresData.reduce((sum, p) => sum + p.montoTotal, 0))}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Compras Totales</p>
-                  <p className="text-2xl font-bold">
+                <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
+                  <p className="text-green-100 text-base mb-2">Compras Totales</p>
+                  <p className="text-4xl font-bold">
                     {proveedoresData.reduce((sum, p) => sum + p.totalCompras, 0)}
                   </p>
                 </div>
@@ -388,31 +397,31 @@ export default function ReportesPage() {
         {/* Rentabilidad de Servicios Report */}
         {reportType === 'rentabilidad' && (
           <div>
-            <div className="bg-purple-50 p-6 rounded mb-6">
-              <h2 className="text-2xl font-bold mb-2">Rentabilidad de Servicios</h2>
-              <p className="text-gray-700">
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-8 rounded-2xl mb-8 shadow-xl text-white">
+              <h2 className="text-3xl font-bold mb-3">Rentabilidad de Servicios</h2>
+              <p className="text-purple-100 text-lg mb-6">
                 Análisis de márgenes de ganancia en órdenes completadas, considerando costo de repuestos vs. mano de obra.
               </p>
-              <div className="grid grid-cols-4 gap-4 mt-4">
-                <div>
-                  <p className="text-sm text-gray-600">Órdenes Completadas</p>
-                  <p className="text-2xl font-bold">{rentabilidadData.length}</p>
+              <div className="grid grid-cols-4 gap-6">
+                <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
+                  <p className="text-purple-100 text-base mb-2">Órdenes Completadas</p>
+                  <p className="text-4xl font-bold">{rentabilidadData.length}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Ingresos Totales</p>
-                  <p className="text-2xl font-bold">
+                <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
+                  <p className="text-purple-100 text-base mb-2">Ingresos Totales</p>
+                  <p className="text-4xl font-bold">
                     {formatCurrency(rentabilidadData.reduce((sum, o) => sum + o.total, 0))}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Costo Repuestos</p>
-                  <p className="text-2xl font-bold text-red-600">
+                <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
+                  <p className="text-purple-100 text-base mb-2">Costo Repuestos</p>
+                  <p className="text-4xl font-bold">
                     {formatCurrency(rentabilidadData.reduce((sum, o) => sum + o.costoRepuestos, 0))}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Margen Promedio</p>
-                  <p className="text-2xl font-bold text-green-600">
+                <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
+                  <p className="text-purple-100 text-base mb-2">Margen Promedio</p>
+                  <p className="text-4xl font-bold">
                     {rentabilidadData.length > 0
                       ? (rentabilidadData.reduce((sum, o) => sum + o.margen, 0) / rentabilidadData.length).toFixed(1)
                       : '0.0'}%
@@ -481,18 +490,20 @@ export default function ReportesPage() {
         )}
 
         {/* Export Buttons */}
-        <div className="mt-6 flex gap-3 justify-end">
+        <div className="mt-8 flex gap-4 justify-end">
           <button
             onClick={() => alert('Función de exportación en desarrollo')}
-            className="bg-gray-100 text-gray-700 px-6 py-2 rounded hover:bg-gray-200 transition-colors"
+            className="bg-gradient-to-br from-gray-600 to-gray-700 text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 font-semibold text-lg flex items-center gap-3"
           >
-            📄 Exportar PDF
+            <span className="text-2xl">📄</span>
+            Exportar PDF
           </button>
           <button
             onClick={() => alert('Función de exportación en desarrollo')}
-            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition-colors"
+            className="bg-gradient-to-br from-green-600 to-green-700 text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 font-semibold text-lg flex items-center gap-3"
           >
-            📊 Exportar Excel
+            <span className="text-2xl">📊</span>
+            Exportar Excel
           </button>
         </div>
       </div>

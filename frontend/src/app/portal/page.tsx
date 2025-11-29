@@ -112,7 +112,7 @@ export default function PortalPage() {
 
     const badge = badges[estado] || badges.pendiente;
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${badge.color}`}>
+      <span className={`px-5 py-2 rounded-xl text-base font-semibold shadow-md ${badge.color}`}>
         {badge.icon} {badge.label}
       </span>
     );
@@ -142,260 +142,304 @@ export default function PortalPage() {
   // ==========================================
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
-      {/* Header */}
-      <div className="bg-white border-b shadow-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+    <div className="min-h-screen bg-gray-100">
+      {/* Header Fijo Superior */}
+      <div className="bg-white border-b shadow-md sticky top-0 z-50">
+        <div className="max-w-[1920px] mx-auto px-8 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">
-                ¡Hola, {perfil.nombre}! 👋
-              </h1>
-              <p className="text-sm text-gray-600">Bienvenido a tu portal</p>
+            <div className="flex items-center gap-6">
+              <div className="text-2xl font-bold text-blue-600">🚗 Portal del Cliente</div>
+              <div className="border-l border-gray-300 pl-6">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Hola, {perfil.nombre} {perfil.apellido}
+                </h2>
+                <p className="text-sm text-gray-500">{perfil.email}</p>
+              </div>
             </div>
-            <button
-              onClick={() => {
-                localStorage.removeItem('token');
-                toast.info('Sesión cerrada');
-                router.push('/login');
-              }}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Cerrar sesión
-            </button>
+            
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Total Invertido</p>
+                <p className="text-xl font-bold text-green-600">
+                  {formatCurrency(vehiculos.reduce((sum, v) => sum + v.total_gastado, 0))}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  toast.info('Sesión cerrada');
+                  router.push('/login');
+                }}
+                className="px-5 py-2.5 text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors"
+              >
+                Cerrar Sesión
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+      {/* Main Content - Grid Layout */}
+      <div className="max-w-[1920px] mx-auto px-8 py-8">
         
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-white rounded-lg shadow-sm p-4 border">
-            <p className="text-2xl font-bold text-blue-600">{vehiculos.length}</p>
-            <p className="text-xs text-gray-600">Vehículos</p>
+        {/* Stats Bar Compacto */}
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Vehículos</p>
+                <p className="text-3xl font-bold text-blue-600">{vehiculos.length}</p>
+              </div>
+              <span className="text-4xl">🚗</span>
+            </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4 border">
-            <p className="text-2xl font-bold text-orange-600">{ordenesActivas.length}</p>
-            <p className="text-xs text-gray-600">En Taller</p>
+          <div className="bg-white rounded-lg shadow p-4 border-l-4 border-orange-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">En Taller</p>
+                <p className="text-3xl font-bold text-orange-600">{ordenesActivas.length}</p>
+              </div>
+              <span className="text-4xl">🔧</span>
+            </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4 border">
-            <p className="text-2xl font-bold text-green-600">{ordenesCompletadas.length}</p>
-            <p className="text-xs text-gray-600">Completadas</p>
+          <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Completadas</p>
+                <p className="text-3xl font-bold text-green-600">{ordenesCompletadas.length}</p>
+              </div>
+              <span className="text-4xl">✅</span>
+            </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4 border">
-            <p className="text-2xl font-bold text-gray-900">
-              {formatCurrency(vehiculos.reduce((sum, v) => sum + v.total_gastado, 0))}
-            </p>
-            <p className="text-xs text-gray-600">Total Gastado</p>
+          <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Servicios</p>
+                <p className="text-3xl font-bold text-purple-600">{ordenes.length}</p>
+              </div>
+              <span className="text-4xl">📊</span>
+            </div>
           </div>
         </div>
 
-        {/* Órdenes Activas */}
-        {ordenesActivas.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-            <div className="bg-blue-50 px-4 py-3 border-b">
-              <h2 className="font-semibold text-blue-900 flex items-center gap-2">
-                🔧 Órdenes Activas ({ordenesActivas.length})
-              </h2>
-            </div>
-            <div className="divide-y">
-              {ordenesActivas.map((orden) => (
-                <div key={orden.id_orden} className="p-4 hover:bg-gray-50 transition">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-gray-900">
-                          Orden #{orden.id_orden}
-                        </span>
-                        {getEstadoBadge(orden.estado)}
-                      </div>
-                      <p className="text-sm text-gray-600 mb-1">
-                        {orden.vehiculo.marca} {orden.vehiculo.modelo} - {orden.vehiculo.patente}
-                      </p>
-                      <p className="text-sm text-gray-700">{orden.descripcion_problema}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                    <div>
-                      <p className="text-xs text-gray-500">Ingreso</p>
-                      <p className="text-sm font-medium">{formatDate(orden.fecha_ingreso)}</p>
-                    </div>
-                    {orden.fecha_estimada && (
-                      <div>
-                        <p className="text-xs text-gray-500">Estimado</p>
-                        <p className="text-sm font-medium text-blue-600">
-                          {formatDate(orden.fecha_estimada)}
-                        </p>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-xs text-gray-500">Total</p>
-                      <p className="text-lg font-bold text-gray-900">
-                        {formatCurrency(orden.total)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {orden.empleado && (
-                    <div className="mt-2 text-xs text-gray-500">
-                      Mecánico: {orden.empleado.nombre} {orden.empleado.apellido}
-                    </div>
-                  )}
+        {/* Layout Principal: Sidebar (33%) + Content (67%) */}
+        <div className="grid grid-cols-3 gap-8">
+          
+          {/* COLUMNA IZQUIERDA: Mis Vehículos (33%) */}
+          <div className="col-span-1 space-y-6">{vehiculos.length > 0 ? (
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="bg-blue-600 text-white px-6 py-4">
+                  <h3 className="text-xl font-bold">🚗 Mis Vehículos</h3>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Mis Vehículos */}
-        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b">
-            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-              🚗 Mis Vehículos ({vehiculos.length})
-            </h2>
-          </div>
-          <div className="divide-y">
-            {vehiculos.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <p>No tienes vehículos registrados</p>
-              </div>
-            ) : (
-              vehiculos.map((vehiculo) => (
-                <div key={vehiculo.id_vehiculo} className="p-4 hover:bg-gray-50 transition">
-                  <div className="flex items-start gap-4">
-                    {/* Foto del vehículo */}
-                    <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                      {vehiculo.foto_url ? (
-                        <img 
-                          src={vehiculo.foto_url} 
-                          alt={`${vehiculo.marca} ${vehiculo.modelo}`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-3xl">🚗</span>
-                      )}
-                    </div>
-
-                    {/* Detalles */}
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">
-                            {vehiculo.marca} {vehiculo.modelo} {vehiculo.anio}
-                          </h3>
-                          <p className="text-sm text-gray-600">Patente: {vehiculo.patente}</p>
-                          {vehiculo.color && (
-                            <p className="text-xs text-gray-500">Color: {vehiculo.color}</p>
+                <div className="divide-y">
+                  {vehiculos.map((vehiculo) => (
+                    <div key={vehiculo.id_vehiculo} className="p-6 hover:bg-gray-50 transition">
+                      <div className="flex items-start gap-4">
+                        <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                          {vehiculo.foto_url ? (
+                            <img src={vehiculo.foto_url} alt="Vehículo" className="w-full h-full object-cover rounded-lg" />
+                          ) : (
+                            <span className="text-3xl">🚗</span>
                           )}
                         </div>
-                        {vehiculo.orden_activa && (
-                          <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
-                            ⚠️ En Taller
-                          </span>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-900 text-lg">
+                            {vehiculo.marca} {vehiculo.modelo}
+                          </h4>
+                          <p className="text-sm text-gray-600">{vehiculo.patente} • {vehiculo.anio}</p>
+                          {vehiculo.color && (
+                            <p className="text-xs text-gray-500">{vehiculo.color}</p>
+                          )}
+                          
+                          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                            <div className="bg-blue-50 px-2 py-1 rounded">
+                              <span className="text-gray-600">Servicios:</span>
+                              <span className="font-bold text-blue-600 ml-1">{vehiculo.ordenes_completadas}</span>
+                            </div>
+                            <div className="bg-green-50 px-2 py-1 rounded">
+                              <span className="text-gray-600">Gastado:</span>
+                              <span className="font-bold text-green-600 ml-1 text-xs">
+                                {formatCurrency(vehiculo.total_gastado)}
+                              </span>
+                            </div>
+                          </div>
+
+                          {vehiculo.orden_activa && (
+                            <div className="mt-3 bg-orange-50 border border-orange-200 rounded px-3 py-2">
+                              <p className="text-xs font-bold text-orange-800">
+                                ⚠️ En Taller (Orden #{vehiculo.orden_activa.id_orden})
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                <div className="text-6xl mb-4">🚗</div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">No hay vehículos</h3>
+                <p className="text-gray-600">Contacta al taller para registrar tu primer vehículo</p>
+              </div>
+            )}
+          </div>
+
+          {/* COLUMNA DERECHA: Órdenes Activas y Historial (67%) */}
+          <div className="col-span-2 space-y-6">
+            
+            {/* Órdenes Activas */}
+            {ordenesActivas.length > 0 ? (
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="bg-orange-600 text-white px-6 py-4">
+                  <h3 className="text-xl font-bold">🔧 Reparaciones en Curso</h3>
+                </div>
+                <div className="divide-y">
+                  {ordenesActivas.map((orden) => (
+                    <div key={orden.id_orden} className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h4 className="text-lg font-bold text-gray-900">Orden #{orden.id_orden}</h4>
+                            {getEstadoBadge(orden.estado)}
+                          </div>
+                          <p className="text-gray-700 font-medium mb-1">
+                            {orden.vehiculo.marca} {orden.vehiculo.modelo} - {orden.vehiculo.patente}
+                          </p>
+                          <p className="text-gray-600">{orden.descripcion_problema}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-3xl font-bold text-green-600">{formatCurrency(orden.total)}</p>
+                        </div>
+                      </div>
+
+                      {/* Barra de Progreso */}
+                      <div className="bg-gray-200 rounded-full h-3 mb-3">
+                        <div 
+                          className={`h-3 rounded-full ${
+                            orden.estado === 'pendiente' ? 'bg-gray-400 w-1/4' :
+                            orden.estado === 'en_proceso' ? 'bg-blue-500 w-1/2' :
+                            orden.estado === 'esperando_repuestos' ? 'bg-yellow-500 w-3/4' :
+                            'bg-green-500 w-full'
+                          }`}
+                        ></div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-500">Ingreso</p>
+                          <p className="font-semibold">{formatDate(orden.fecha_ingreso)}</p>
+                        </div>
+                        {orden.fecha_estimada && (
+                          <div>
+                            <p className="text-gray-500">Estimado</p>
+                            <p className="font-semibold text-blue-600">{formatDate(orden.fecha_estimada)}</p>
+                          </div>
+                        )}
+                        {orden.empleado && (
+                          <div>
+                            <p className="text-gray-500">Mecánico</p>
+                            <p className="font-semibold">{orden.empleado.nombre} {orden.empleado.apellido}</p>
+                          </div>
                         )}
                       </div>
-
-                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <p className="text-gray-500">Servicios</p>
-                          <p className="font-medium">{vehiculo.ordenes_completadas}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Total Gastado</p>
-                          <p className="font-medium">{formatCurrency(vehiculo.total_gastado)}</p>
-                        </div>
-                      </div>
-
-                      {vehiculo.orden_activa && (
-                        <div className="mt-3 p-2 bg-orange-50 rounded border border-orange-200">
-                          <p className="text-xs font-medium text-orange-900">
-                            Orden #{vehiculo.orden_activa.id_orden} - {vehiculo.orden_activa.estado}
-                          </p>
-                          <p className="text-xs text-orange-700 mt-1">
-                            {vehiculo.orden_activa.descripcion_problema}
-                          </p>
-                        </div>
-                      )}
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                <div className="text-6xl mb-4">✅</div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Sin reparaciones activas</h3>
+                <p className="text-gray-600">Todos tus vehículos están listos</p>
+              </div>
+            )}
+
+            {/* Historial de Servicios - Tabla */}
+            {ordenesCompletadas.length > 0 && (
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="bg-green-600 text-white px-6 py-4">
+                  <h3 className="text-xl font-bold">✅ Historial de Servicios</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Orden</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vehículo</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Estado Pago</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {ordenesCompletadas.slice(0, 10).map((orden) => (
+                        <tr key={orden.id_orden} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="font-semibold text-blue-600">#{orden.id_orden}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {orden.vehiculo.marca} {orden.vehiculo.modelo}
+                            </div>
+                            <div className="text-xs text-gray-500">{orden.vehiculo.patente}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-700 max-w-xs truncate">
+                              {orden.descripcion_problema}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {formatDate(orden.fecha_entrega || orden.fecha_ingreso)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right">
+                            <span className="text-lg font-bold text-gray-900">
+                              {formatCurrency(orden.total)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            {orden.factura ? (
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                orden.factura.estado_pago === 'pagada'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {orden.factura.estado_pago === 'pagada' ? '✓ Pagada' : '⚠ Pendiente'}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 text-xs">Sin factura</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Historial Reciente */}
-        {ordenesCompletadas.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-            <div className="bg-green-50 px-4 py-3 border-b">
-              <h2 className="font-semibold text-green-900 flex items-center gap-2">
-                ✅ Servicios Completados ({ordenesCompletadas.length})
-              </h2>
-            </div>
-            <div className="divide-y">
-              {ordenesCompletadas.slice(0, 5).map((orden) => (
-                <div key={orden.id_orden} className="p-4 hover:bg-gray-50 transition">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-sm">Orden #{orden.id_orden}</span>
-                        <span className="text-xs text-gray-500">
-                          {formatDate(orden.fecha_entrega || orden.fecha_ingreso)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-1">
-                        {orden.vehiculo.marca} {orden.vehiculo.modelo}
-                      </p>
-                      <p className="text-sm text-gray-700">{orden.descripcion_problema}</p>
-                    </div>
-                    <div className="text-right ml-4">
-                      <p className="text-lg font-bold text-gray-900">
-                        {formatCurrency(orden.total)}
-                      </p>
-                      {orden.factura && (
-                        <span className={`text-xs px-2 py-0.5 rounded ${
-                          orden.factura.estado_pago === 'pagada'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {orden.factura.estado_pago === 'pagada' ? '✓ Pagada' : '⚠ Pendiente'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
+        {/* Empty State Global */}
         {vehiculos.length === 0 && ordenes.length === 0 && (
-          <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
-            <div className="text-6xl mb-4">🚗</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Bienvenido a tu Portal
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Aquí podrás ver el estado de tus vehículos y servicios.<br />
-              Contacta al taller para registrar tu primer vehículo.
+          <div className="bg-white rounded-lg shadow-md p-16 text-center col-span-3">
+            <div className="text-9xl mb-6">🚗</div>
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">Bienvenido a tu Portal</h3>
+            <p className="text-xl text-gray-600 mb-8">
+              Aquí podrás ver el estado de tus vehículos y servicios en tiempo real.
             </p>
             <a
               href="tel:+123456789"
-              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition"
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
             >
               📞 Contactar al Taller
             </a>
           </div>
         )}
 
-        {/* Footer */}
-        <div className="text-center text-sm text-gray-500 py-6">
-          <p>¿Necesitas ayuda? Llámanos al (123) 456-7890</p>
-        </div>
+
       </div>
     </div>
   );

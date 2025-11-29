@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { toast } from 'sonner';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
@@ -139,34 +138,37 @@ export default function RecepcionDashboard() {
     }
   };
 
-  const clientesFiltrados = busqueda.trim()
-    ? clientes.filter(c =>
-        c.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-        c.apellido.toLowerCase().includes(busqueda.toLowerCase()) ||
-        c.telefono?.includes(busqueda) ||
-        c.email?.toLowerCase().includes(busqueda.toLowerCase())
-      )
-    : clientes.slice(0, 5);
+  const ordenesPendientes = ordenes.filter(o => o.estado === 'pendiente');
+  const ordenesEnProceso = ordenes.filter(o => o.estado === 'en_proceso');
+  const ordenesRecientes = ordenes.slice(0, 8);
+  const clientesRecientes = clientes.slice(0, 6);
+
+  const handleNuevaOrden = () => {
+    router.push('/admin/ordenes/new');
+  };
+
+  const handleNuevoCliente = () => {
+    router.push('/admin/clients/new');
+  };
 
   if (loading) {
     return (
-      <ProtectedRoute requiredRoles={['recepcion']}>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-gray-600">Cargando panel de recepción...</div>
-        </div>
-      </ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-4xl font-bold text-gray-600">Cargando recepción...</div>
+      </div>
     );
   }
 
   return (
-    <ProtectedRoute requiredRoles={['recepcion']}>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8 flex justify-between items-center">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50">
+      {/* HEADER - Sticky y grande */}
+      <div className="bg-white border-b-4 border-purple-600 shadow-xl sticky top-0 z-10">
+        <div className="max-w-[1800px] mx-auto px-8 py-6">
+          <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Panel de Recepción</h1>
-              <p className="mt-2 text-gray-600">
-                Bienvenido, {user?.nombre} {user?.apellido}
+              <h1 className="text-5xl font-bold text-gray-900">📋 Recepción</h1>
+              <p className="mt-2 text-2xl text-gray-600">
+                {user?.nombre} {user?.apellido}
               </p>
             </div>
             <button
@@ -174,203 +176,201 @@ export default function RecepcionDashboard() {
                 localStorage.removeItem('token');
                 router.push('/login');
               }}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+              className="px-8 py-5 bg-red-600 text-white text-xl rounded-2xl hover:bg-red-700 transition-all shadow-xl font-bold"
             >
-              <span>🚪</span>
               Cerrar Sesión
             </button>
           </div>
+        </div>
+      </div>
 
-          {error && (
-            <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-
-          {/* Estadísticas */}
-          {estadisticas && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 overflow-hidden shadow-lg rounded-lg text-white">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-blue-100 text-sm font-medium">Órdenes Hoy</p>
-                      <p className="text-4xl font-bold mt-2">{estadisticas.ordenesHoy}</p>
-                    </div>
-                    <div className="text-5xl opacity-80">📋</div>
-                  </div>
-                  <p className="text-blue-100 text-xs mt-4">Órdenes creadas hoy</p>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 overflow-hidden shadow-lg rounded-lg text-white">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-yellow-100 text-sm font-medium">Pendientes</p>
-                      <p className="text-4xl font-bold mt-2">{estadisticas.ordenesPendientes}</p>
-                    </div>
-                    <div className="text-5xl opacity-80">⏳</div>
-                  </div>
-                  <p className="text-yellow-100 text-xs mt-4">Órdenes por atender</p>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-green-500 to-green-600 overflow-hidden shadow-lg rounded-lg text-white">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-green-100 text-sm font-medium">Clientes</p>
-                      <p className="text-4xl font-bold mt-2">{estadisticas.clientesRegistrados}</p>
-                    </div>
-                    <div className="text-5xl opacity-80">👥</div>
-                  </div>
-                  <p className="text-green-100 text-xs mt-4">Total registrados</p>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 overflow-hidden shadow-lg rounded-lg text-white">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-purple-100 text-sm font-medium">Esta Semana</p>
-                      <p className="text-4xl font-bold mt-2">{estadisticas.ordenesUltimaSemana}</p>
-                    </div>
-                    <div className="text-5xl opacity-80">📊</div>
-                  </div>
-                  <p className="text-purple-100 text-xs mt-4">Órdenes últimos 7 días</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Acciones Rápidas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <Link
-              href="/admin/ordenes/new"
-              className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow border-2 border-blue-200 hover:border-blue-400"
-            >
-              <div className="flex items-center gap-4">
-                <div className="text-5xl">➕</div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900">Nueva Orden de Trabajo</h3>
-                  <p className="text-gray-600 text-sm mt-1">Crear una nueva orden para un cliente</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link
-              href="/admin/clients/new"
-              className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow border-2 border-green-200 hover:border-green-400"
-            >
-              <div className="flex items-center gap-4">
-                <div className="text-5xl">👤</div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900">Registrar Cliente</h3>
-                  <p className="text-gray-600 text-sm mt-1">Agregar un nuevo cliente al sistema</p>
-                </div>
-              </div>
-            </Link>
+      {error && (
+        <div className="max-w-[1800px] mx-auto px-8 mt-6">
+          <div className="bg-red-100 border-4 border-red-400 text-red-700 px-8 py-6 rounded-2xl text-2xl font-bold">
+            {error}
           </div>
+        </div>
+      )}
 
-          {/* Últimas Órdenes y Clientes */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Últimas Órdenes */}
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium text-gray-900">Últimas Órdenes</h3>
-                  <Link href="/admin/ordenes" className="text-blue-600 hover:underline text-sm">
-                    Ver todas →
-                  </Link>
+      {/* STATS BAR - Contadores grandes */}
+      {estadisticas && (
+        <div className="max-w-[1800px] mx-auto px-8 py-6">
+          <div className="grid grid-cols-4 gap-6">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-3xl shadow-2xl p-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-xl font-semibold">Hoy</p>
+                  <p className="text-7xl font-bold text-white mt-3">{estadisticas.ordenesHoy}</p>
                 </div>
-              </div>
-              <div className="p-6">
-                {ordenes.length > 0 ? (
-                  <div className="space-y-3">
-                    {ordenes.slice(0, 5).map(orden => (
-                      <div key={orden.id_orden} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">
-                            {orden.cliente.nombre} {orden.cliente.apellido}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {orden.vehiculo.marca} {orden.vehiculo.modelo} - {orden.vehiculo.placa}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {new Date(orden.fecha_apertura).toLocaleDateString('es-ES')}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${getEstadoColor(orden.estado)}`}>
-                            {getEstadoLabel(orden.estado)}
-                          </span>
-                          <p className="text-sm font-semibold text-gray-900 mt-1">
-                            ${orden.total_estimado.toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-gray-500 py-8">No hay órdenes registradas</p>
-                )}
+                <div className="text-8xl opacity-80">📋</div>
               </div>
             </div>
 
-            {/* Búsqueda de Clientes */}
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Clientes</h3>
-              </div>
-              <div className="p-6">
-                <div className="mb-4">
-                  <input
-                    type="text"
-                    placeholder="Buscar cliente..."
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  />
+            <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-3xl shadow-2xl p-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-yellow-100 text-xl font-semibold">Pendientes</p>
+                  <p className="text-7xl font-bold text-white mt-3">{estadisticas.ordenesPendientes}</p>
                 </div>
-                {clientesFiltrados.length > 0 ? (
-                  <div className="space-y-3">
-                    {clientesFiltrados.map(cliente => (
-                      <Link
-                        key={cliente.id_cliente}
-                        href={`/admin/clients/${cliente.id_cliente}`}
-                        className="block p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
-                      >
-                        <p className="font-medium text-gray-900">
-                          {cliente.nombre} {cliente.apellido}
-                        </p>
-                        {cliente.telefono && (
-                          <p className="text-sm text-gray-600">📞 {cliente.telefono}</p>
-                        )}
-                        {cliente.email && (
-                          <p className="text-sm text-gray-600">✉️ {cliente.email}</p>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-gray-500 py-8">
-                    {busqueda ? 'No se encontraron clientes' : 'No hay clientes registrados'}
-                  </p>
-                )}
-                {!busqueda && clientes.length > 5 && (
-                  <Link
-                    href="/admin/clients"
-                    className="block text-center text-blue-600 hover:underline text-sm mt-4"
-                  >
-                    Ver todos los clientes →
-                  </Link>
-                )}
+                <div className="text-8xl opacity-80">⏳</div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-500 to-green-700 rounded-3xl shadow-2xl p-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-xl font-semibold">Clientes</p>
+                  <p className="text-7xl font-bold text-white mt-3">{estadisticas.clientesRegistrados}</p>
+                </div>
+                <div className="text-8xl opacity-80">👥</div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-3xl shadow-2xl p-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-xl font-semibold">Semana</p>
+                  <p className="text-7xl font-bold text-white mt-3">{estadisticas.ordenesUltimaSemana}</p>
+                </div>
+                <div className="text-8xl opacity-80">📊</div>
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* ACCIONES RÁPIDAS - Botones grandes */}
+      <div className="max-w-[1800px] mx-auto px-8 py-6">
+        <h2 className="text-3xl font-bold text-gray-900 mb-6">Acciones Rápidas</h2>
+        <div className="grid grid-cols-2 gap-8">
+          <button
+            onClick={handleNuevaOrden}
+            className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl shadow-2xl p-12 hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transition-all hover:scale-105"
+          >
+            <div className="text-center text-white">
+              <div className="text-9xl mb-6">➕</div>
+              <h3 className="text-4xl font-bold mb-3">NUEVA ORDEN</h3>
+              <p className="text-2xl text-blue-100">Crear orden de trabajo</p>
+            </div>
+          </button>
+
+          <button
+            onClick={handleNuevoCliente}
+            className="bg-gradient-to-br from-green-500 to-green-600 rounded-3xl shadow-2xl p-12 hover:shadow-[0_0_40px_rgba(34,197,94,0.5)] transition-all hover:scale-105"
+          >
+            <div className="text-center text-white">
+              <div className="text-9xl mb-6">👤</div>
+              <h3 className="text-4xl font-bold mb-3">NUEVO CLIENTE</h3>
+              <p className="text-2xl text-green-100">Registrar en el sistema</p>
+            </div>
+          </button>
+        </div>
       </div>
-    </ProtectedRoute>
+
+      {/* CONTENIDO PRINCIPAL - Grid de 2 columnas */}
+      <div className="max-w-[1800px] mx-auto px-8 pb-8">
+        <div className="grid grid-cols-2 gap-8">
+          {/* COLUMNA IZQUIERDA - Últimas Órdenes */}
+          <div className="bg-white rounded-3xl shadow-2xl p-8 border-4 border-blue-200">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-3xl font-bold text-gray-900">📋 Últimas Órdenes</h2>
+              <button
+                onClick={() => router.push('/admin/ordenes')}
+                className="px-6 py-3 bg-blue-600 text-white text-lg rounded-xl hover:bg-blue-700 transition-all font-bold"
+              >
+                Ver Todas →
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {ordenesRecientes.length > 0 ? (
+                ordenesRecientes.map(orden => (
+                  <div
+                    key={orden.id_orden}
+                    className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 border-l-8 border-blue-500 hover:shadow-lg transition-all"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="text-2xl font-bold text-gray-900 mb-2">
+                          {orden.vehiculo.placa}
+                        </div>
+                        <div className="text-xl text-gray-700 font-semibold">
+                          {orden.cliente.nombre} {orden.cliente.apellido}
+                        </div>
+                        <div className="text-lg text-gray-600 mt-1">
+                          {orden.vehiculo.marca} {orden.vehiculo.modelo}
+                        </div>
+                        <div className="text-base text-gray-500 mt-2">
+                          {new Date(orden.fecha_apertura).toLocaleDateString('es-ES', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className={`px-4 py-2 rounded-xl text-base font-bold ${getEstadoColor(orden.estado)}`}>
+                          {getEstadoLabel(orden.estado)}
+                        </span>
+                        <div className="text-2xl font-bold text-gray-900 mt-3">
+                          ${orden.total_estimado.toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-16 text-2xl text-gray-500">
+                  No hay órdenes registradas
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* COLUMNA DERECHA - Clientes */}
+          <div className="bg-white rounded-3xl shadow-2xl p-8 border-4 border-green-200">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-3xl font-bold text-gray-900">👥 Clientes</h2>
+              <button
+                onClick={() => router.push('/admin/clients')}
+                className="px-6 py-3 bg-green-600 text-white text-lg rounded-xl hover:bg-green-700 transition-all font-bold"
+              >
+                Ver Todos →
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {clientesRecientes.length > 0 ? (
+                clientesRecientes.map(cliente => (
+                  <button
+                    key={cliente.id_cliente}
+                    onClick={() => router.push(`/admin/clients/${cliente.id_cliente}`)}
+                    className="w-full bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 border-l-8 border-green-500 hover:shadow-lg transition-all text-left"
+                  >
+                    <div className="text-2xl font-bold text-gray-900 mb-2">
+                      {cliente.nombre} {cliente.apellido}
+                    </div>
+                    {cliente.telefono && (
+                      <div className="text-xl text-gray-700 flex items-center gap-3 mb-1">
+                        <span>📞</span> {cliente.telefono}
+                      </div>
+                    )}
+                    {cliente.email && (
+                      <div className="text-xl text-gray-700 flex items-center gap-3">
+                        <span>✉️</span> {cliente.email}
+                      </div>
+                    )}
+                  </button>
+                ))
+              ) : (
+                <div className="text-center py-16 text-2xl text-gray-500">
+                  No hay clientes registrados
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

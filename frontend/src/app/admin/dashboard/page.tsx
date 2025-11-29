@@ -156,73 +156,76 @@ export default function DashboardPage() {
   // Vista simplificada para recepcion
   if (isRecepcion) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">Bienvenido al Panel de Recepción</h1>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="mb-10">
+            <h1 className="text-5xl font-bold text-gray-900 mb-2">Panel de Recepción</h1>
+            <p className="text-lg text-gray-600">Bienvenido al sistema de gestión</p>
+          </div>
           
           {/* Acciones Rápidas para Recepción */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
             <Link
               href="/admin/ordenes/new"
-              className="bg-blue-600 text-white p-8 rounded-lg hover:bg-blue-700 transition-colors text-center shadow-lg"
+              className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-10 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:scale-105 text-center group"
             >
-              <div className="text-5xl mb-3">📋</div>
-              <h3 className="text-xl font-semibold mb-2">Nueva Orden</h3>
-              <p className="text-sm text-blue-100">Crear orden de trabajo</p>
+              <div className="text-7xl mb-4 group-hover:scale-110 transition-transform">📋</div>
+              <h3 className="text-2xl font-bold mb-2">Nueva Orden</h3>
+              <p className="text-base text-blue-100">Crear orden de trabajo</p>
             </Link>
 
             <Link
               href="/admin/clients/new"
-              className="bg-green-600 text-white p-8 rounded-lg hover:bg-green-700 transition-colors text-center shadow-lg"
+              className="bg-gradient-to-br from-green-600 to-green-700 text-white p-10 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:scale-105 text-center group"
             >
-              <div className="text-5xl mb-3">👤</div>
-              <h3 className="text-xl font-semibold mb-2">Nuevo Cliente</h3>
-              <p className="text-sm text-green-100">Registrar cliente</p>
+              <div className="text-7xl mb-4 group-hover:scale-110 transition-transform">👤</div>
+              <h3 className="text-2xl font-bold mb-2">Nuevo Cliente</h3>
+              <p className="text-base text-green-100">Registrar cliente</p>
             </Link>
 
             <Link
               href="/admin/vehiculos/new"
-              className="bg-purple-600 text-white p-8 rounded-lg hover:bg-purple-700 transition-colors text-center shadow-lg"
+              className="bg-gradient-to-br from-purple-600 to-purple-700 text-white p-10 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:scale-105 text-center group"
             >
-              <div className="text-5xl mb-3">🚗</div>
-              <h3 className="text-xl font-semibold mb-2">Nuevo Vehículo</h3>
-              <p className="text-sm text-purple-100">Registrar vehículo</p>
+              <div className="text-7xl mb-4 group-hover:scale-110 transition-transform">🚗</div>
+              <h3 className="text-2xl font-bold mb-2">Nuevo Vehículo</h3>
+              <p className="text-base text-purple-100">Registrar vehículo</p>
             </Link>
           </div>
 
           {/* Accesos Directos */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Accesos Rápidos</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link href="/admin/ordenes" className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <span className="text-2xl">📋</span>
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">Accesos Rápidos</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Link href="/admin/ordenes" className="flex items-center gap-5 p-6 bg-gray-50 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all group">
+                <span className="text-5xl group-hover:scale-110 transition-transform">📋</span>
                 <div>
-                  <p className="font-medium">Órdenes de Trabajo</p>
-                  <p className="text-sm text-gray-600">Ver todas las órdenes</p>
+                  <p className="text-xl font-semibold text-gray-900 mb-1">Órdenes de Trabajo</p>
+                  <p className="text-base text-gray-600">Ver todas las órdenes</p>
                 </div>
               </Link>
               
-              <Link href="/admin/clients" className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <span className="text-2xl">👤</span>
+              <Link href="/admin/clients" className="flex items-center gap-5 p-6 bg-gray-50 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all group">
+                <span className="text-5xl group-hover:scale-110 transition-transform">👤</span>
                 <div>
-                  <p className="font-medium">Clientes</p>
-                  <p className="text-sm text-gray-600">Gestionar clientes</p>
+                  <p className="text-xl font-semibold text-gray-900 mb-1">Clientes</p>
+                  <p className="text-base text-gray-600">Gestionar clientes</p>
                 </div>
               </Link>
               
-              <Link href="/admin/vehiculos" className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <span className="text-2xl">🚗</span>
+              <Link href="/admin/vehiculos" className="flex items-center gap-5 p-6 bg-gray-50 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all group">
+                <span className="text-5xl group-hover:scale-110 transition-transform">🚗</span>
                 <div>
-                  <p className="font-medium">Vehículos</p>
-                  <p className="text-sm text-gray-600">Ver vehículos</p>
+                  <p className="text-xl font-semibold text-gray-900 mb-1">Vehículos</p>
+                  <p className="text-base text-gray-600">Ver vehículos</p>
                 </div>
               </Link>
               
-              <Link href="/admin/facturas" className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <span className="text-2xl">🧾</span>
+              <Link href="/admin/facturas" className="flex items-center gap-5 p-6 bg-gray-50 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all group">
+                <span className="text-5xl group-hover:scale-110 transition-transform">🧾</span>
                 <div>
-                  <p className="font-medium">Facturas</p>
-                  <p className="text-sm text-gray-600">Consultar facturas</p>
+                  <p className="text-xl font-semibold text-gray-900 mb-1">Facturas</p>
+                  <p className="text-base text-gray-600">Consultar facturas</p>
                 </div>
               </Link>
             </div>
@@ -234,138 +237,175 @@ export default function DashboardPage() {
 
   // ✅ Vista Principal del Dashboard (con datos del caché)
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Dashboard - Sistema de Taller</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+      <div className="max-w-[1600px] mx-auto">
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="text-5xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-lg text-gray-600">Sistema de Gestión de Taller</p>
+        </div>
 
         {/* KPIs Grid - Con datos de Tanstack Query */}
         {kpis && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
             {/* Ventas del Mes */}
-            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex justify-between items-start mb-3">
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-xl p-8 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex justify-between items-start mb-6">
                 <div>
-                  <p className="text-green-100 text-sm">Ingresos del Mes</p>
-                  <p className="text-3xl font-bold">{formatCurrency(kpis.ingresos_mes || 0)}</p>
+                  <p className="text-green-100 text-base mb-2">Ingresos del Mes</p>
+                  <p className="text-5xl font-bold mb-1">{formatCurrency(kpis.ingresos_mes || 0)}</p>
+                  <p className="text-green-100 text-sm">Facturación mensual</p>
                 </div>
-                <div className="text-4xl">💰</div>
+                <div className="text-6xl opacity-80">💰</div>
               </div>
-              <Link href="/admin/facturas" className="text-green-100 hover:text-white text-sm mt-2 inline-block">
+              <Link href="/admin/facturas" className="text-green-100 hover:text-white text-base font-medium inline-block border-b-2 border-green-300 hover:border-white transition-colors">
                 Ver facturas →
               </Link>
             </div>
 
             {/* Órdenes Completadas */}
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex justify-between items-start mb-3">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-xl p-8 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex justify-between items-start mb-6">
                 <div>
-                  <p className="text-blue-100 text-sm">Órdenes Completadas</p>
-                  <p className="text-3xl font-bold">{kpis.ordenes_completadas || 0}</p>
+                  <p className="text-blue-100 text-base mb-2">Órdenes Completadas</p>
+                  <p className="text-5xl font-bold mb-1">{kpis.ordenes_completadas || 0}</p>
+                  <p className="text-blue-100 text-sm">Trabajos finalizados</p>
                 </div>
-                <div className="text-4xl">✅</div>
+                <div className="text-6xl opacity-80">✅</div>
               </div>
-              <Link href="/admin/ordenes" className="text-blue-100 hover:text-white text-sm mt-2 inline-block">
+              <Link href="/admin/ordenes" className="text-blue-100 hover:text-white text-base font-medium inline-block border-b-2 border-blue-300 hover:border-white transition-colors">
                 Ver órdenes →
               </Link>
             </div>
 
             {/* Órdenes Pendientes */}
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex justify-between items-start mb-3">
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-xl p-8 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex justify-between items-start mb-6">
                 <div>
-                  <p className="text-orange-100 text-sm">Órdenes Pendientes</p>
-                  <p className="text-3xl font-bold">{kpis.ordenes_pendientes || 0}</p>
+                  <p className="text-orange-100 text-base mb-2">Órdenes Pendientes</p>
+                  <p className="text-5xl font-bold mb-1">{kpis.ordenes_pendientes || 0}</p>
+                  <p className="text-orange-100 text-sm">En espera de atención</p>
                 </div>
-                <div className="text-4xl">⏳</div>
+                <div className="text-6xl opacity-80">⏳</div>
               </div>
-              <Link href="/admin/ordenes?status=pendiente" className="text-orange-100 hover:text-white text-sm mt-2 inline-block">
+              <Link href="/admin/ordenes?status=pendiente" className="text-orange-100 hover:text-white text-base font-medium inline-block border-b-2 border-orange-300 hover:border-white transition-colors">
                 Ver pendientes →
               </Link>
             </div>
 
-            {/* Total Clientes */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <p className="text-gray-600 text-sm">Clientes Activos</p>
-                  <p className="text-3xl font-bold text-gray-800">{kpis.clientes_activos || 0}</p>
-                </div>
-                <div className="text-4xl">👥</div>
-              </div>
-              <p className="text-xs text-gray-500">
-                Total: {kpis.clientes_total || 0}
-              </p>
-              <Link href="/admin/clientes" className="text-blue-600 hover:underline text-sm mt-2 inline-block">
-                Ver clientes →
-              </Link>
-            </div>
-
             {/* Stock Bajo */}
-            <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-6 text-white">
-              <div className="flex justify-between items-start mb-3">
+            <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl shadow-xl p-8 text-white hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex justify-between items-start mb-6">
                 <div>
-                  <p className="text-red-100 text-sm">Alertas de Stock</p>
-                  <p className="text-3xl font-bold">{kpis.stock_bajo || 0}</p>
+                  <p className="text-red-100 text-base mb-2">Alertas de Stock</p>
+                  <p className="text-5xl font-bold mb-1">{kpis.stock_bajo || 0}</p>
+                  <p className="text-red-100 text-sm">Repuestos bajo mínimo</p>
                 </div>
-                <div className="text-4xl">⚠️</div>
+                <div className="text-6xl opacity-80">⚠️</div>
               </div>
-              <p className="text-red-100 text-xs mt-2">Repuestos bajo mínimo</p>
+              <Link href="/admin/inventario" className="text-red-100 hover:text-white text-base font-medium inline-block border-b-2 border-red-300 hover:border-white transition-colors">
+                Ver inventario →
+              </Link>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Stock Bajo Alert - Con datos de Tanstack Query */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">⚠️ Alertas de Stock Bajo</h2>
-                <span className="text-sm text-gray-500">{stockBajo.length} repuestos</span>
+        {/* Stats Adicionales */}
+        {kpis && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+            <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
+              <div className="flex items-center gap-6">
+                <div className="text-6xl">👥</div>
+                <div>
+                  <p className="text-gray-600 text-base mb-1">Clientes Activos</p>
+                  <p className="text-4xl font-bold text-gray-900">{kpis.clientes_activos || 0}</p>
+                  <p className="text-sm text-gray-500 mt-1">Total: {kpis.clientes_total || 0}</p>
+                </div>
               </div>
             </div>
-            <div className="p-6">
+
+            <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
+              <div className="flex items-center gap-6">
+                <div className="text-6xl">🔧</div>
+                <div>
+                  <p className="text-gray-600 text-base mb-1">Órdenes en Proceso</p>
+                  <p className="text-4xl font-bold text-gray-900">{kpis.ordenes_en_proceso || 0}</p>
+                  <p className="text-sm text-gray-500 mt-1">Trabajos activos</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
+              <div className="flex items-center gap-6">
+                <div className="text-6xl">📦</div>
+                <div>
+                  <p className="text-gray-600 text-base mb-1">Repuestos Totales</p>
+                  <p className="text-4xl font-bold text-gray-900">{kpis.repuestos_total || 0}</p>
+                  <p className="text-sm text-gray-500 mt-1">En inventario</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+          {/* Stock Bajo Alert - Con datos de Tanstack Query */}
+          <div className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow">
+            <div className="p-8 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-1">⚠️ Alertas de Stock</h2>
+                  <p className="text-gray-600">Repuestos que requieren atención</p>
+                </div>
+                <span className="bg-red-100 text-red-800 px-4 py-2 rounded-full text-lg font-semibold">{stockBajo.length}</span>
+              </div>
+            </div>
+            <div className="p-8">
               {stockLoading ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-16 bg-gray-100 rounded animate-pulse"></div>
+                    <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse"></div>
                   ))}
                 </div>
               ) : stockBajo.length > 0 ? (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                   {stockBajo.map((rep: RepuestoStockBajo) => {
                     const deficit = rep.stock_minimo - rep.stock_actual;
                     const urgencia = rep.urgencia || (deficit > 5 ? 'CRÍTICO' : deficit > 2 ? 'URGENTE' : 'BAJO');
                     const urgenciaColor = 
-                      urgencia === 'CRÍTICO' ? 'bg-red-100 border-red-300' :
-                      urgencia === 'URGENTE' ? 'bg-orange-100 border-orange-300' :
-                      'bg-yellow-100 border-yellow-300';
+                      urgencia === 'CRÍTICO' ? 'bg-red-50 border-red-400' :
+                      urgencia === 'URGENTE' ? 'bg-orange-50 border-orange-400' :
+                      'bg-yellow-50 border-yellow-400';
                     
                     return (
-                      <div key={rep.id_repuesto} className={`flex justify-between items-center p-3 rounded border-l-4 ${urgenciaColor}`}>
+                      <div key={rep.id_repuesto} className={`flex justify-between items-center p-5 rounded-xl border-l-4 ${urgenciaColor} hover:shadow-md transition-shadow`}>
                         <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3 mb-2">
                             <Link
                               href={`/admin/repuestos/${rep.id_repuesto}`}
-                              className="font-medium text-blue-600 hover:underline"
+                              className="text-lg font-semibold text-blue-600 hover:underline"
                             >
                               {rep.nombre}
                             </Link>
-                            <span className={`text-xs px-2 py-1 rounded font-semibold ${
-                              urgencia === 'CRÍTICO' ? 'bg-red-200 text-red-800' :
-                              urgencia === 'URGENTE' ? 'bg-orange-200 text-orange-800' :
-                              'bg-yellow-200 text-yellow-800'
+                            <span className={`text-sm px-3 py-1 rounded-full font-bold ${
+                              urgencia === 'CRÍTICO' ? 'bg-red-200 text-red-900' :
+                              urgencia === 'URGENTE' ? 'bg-orange-200 text-orange-900' :
+                              'bg-yellow-200 text-yellow-900'
                             }`}>
                               {urgencia}
                             </span>
                           </div>
-                          {rep.codigo && <p className="text-sm text-gray-600">Código: {rep.codigo}</p>}
+                          {rep.codigo && <p className="text-base text-gray-600">Código: {rep.codigo}</p>}
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-medium text-red-600">
+                          <p className="text-lg font-bold text-red-600 mb-1">
                             Stock: {rep.stock_actual}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            Mínimo: {rep.stock_minimo} (faltan {deficit})
+                          <p className="text-sm text-gray-600">
+                            Mínimo: {rep.stock_minimo}
+                          </p>
+                          <p className="text-xs text-red-500 font-medium">
+                            Faltan {deficit} unidades
                           </p>
                         </div>
                       </div>
@@ -373,62 +413,64 @@ export default function DashboardPage() {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <div className="text-5xl mb-3">✅</div>
-                  <p className="text-gray-600">Todo el stock está en niveles normales</p>
+                <div className="text-center py-12">
+                  <div className="text-7xl mb-4">✅</div>
+                  <p className="text-xl text-gray-600">Todo el stock está en niveles normales</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Ventas de la Semana - Con datos de Tanstack Query */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b">
-              <h2 className="text-xl font-semibold">📊 Ventas de la Semana</h2>
-              <p className="text-sm text-gray-500 mt-1">Últimos 7 días</p>
+          <div className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-shadow">
+            <div className="p-8 border-b border-gray-200">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-1">📊 Ventas de la Semana</h2>
+                <p className="text-gray-600">Últimos 7 días de actividad</p>
+              </div>
             </div>
-            <div className="p-6">
+            <div className="p-8">
               {ventasLoading ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {[...Array(7)].map((_, i) => (
-                    <div key={i} className="h-14 bg-gray-100 rounded animate-pulse"></div>
+                    <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse"></div>
                   ))}
                 </div>
               ) : ventasSemana.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {ventasSemana.map((venta: VentaSemana, idx: number) => {
                     // El backend envía "dia" en lugar de "fecha"
                     const diaNombre = venta.dia;
                     
                     return (
-                      <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+                      <div key={idx} className="flex justify-between items-center p-5 bg-gray-50 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all">
                         <div>
-                          <p className="font-medium text-gray-800 capitalize">{diaNombre}</p>
-                          <p className="text-xs text-gray-500">
-                            {venta.ordenes} {venta.ordenes === 1 ? 'orden' : 'órdenes'}
+                          <p className="text-xl font-semibold text-gray-800 capitalize mb-1">{diaNombre}</p>
+                          <p className="text-sm text-gray-600">
+                            {venta.ordenes} {venta.ordenes === 1 ? 'orden completada' : 'órdenes completadas'}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-green-600">
+                          <p className="text-2xl font-bold text-green-600">
                             {formatCurrency(venta.total)}
                           </p>
                         </div>
                       </div>
                     );
                   })}
-                  <div className="pt-3 border-t mt-3">
-                    <div className="flex justify-between items-center">
-                      <p className="font-semibold text-gray-700">Total Semana</p>
-                      <p className="font-bold text-green-600 text-lg">
+                  <div className="pt-6 border-t-2 border-gray-200 mt-6">
+                    <div className="flex justify-between items-center bg-green-50 p-5 rounded-xl">
+                      <p className="text-xl font-bold text-gray-800">Total Semana</p>
+                      <p className="text-3xl font-bold text-green-600">
                         {formatCurrency(ventasSemana.reduce((sum, v) => sum + v.total, 0))}
                       </p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <div className="text-5xl mb-3">📈</div>
-                  <p className="text-gray-600">No hay ventas registradas esta semana</p>
+                <div className="text-center py-12">
+                  <div className="text-7xl mb-4">📈</div>
+                  <p className="text-xl text-gray-600">No hay ventas registradas esta semana</p>
                 </div>
               )}
             </div>
@@ -436,32 +478,32 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <Link
             href="/admin/compras/new"
-            className="bg-green-600 text-white p-6 rounded-lg hover:bg-green-700 transition-colors text-center"
+            className="bg-gradient-to-br from-green-600 to-green-700 text-white p-10 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:scale-105 text-center group"
           >
-            <div className="text-4xl mb-2">➕</div>
-            <h3 className="font-semibold">Nueva Compra</h3>
-            <p className="text-sm text-green-100 mt-1">Registrar entrada de inventario</p>
+            <div className="text-7xl mb-4 group-hover:scale-110 transition-transform">➕</div>
+            <h3 className="text-2xl font-bold mb-2">Nueva Compra</h3>
+            <p className="text-base text-green-100">Registrar entrada de inventario</p>
           </Link>
 
           <Link
             href="/admin/ordenes/new"
-            className="bg-blue-600 text-white p-6 rounded-lg hover:bg-blue-700 transition-colors text-center"
+            className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-10 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:scale-105 text-center group"
           >
-            <div className="text-4xl mb-2">🔧</div>
-            <h3 className="font-semibold">Nueva Orden</h3>
-            <p className="text-sm text-blue-100 mt-1">Crear orden de trabajo</p>
+            <div className="text-7xl mb-4 group-hover:scale-110 transition-transform">🔧</div>
+            <h3 className="text-2xl font-bold mb-2">Nueva Orden</h3>
+            <p className="text-base text-blue-100">Crear orden de trabajo</p>
           </Link>
 
           <Link
             href="/admin/reportes"
-            className="bg-purple-600 text-white p-6 rounded-lg hover:bg-purple-700 transition-colors text-center"
+            className="bg-gradient-to-br from-purple-600 to-purple-700 text-white p-10 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:scale-105 text-center group"
           >
-            <div className="text-4xl mb-2">📊</div>
-            <h3 className="font-semibold">Reportes</h3>
-            <p className="text-sm text-purple-100 mt-1">Ver análisis y estadísticas</p>
+            <div className="text-7xl mb-4 group-hover:scale-110 transition-transform">📊</div>
+            <h3 className="text-2xl font-bold mb-2">Reportes</h3>
+            <p className="text-base text-purple-100">Ver análisis y estadísticas</p>
           </Link>
         </div>
       </div>

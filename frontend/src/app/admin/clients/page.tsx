@@ -106,76 +106,123 @@ export default function AdminClientsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">Listado de Clientes</h2>
-        <Link
-          href="/admin/clients/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-        >
-          + Nuevo Cliente
-        </Link>
-      </div>
-
-      {loading && <p> Cargando clientes… </p>}
-
-      {error && (
-        <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>
-      )}
-
-      {!loading && !error && (
-        <div className="overflow-x-auto bg-gray-50 rounded shadow">
-          <table className="min-w-full">
-            <thead className="bg-gray-200">
-              <tr>
-                <th className="px-4 py-2 text-left">ID</th>
-                <th className="px-4 py-2 text-left">Nombre</th>
-                <th className="px-4 py-2 text-left">Email</th>
-                <th className="px-4 py-2 text-left">Teléfono</th>
-                <th className="px-4 py-2 text-center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clients.map(c => (
-                <tr key={c.id_cliente} className="border-t hover:bg-gray-100">
-                  <td className="px-4 py-2">{c.id_cliente}</td>
-                  <td className="px-4 py-2">{c.nombre} {c.apellido}</td>
-                  <td className="px-4 py-2">{c.email}</td>
-                  <td className="px-4 py-2">{c.telefono ?? '-'}</td>
-                  <td className="px-4 py-2">
-                    <div className="flex justify-center gap-2">
-                      <Link
-                        href={`/admin/clients/${c.id_cliente}/edit`}
-                        className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition-colors text-sm"
-                      >
-                        ✏️ Editar
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(c.id_cliente, `${c.nombre} ${c.apellido}`)}
-                        disabled={deleteLoading === c.id_cliente}
-                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {deleteLoading === c.id_cliente ? '🔄' : '🗑️'} Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-
-              {clients.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
-                    No se encontraron clientes. 
-                    <Link href="/admin/clients/new" className="text-blue-600 hover:underline ml-2">
-                      Crear el primero
-                    </Link>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+      <div className="max-w-[1600px] mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-10">
+          <div>
+            <h2 className="text-5xl font-bold text-gray-900 mb-2">Clientes</h2>
+            <p className="text-lg text-gray-600">{clients.length} clientes registrados</p>
+          </div>
+          <Link
+            href="/admin/clients/new"
+            className="bg-gradient-to-br from-blue-600 to-blue-700 text-white px-8 py-4 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:scale-105 font-semibold text-lg flex items-center gap-3"
+          >
+            <span className="text-2xl">➕</span>
+            Nuevo Cliente
+          </Link>
         </div>
-      )}
+
+        {loading && (
+          <div className="flex justify-center items-center py-20">
+            <div className="text-center">
+              <div className="text-6xl mb-4 animate-bounce">⏳</div>
+              <p className="text-xl text-gray-600">Cargando clientes...</p>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-2xl mb-6 shadow-lg">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">⚠️</span>
+              <p className="text-lg font-medium">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-gradient-to-r from-gray-800 to-gray-900 text-white">
+                  <tr>
+                    <th className="px-8 py-5 text-left text-lg font-semibold">ID</th>
+                    <th className="px-8 py-5 text-left text-lg font-semibold">Nombre Completo</th>
+                    <th className="px-8 py-5 text-left text-lg font-semibold">Email</th>
+                    <th className="px-8 py-5 text-left text-lg font-semibold">Teléfono</th>
+                    <th className="px-8 py-5 text-center text-lg font-semibold">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clients.map((c, index) => (
+                    <tr 
+                      key={c.id_cliente} 
+                      className={`border-b border-gray-200 hover:bg-blue-50 transition-colors ${
+                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                      }`}
+                    >
+                      <td className="px-8 py-5">
+                        <span className="inline-flex items-center justify-center bg-blue-100 text-blue-800 w-12 h-12 rounded-full font-bold text-lg">
+                          {c.id_cliente}
+                        </span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold">
+                            {c.nombre.charAt(0)}{c.apellido.charAt(0)}
+                          </div>
+                          <span className="text-lg font-semibold text-gray-800">{c.nombre} {c.apellido}</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-base text-gray-700">{c.email}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-base text-gray-700">{c.telefono ?? '-'}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex justify-center gap-3">
+                          <Link
+                            href={`/admin/clients/${c.id_cliente}/edit`}
+                            className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 font-medium text-base flex items-center gap-2"
+                          >
+                            <span className="text-xl">✏️</span>
+                            Editar
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(c.id_cliente, `${c.nombre} ${c.apellido}`)}
+                            disabled={deleteLoading === c.id_cliente}
+                            className="bg-gradient-to-br from-red-500 to-red-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base flex items-center gap-2"
+                          >
+                            <span className="text-xl">{deleteLoading === c.id_cliente ? '🔄' : '🗑️'}</span>
+                            {deleteLoading === c.id_cliente ? 'Eliminando...' : 'Eliminar'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {clients.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-8 py-20 text-center">
+                        <div className="text-7xl mb-4">👥</div>
+                        <p className="text-2xl text-gray-600 mb-4">No hay clientes registrados</p>
+                        <Link 
+                          href="/admin/clients/new" 
+                          className="inline-block text-blue-600 hover:text-blue-700 text-lg font-medium hover:underline"
+                        >
+                          Crear el primer cliente →
+                        </Link>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
