@@ -235,6 +235,34 @@ export interface Factura {
 }
 
 // ==========================================
+// PROVEEDORES
+// ==========================================
+
+export interface Proveedor {
+  id_proveedor: number;
+  nombre: string;
+  empresa?: string;
+  telefono: string;
+  email: string;
+  direccion?: string;
+  activo: boolean;
+  notas?: string;
+  _count?: {
+    compras: number;
+    repuestos: number;
+  };
+}
+
+export interface CreateProveedorDto {
+  nombre: string;
+  empresa?: string;
+  telefono: string;
+  email: string;
+  direccion?: string;
+  notas?: string;
+}
+
+// ==========================================
 // SERVICIOS
 // ==========================================
 
