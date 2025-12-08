@@ -5,28 +5,15 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import type { Orden, ServicioAsignado, RepuestoUsado } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
-interface Servicio {
-  id_servicio: number;
-  nombre: string;
-  descripcion?: string;
-}
-
-interface ServicioAsignado {
-  id_servicio_asignado: number;
-  servicio: Servicio;
-}
-
-interface Orden {
-  id_orden: number;
+// Extensión de la interfaz Orden para incluir campos adicionales del backend
+interface OrdenTecnico extends Omit<Orden, 'fecha_ingreso' | 'total' | 'cliente' | 'vehiculo'> {
   fecha_apertura: string;
   fecha_compromiso?: string;
-  estado: string;
   total_estimado: number;
-  notas?: string;
-  descripcion_problema?: string;
   cliente: {
     nombre: string;
     apellido: string;
@@ -40,13 +27,13 @@ interface Orden {
     color?: string;
   };
   servicios_asignados: ServicioAsignado[];
-  repuestos_usados: any[];
+  repuestos_usados: RepuestoUsado[];
 }
 
 export default function TecnicoDashboard() {
   const { user } = useAuth();
   const router = useRouter();
-  const [ordenes, setOrdenes] = useState<Orden[]>([]);
+  const [ordenes, setOrdenes] = useState<OrdenTecnico[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filtroEstado, setFiltroEstado] = useState<string>('todas');
@@ -169,7 +156,7 @@ export default function TecnicoDashboard() {
 
   const ordenesPendientes = ordenes.filter(o => o.estado === 'pendiente');
   const ordenesEnProceso = ordenes.filter(o => o.estado === 'en_proceso');
-  const ordenesCompletadas = ordenes.filter(o => o.estado === 'completada' || o.estado === 'facturada');
+  const ordenesCompletadas = ordenes.filter(o => o.estado === 'completada');
 
   const ordenesFiltradas = ordenes.filter(orden => {
     const matchEstado = filtroEstado === 'todas' || orden.estado === filtroEstado;

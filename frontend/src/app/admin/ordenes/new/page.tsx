@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { Vehiculo, Servicio, Repuesto } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
@@ -13,31 +14,6 @@ interface Cliente {
   apellido: string;
   email: string;
   telefono: string;
-}
-
-interface Vehiculo {
-  id_vehiculo: number;
-  placa: string;
-  marca: string;
-  modelo: string;
-  año: number;
-  color: string;
-}
-
-interface Servicio {
-  id_servicio: number;
-  nombre: string;
-  descripcion?: string;
-  precio: number;
-  tiempo_estimado: number;
-}
-
-interface Repuesto {
-  id_repuesto: number;
-  nombre: string;
-  codigo: string;
-  precio_venta: number;
-  stock_actual: number;
 }
 
 interface ServicioItem {
@@ -109,7 +85,7 @@ export default function NuevaOrdenPage() {
       if (!res.ok) throw new Error('Error al cargar vehículos');
       const allVehiculos = await res.json();
       // Filtrar vehículos del cliente seleccionado
-      const vehiculosCliente = allVehiculos.filter((v: any) => v.id_cliente === id_cliente);
+      const vehiculosCliente = allVehiculos.filter((v: Vehiculo) => v.id_cliente === id_cliente);
       setVehiculos(vehiculosCliente);
     } catch (err: any) {
       setError(err.message);
@@ -157,8 +133,8 @@ export default function NuevaOrdenPage() {
         id_servicio: servicio.id_servicio,
         nombre: servicio.nombre,
         cantidad: 1,
-        precio_unitario: servicio.precio,
-        subtotal: servicio.precio
+        precio_unitario: servicio.precio_base,
+        subtotal: servicio.precio_base
       }]);
     }
   };
@@ -324,7 +300,7 @@ export default function NuevaOrdenPage() {
                     <option value={0}>Seleccione un vehículo</option>
                     {vehiculos.map(v => (
                       <option key={v.id_vehiculo} value={v.id_vehiculo}>
-                        {v.placa} - {v.marca} {v.modelo} ({v.año})
+                        {v.patente} - {v.marca} {v.modelo} ({v.anio})
                       </option>
                     ))}
                   </select>
@@ -364,7 +340,7 @@ export default function NuevaOrdenPage() {
                   <div key={s.id_servicio} className="flex justify-between items-center bg-white p-3 rounded border">
                     <div>
                       <p className="font-medium">{s.nombre}</p>
-                      <p className="text-sm text-gray-600">${s.precio.toFixed(2)}</p>
+                      <p className="text-sm text-gray-600">${s.precio_base.toFixed(2)}</p>
                     </div>
                     <button 
                       onClick={() => agregarServicio(s)} 

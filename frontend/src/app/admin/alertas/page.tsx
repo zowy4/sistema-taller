@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { fetchStockBajo } from '@/services/repuestos.service';
-import { fetchOrdenes, Orden as OrdenType } from '@/services/ordenes.service';
+import { fetchOrdenes } from '@/services/ordenes.service';
+import { Orden } from '@/types';
 
 interface RepuestoStockBajo {
   id_repuesto: number;
@@ -84,7 +85,7 @@ export default function AlertasPage() {
   }
 
   const proveedoresInactivos = proveedores.filter((p: Proveedor) => !p.activo);
-  const ordenesPendientes = ordenes.filter((o: OrdenType) => 
+  const ordenesPendientes = ordenes.filter((o: Orden) => 
     o.estado === 'pendiente' || o.estado === 'en_proceso'
   );
 

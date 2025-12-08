@@ -100,6 +100,20 @@ export interface Orden {
     nombre: string;
     apellido: string;
   };
+  servicios_asignados?: ServicioAsignado[];
+  repuestos_usados?: RepuestoUsado[];
+  factura?: Factura;
+}
+
+/**
+ * Interfaz para servicios asignados a órdenes de trabajo
+ */
+export interface ServicioAsignado {
+  id_servicio_asignado: number;
+  id_orden: number;
+  id_servicio: number;
+  precio: number;
+  servicio: Servicio;
 }
 
 export interface CreateOrdenDto {
@@ -198,6 +212,29 @@ export interface StockBajo {
   stock_actual: number;
   stock_minimo: number;
   precio_venta: number;
+}
+
+/**
+ * Interfaz para repuestos usados en órdenes de trabajo
+ */
+export interface RepuestoUsado {
+  id: number;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
+  id_orden: number;
+  id_repuesto: number;
+  repuesto: Repuesto;
+}
+
+/**
+ * DTO para crear/agregar repuesto usado a una orden
+ */
+export interface CreateRepuestoUsadoDto {
+  id_repuesto: number;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
 }
 
 // ==========================================
@@ -327,10 +364,12 @@ export interface DashboardKPIs {
   clientes_total: number;
   clientes_activos: number;
   ordenes_pendientes: number;
+  ordenes_en_proceso: number;
   ordenes_completadas: number;
   servicios_activos: number;
   ingresos_mes: number;
   stock_bajo: number;
+  repuestos_total: number;
 }
 
 export interface VentasSemana {

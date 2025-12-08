@@ -98,7 +98,15 @@ export default function NuevoVehiculoPage() {
         return;
       }
       // Asegurar que los campos numéricos sean números y limpiar campos opcionales vacíos
-      const payload: any = {
+      const payload: Partial<{
+        placa: string;
+        vin: string;
+        marca: string;
+        modelo: string;
+        anio: number;
+        id_cliente: number;
+        detalles?: string;
+      }> = {
         placa: form.placa,
         vin: form.vin,
         marca: form.marca,

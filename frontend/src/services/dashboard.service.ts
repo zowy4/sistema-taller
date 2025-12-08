@@ -12,10 +12,12 @@ export interface DashboardKPIs {
   clientes_total: number;
   clientes_activos: number;
   ordenes_pendientes: number;
+  ordenes_en_proceso: number;
   ordenes_completadas: number;
   servicios_activos: number;
   ingresos_mes: number;
   stock_bajo: number;
+  repuestos_total: number;
 }
 
 /**

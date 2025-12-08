@@ -105,7 +105,14 @@ export default function EditarVehiculoPage({ params }: { params: Promise<{ id: s
         return;
       }
       // Enviar solo los campos permitidos
-      const payload: any = {
+      const payload: {
+        placa: string;
+        vin: string;
+        marca: string;
+        modelo: string;
+        anio: number;
+        id_cliente: number;
+      } = {
         placa: vehiculo.placa,
         vin: vehiculo.vin,
         marca: vehiculo.marca,
