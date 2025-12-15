@@ -37,9 +37,11 @@ ENV NODE_ENV=production
 
 # Copiar archivos necesarios para standalone
 COPY --from=builder /app/next.config.* ./
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+# Copiar public si existe
+RUN mkdir -p ./public
+COPY --from=builder /app/public* ./public/ || true
 
 # Exponer puerto
 EXPOSE 3000
