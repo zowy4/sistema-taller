@@ -20,6 +20,9 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copiar todo el código
 COPY . .
 
+# Crear public directory si no existe
+RUN mkdir -p ./public
+
 # Variable de entorno para el build (apunta al servicio backend en Docker)
 ARG NEXT_PUBLIC_API_URL=http://localhost:3002
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
@@ -37,11 +40,9 @@ ENV NODE_ENV=production
 
 # Copiar archivos necesarios para standalone
 COPY --from=builder /app/next.config.* ./
+COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
-# Copiar public si existe
-RUN mkdir -p ./public
-COPY --from=builder /app/public* ./public/ || true
 
 # Exponer puerto
 EXPOSE 3000
