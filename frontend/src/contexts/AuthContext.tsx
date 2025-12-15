@@ -1,9 +1,6 @@
 ﻿'use client';
-
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-
 interface User {
   id: number;
   email: string;
@@ -13,7 +10,6 @@ interface User {
   permissions?: string[];
   _type: 'empleado' | 'cliente';
 }
-
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -23,19 +19,15 @@ interface AuthContextType {
   hasRole: (role: string) => boolean;
   isLoading: boolean;
 }
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
       setToken(savedToken);
-      // Decodificar el token para obtener información del usuario
       try {
         const payload = JSON.parse(atob(savedToken.split('.')[1]));
         setUser({
@@ -51,7 +43,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setIsLoading(false);
   }, []);
-
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
@@ -61,14 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
         body: JSON.stringify({ email, password }),
       });
-
       if (response.ok) {
         const data = await response.json();
         const token = data.access_token;
-        
-        // Decodificar el token para obtener información del usuario
         const payload = JSON.parse(atob(token.split('.')[1]));
-        
         const userData: User = {
           id: payload.sub,
           email: payload.email,
@@ -76,7 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           permissions: payload.permissions || [],
           _type: payload.rol ? 'empleado' : 'cliente',
         };
-
         setToken(token);
         setUser(userData);
         localStorage.setItem('token', token);
@@ -87,7 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
   };
-
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -96,15 +81,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.location.href = '/login';
     }
   };
-
   const hasPermission = (permission: string): boolean => {
     return user?.permissions?.includes(permission) || false;
   };
-
   const hasRole = (role: string): boolean => {
     return user?.rol === role;
   };
-
   return (
     <AuthContext.Provider value={{
       user,
@@ -119,7 +101,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -127,4 +108,3 @@ export function useAuth() {
   }
   return context;
 }
-

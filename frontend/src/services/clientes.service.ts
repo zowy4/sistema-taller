@@ -1,13 +1,4 @@
-/**
- * Servicios API para Clientes
- * Funciones limpias y reutilizables para fetching de datos
- */
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-
-/**
- * Interfaz para Cliente
- */
+﻿const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 export interface Cliente {
   id_cliente: number;
   nombre: string;
@@ -18,10 +9,6 @@ export interface Cliente {
   activo: boolean;
   fecha_registro: string;
 }
-
-/**
- * Obtener todos los clientes
- */
 export async function fetchClientes(token: string): Promise<Cliente[]> {
   const response = await fetch(`${API_URL}/clientes`, {
     headers: {
@@ -29,7 +16,6 @@ export async function fetchClientes(token: string): Promise<Cliente[]> {
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) {
       throw new Error('UNAUTHORIZED');
@@ -39,13 +25,8 @@ export async function fetchClientes(token: string): Promise<Cliente[]> {
     }
     throw new Error('Error al obtener clientes');
   }
-
   return response.json();
 }
-
-/**
- * Obtener un cliente por ID
- */
 export async function fetchClienteById(token: string, id: number): Promise<Cliente> {
   const response = await fetch(`${API_URL}/clientes/${id}`, {
     headers: {
@@ -53,7 +34,6 @@ export async function fetchClienteById(token: string, id: number): Promise<Clien
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) {
       throw new Error('UNAUTHORIZED');
@@ -66,13 +46,8 @@ export async function fetchClienteById(token: string, id: number): Promise<Clien
     }
     throw new Error('Error al obtener el cliente');
   }
-
   return response.json();
 }
-
-/**
- * Crear un nuevo cliente
- */
 export async function createCliente(
   token: string,
   data: Omit<Cliente, 'id_cliente' | 'fecha_registro'>
@@ -85,7 +60,6 @@ export async function createCliente(
     },
     body: JSON.stringify(data),
   });
-
   if (!response.ok) {
     if (response.status === 401) {
       throw new Error('UNAUTHORIZED');
@@ -95,13 +69,8 @@ export async function createCliente(
     }
     throw new Error('Error al crear el cliente');
   }
-
   return response.json();
 }
-
-/**
- * Actualizar un cliente existente
- */
 export async function updateCliente(
   token: string,
   id: number,
@@ -115,7 +84,6 @@ export async function updateCliente(
     },
     body: JSON.stringify(data),
   });
-
   if (!response.ok) {
     if (response.status === 401) {
       throw new Error('UNAUTHORIZED');
@@ -128,13 +96,8 @@ export async function updateCliente(
     }
     throw new Error('Error al actualizar el cliente');
   }
-
   return response.json();
 }
-
-/**
- * Eliminar un cliente
- */
 export async function deleteCliente(token: string, id: number): Promise<void> {
   const response = await fetch(`${API_URL}/clientes/${id}`, {
     method: 'DELETE',
@@ -143,7 +106,6 @@ export async function deleteCliente(token: string, id: number): Promise<void> {
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) {
       throw new Error('UNAUTHORIZED');

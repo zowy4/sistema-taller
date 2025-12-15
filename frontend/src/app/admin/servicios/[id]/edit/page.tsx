@@ -10,7 +10,7 @@ interface Servicio {
   id_servicio: number;
   nombre: string;
   descripcion?: string;
-  precio_estandar: number;
+  precio_base: number;
   activo: boolean;
 }
 
@@ -60,7 +60,7 @@ export default function EditarServicioPage({ params }: { params: Promise<{ id: s
     const checked = (target as HTMLInputElement).checked ?? false;
     setServicio(s => s ? ({
       ...s,
-      [name]: type === 'checkbox' ? checked : (name === 'precio_estandar' ? parseFloat(valueStr) : valueStr)
+      [name]: type === 'checkbox' ? checked : (name === 'precio_base' ? parseFloat(valueStr) || 0 : valueStr)
     }) : s);
   };
 
@@ -75,13 +75,20 @@ export default function EditarServicioPage({ params }: { params: Promise<{ id: s
         router.push('/login');
         return;
       }
+      const payload = {
+        nombre: servicio.nombre,
+        descripcion: servicio.descripcion || undefined,
+        precio: servicio.precio_base,
+        tiempo_estimado: 60,
+        activo: servicio.activo
+      };
       const res = await fetch(`${API_URL}/servicios/${id}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(servicio)
+        body: JSON.stringify(payload)
       });
       if (res.status === 401) {
         localStorage.removeItem('token');
@@ -126,8 +133,8 @@ export default function EditarServicioPage({ params }: { params: Promise<{ id: s
               <textarea name="descripcion" value={servicio.descripcion || ''} onChange={handleChange} className="w-full border border-gray-300 rounded px-3 py-2" rows={3} />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Precio estándar *</label>
-              <input type="number" name="precio_estandar" value={servicio.precio_estandar} onChange={handleChange} required min="0" step="0.01" className="w-full border border-gray-300 rounded px-3 py-2" />
+              <label className="block text-sm font-medium mb-1">Precio base *</label>
+              <input type="number" name="precio_base" value={servicio.precio_base || 0} onChange={handleChange} required min="0" step="0.01" className="w-full border border-gray-300 rounded px-3 py-2" />
             </div>
             <div className="flex items-center gap-2">
               <input type="checkbox" name="activo" checked={servicio.activo} onChange={handleChange} id="activo" />

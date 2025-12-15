@@ -1,185 +1,256 @@
 ﻿'use client';
-
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-
+import { Wrench, Users, Shield, Gauge } from 'lucide-react';
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
   useEffect(() => {
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
   }, []);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 animate-gradient-x relative overflow-hidden">
-      {/* Efectos de fondo */}
-      <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full filter blur-3xl opacity-20 animate-pulse delay-700"></div>
-
-      {/* Header flotante */}
-      <header className="relative z-10">
-        <div className="max-w-7xl mx-auto px-6 py-6">
+    <div className="min-h-screen bg-[#0f0f0f] relative overflow-hidden">
+      {}
+      <div 
+        className="absolute inset-0 opacity-5"
+        style={{
+          backgroundImage: `
+            repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px)
+          `
+        }}
+      ></div>
+      {}
+      <header className="relative z-10 border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="text-4xl">🔧</div>
-              <h1 className="text-2xl font-bold text-white">TallerPro</h1>
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                <Wrench className="w-6 h-6 text-white" strokeWidth={2} />
+              </div>
+              <h1 className="text-2xl font-bold text-white tracking-tight">TALLERPRO</h1>
+              <span className="text-xs text-gray-500 font-mono ml-2">v2.0</span>
             </div>
-            <nav className="flex gap-4">
+            <nav className="flex gap-3">
               {!isLoggedIn ? (
                 <>
                   <Link 
                     href="/login" 
-                    className="px-6 py-3 text-white hover:text-blue-300 transition-colors font-medium"
+                    className="px-5 py-2 text-gray-300 hover:text-white transition-colors font-medium text-sm"
                   >
-                    Iniciar Sesión
+                    ACCEDER
                   </Link>
                   <Link 
                     href="/register" 
-                    className="bg-white/10 backdrop-blur-lg text-white px-8 py-3 rounded-xl hover:bg-white/20 transition-all font-bold border border-white/30"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2 hover:from-orange-600 hover:to-orange-700 transition-all font-bold text-sm border border-orange-400/50"
                   >
-                    Comenzar Ahora
+                    REGISTRARSE
                   </Link>
                 </>
               ) : (
                 <Link 
                   href="/admin/dashboard" 
-                  className="bg-white/10 backdrop-blur-lg text-white px-8 py-3 rounded-xl hover:bg-white/20 transition-all font-bold border border-white/30"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2 hover:from-orange-600 hover:to-orange-700 transition-all font-bold text-sm border border-orange-400/50"
                 >
-                  Ir al Dashboard
+                  DASHBOARD
                 </Link>
               )}
             </nav>
           </div>
         </div>
       </header>
-
-      {/* Hero Section con Glassmorphism */}
       <main className="relative z-10">
-        <div className="max-w-7xl mx-auto px-6 pt-20 pb-32">
-          {/* Hero principal */}
-          <div className="text-center mb-20">
-            <div className="mb-8 inline-block">
-              <span className="bg-white/10 backdrop-blur-lg text-white px-6 py-2 rounded-full text-sm font-medium border border-white/30">
-                ✨ Sistema de Gestión Profesional
-              </span>
-            </div>
-            <h1 className="text-7xl md:text-8xl font-black text-white mb-6 leading-tight">
-              TallerPro
-            </h1>
-            <p className="text-2xl md:text-3xl text-blue-100 mb-12 max-w-3xl mx-auto leading-relaxed">
-              La plataforma completa para administrar tu taller mecánico con tecnología de vanguardia
-            </p>
-            <div className="flex justify-center gap-6">
-              <Link 
-                href="/register"
-                className="bg-white text-blue-900 px-10 py-5 rounded-2xl text-xl font-bold hover:scale-105 transition-all shadow-2xl hover:shadow-white/20"
-              >
-                Prueba Gratis 30 días
-              </Link>
-              <Link 
-                href="/login"
-                className="bg-white/10 backdrop-blur-lg text-white px-10 py-5 rounded-2xl text-xl font-bold hover:bg-white/20 transition-all border-2 border-white/30"
-              >
-                Iniciar Sesión
-              </Link>
+        <div 
+          className="relative h-[600px] bg-cover bg-center"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=1920&q=80')"
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/80 to-black/60"></div>
+          <div className="relative max-w-7xl mx-auto px-6 h-full flex items-center">
+            <div className="max-w-2xl">
+              <div className="mb-6">
+                <span className="bg-orange-500/20 text-orange-400 px-4 py-2 text-xs font-mono border border-orange-500/30 inline-block">
+                  SISTEMA PROFESIONAL DE GESTIÓN
+                </span>
+              </div>
+              <h1 className="text-6xl md:text-7xl font-black text-white mb-6 leading-tight tracking-tight">
+                CONTROL TOTAL<br/>
+                <span className="text-orange-500">DEL TALLER</span>
+              </h1>
+              <p className="text-xl text-gray-300 mb-10 leading-relaxed font-light">
+                Plataforma industrial para gestión completa de talleres mecánicos.<br/>
+                Órdenes, inventario, facturación y más en tiempo real.
+              </p>
+              <div className="flex gap-4">
+                <Link 
+                  href="/register"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-10 py-4 text-lg font-bold hover:from-orange-600 hover:to-orange-700 transition-all border border-orange-400/50 shadow-xl shadow-orange-500/20"
+                >
+                  COMENZAR AHORA
+                </Link>
+                <Link 
+                  href="/login"
+                  className="bg-gray-800 text-white px-10 py-4 text-lg font-bold hover:bg-gray-700 transition-all border border-gray-600"
+                >
+                  ACCEDER
+                </Link>
+              </div>
             </div>
           </div>
-
-          {/* Features con tarjetas glassmorphism */}
-          <div className="grid md:grid-cols-3 gap-8 mb-20">
-            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 hover:bg-white/20 transition-all">
-              <div className="text-6xl mb-6">👥</div>
-              <h3 className="text-2xl font-bold text-white mb-4">Gestión de Clientes</h3>
-              <p className="text-blue-100 text-lg leading-relaxed">
-                Historial completo, datos de contacto y seguimiento personalizado de cada cliente.
-              </p>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 hover:bg-white/20 transition-all">
-              <div className="text-6xl mb-6">🔧</div>
-              <h3 className="text-2xl font-bold text-white mb-4">Órdenes de Trabajo</h3>
-              <p className="text-blue-100 text-lg leading-relaxed">
-                Control total de servicios, reparaciones y estado de cada vehículo en tiempo real.
-              </p>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 hover:bg-white/20 transition-all">
-              <div className="text-6xl mb-6">📊</div>
-              <h3 className="text-2xl font-bold text-white mb-4">Reportes Avanzados</h3>
-              <p className="text-blue-100 text-lg leading-relaxed">
-                Analytics en tiempo real, KPIs y reportes financieros para tomar mejores decisiones.
-              </p>
-            </div>
-          </div>
-
-          {/* Sección de beneficios */}
-          <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-12 border border-white/20 mb-20">
-            <h2 className="text-4xl font-bold text-white text-center mb-12">
-              Todo lo que necesitas en un solo lugar
+        </div>
+        {}
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-white mb-4 tracking-tight">
+              ACCESO POR ROL
             </h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="flex items-start gap-4">
-                <div className="text-3xl">✅</div>
-                <div>
-                  <h4 className="text-xl font-bold text-white mb-2">Gestión de Inventario</h4>
-                  <p className="text-blue-100">Control de repuestos y productos con alertas automáticas</p>
-                </div>
+            <p className="text-gray-400 text-lg">
+              Cada usuario tiene su espacio de trabajo optimizado
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div 
+              className="group relative h-[400px] bg-cover bg-center overflow-hidden border border-gray-800"
+              style={{
+                backgroundImage: "url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=80')"
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent group-hover:from-orange-600/90 group-hover:via-orange-600/60 transition-all duration-300"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <Shield className="w-12 h-12 text-orange-500 mb-4 group-hover:text-white transition-colors" strokeWidth={1.5} />
+                <h3 className="text-2xl font-bold text-white mb-2">ADMINISTRADOR</h3>
+                <p className="text-gray-300 text-sm mb-4 group-hover:text-gray-100">
+                  Dashboard completo, reportes, configuración, usuarios y facturación
+                </p>
+                <Link 
+                  href="/login"
+                  className="inline-block text-orange-500 group-hover:text-white font-bold text-sm"
+                >
+                  ACCEDER ?
+                </Link>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="text-3xl">✅</div>
-                <div>
-                  <h4 className="text-xl font-bold text-white mb-2">Portal del Cliente</h4>
-                  <p className="text-blue-100">Tus clientes pueden ver el estado de sus vehículos 24/7</p>
-                </div>
+            </div>
+            <div 
+              className="group relative h-[400px] bg-cover bg-center overflow-hidden border border-gray-800"
+              style={{
+                backgroundImage: "url('https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80')"
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent group-hover:from-orange-600/90 group-hover:via-orange-600/60 transition-all duration-300"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <Wrench className="w-12 h-12 text-orange-500 mb-4 group-hover:text-white transition-colors" strokeWidth={1.5} />
+                <h3 className="text-2xl font-bold text-white mb-2">TÉCNICO</h3>
+                <p className="text-gray-300 text-sm mb-4 group-hover:text-gray-100">
+                  Órdenes asignadas, actualización de estado, repuestos utilizados
+                </p>
+                <Link 
+                  href="/login"
+                  className="inline-block text-orange-500 group-hover:text-white font-bold text-sm"
+                >
+                  ACCEDER ?
+                </Link>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="text-3xl">✅</div>
-                <div>
-                  <h4 className="text-xl font-bold text-white mb-2">Multi-Usuario</h4>
-                  <p className="text-blue-100">Roles para admin, técnicos, recepción y clientes</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="text-3xl">✅</div>
-                <div>
-                  <h4 className="text-xl font-bold text-white mb-2">Notificaciones en Tiempo Real</h4>
-                  <p className="text-blue-100">Mantén informados a todos sobre cambios importantes</p>
-                </div>
+            </div>
+            <div 
+              className="group relative h-[400px] bg-cover bg-center overflow-hidden border border-gray-800"
+              style={{
+                backgroundImage: "url('https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80')"
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent group-hover:from-orange-600/90 group-hover:via-orange-600/60 transition-all duration-300"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <Users className="w-12 h-12 text-orange-500 mb-4 group-hover:text-white transition-colors" strokeWidth={1.5} />
+                <h3 className="text-2xl font-bold text-white mb-2">RECEPCIÓN</h3>
+                <p className="text-gray-300 text-sm mb-4 group-hover:text-gray-100">
+                  Crear órdenes, atención al cliente, seguimiento de vehículos
+                </p>
+                <Link 
+                  href="/login"
+                  className="inline-block text-orange-500 group-hover:text-white font-bold text-sm"
+                >
+                  ACCEDER ?
+                </Link>
               </div>
             </div>
           </div>
-
-          {/* CTA Final */}
-          <div className="text-center">
-            <div className="bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-2xl rounded-3xl p-12 border border-white/30">
-              <h2 className="text-4xl font-bold text-white mb-4">
-                ¿Listo para transformar tu taller?
+        </div>
+        {}
+        <div className="bg-[#1a1a1a] py-20 border-y border-gray-800">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-black text-white mb-4 tracking-tight">
+                ESPECIFICACIONES TÉCNICAS
               </h2>
-              <p className="text-xl text-blue-100 mb-8">
-                Únete a cientos de talleres que ya confían en TallerPro
-              </p>
-              <Link 
-                href="/register"
-                className="inline-block bg-white text-blue-900 px-12 py-5 rounded-2xl text-xl font-bold hover:scale-105 transition-all shadow-2xl"
-              >
-                Crear Cuenta Gratis
-              </Link>
+            </div>
+            <div className="grid md:grid-cols-4 gap-6">
+              <div className="bg-[#2d2d2d] border border-gray-700 p-6">
+                <Gauge className="w-8 h-8 text-orange-500 mb-4" strokeWidth={1.5} />
+                <h4 className="text-white font-bold mb-2 text-sm">RENDIMIENTO</h4>
+                <p className="text-gray-400 text-xs leading-relaxed">
+                  Sistema optimizado para operaciones concurrentes
+                </p>
+              </div>
+              <div className="bg-[#2d2d2d] border border-gray-700 p-6">
+                <Shield className="w-8 h-8 text-orange-500 mb-4" strokeWidth={1.5} />
+                <h4 className="text-white font-bold mb-2 text-sm">SEGURIDAD</h4>
+                <p className="text-gray-400 text-xs leading-relaxed">
+                  Autenticación JWT y control de roles avanzado
+                </p>
+              </div>
+              <div className="bg-[#2d2d2d] border border-gray-700 p-6">
+                <Users className="w-8 h-8 text-orange-500 mb-4" strokeWidth={1.5} />
+                <h4 className="text-white font-bold mb-2 text-sm">MULTI-USUARIO</h4>
+                <p className="text-gray-400 text-xs leading-relaxed">
+                  Acceso simultáneo sin conflictos de datos
+                </p>
+              </div>
+              <div className="bg-[#2d2d2d] border border-gray-700 p-6">
+                <Wrench className="w-8 h-8 text-orange-500 mb-4" strokeWidth={1.5} />
+                <h4 className="text-white font-bold mb-2 text-sm">TIEMPO REAL</h4>
+                <p className="text-gray-400 text-xs leading-relaxed">
+                  Actualizaciones instantáneas en todos los módulos
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {}
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <div 
+            className="relative h-[300px] bg-cover bg-center overflow-hidden border border-gray-800"
+            style={{
+              backgroundImage: "url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80')"
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/80 to-transparent"></div>
+            <div className="relative h-full flex items-center px-12">
+              <div>
+                <h2 className="text-4xl font-black text-white mb-4">
+                  OPTIMIZA TU TALLER HOY
+                </h2>
+                <p className="text-xl text-gray-300 mb-8 max-w-2xl">
+                  Únete a talleres profesionales que confían en TallerPro
+                </p>
+                <Link 
+                  href="/register"
+                  className="inline-block bg-gradient-to-r from-orange-500 to-orange-600 text-white px-12 py-4 text-lg font-bold hover:from-orange-600 hover:to-orange-700 transition-all border border-orange-400/50 shadow-xl shadow-orange-500/20"
+                >
+                  REGISTRARSE GRATIS
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-12">
+      {}
+      <footer className="relative z-10 border-t border-gray-800 bg-[#1a1a1a]">
+        <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="text-center">
-            <p className="text-blue-200 text-lg mb-4">
-              © 2025 TallerPro. Sistema de Gestión de Talleres Mecánicos.
+            <p className="text-gray-500 text-sm mb-2 font-mono">
+              © 2025 TALLERPRO - SISTEMA DE GESTIÓN INDUSTRIAL
             </p>
-            <p className="text-blue-300 text-sm">
-              Potenciado por tecnología de última generación
+            <p className="text-gray-600 text-xs">
+              Tecnología profesional para talleres mecánicos
             </p>
           </div>
         </div>
@@ -187,4 +258,3 @@ export default function Home() {
     </div>
   );
 }
-

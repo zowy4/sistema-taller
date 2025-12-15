@@ -3,14 +3,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateRepuestoDto } from './dto/create-repuesto.dto';
 import { UpdateRepuestoDto } from './dto/update-repuesto.dto';
 import { AdjustStockDto } from './dto/adjust-stock.dto';
-
 @Injectable()
 export class RepuestosService {
   constructor(private readonly prisma: PrismaService) {}
-
-  /**
-   * Crear un nuevo repuesto
-   */
   async createRepuesto(createRepuestoDto: CreateRepuestoDto) {
     try {
       return await this.prisma.repuestos.create({
@@ -23,10 +18,6 @@ export class RepuestosService {
       throw error;
     }
   }
-
-  /**
-   * Obtener todos los repuestos
-   */
   async getAllRepuestos() {
     return await this.prisma.repuestos.findMany({
       orderBy: {
@@ -34,10 +25,6 @@ export class RepuestosService {
       },
     });
   }
-
-  /**
-   * Obtener repuestos con stock bajo (por debajo del nivel mínimo)
-   */
   async getRepuestosBajoStock() {
     const repuestos = await this.prisma.repuestos.findMany({
       where: {
@@ -51,28 +38,17 @@ export class RepuestosService {
     });
     return repuestos;
   }
-
-  /**
-   * Obtener un repuesto por ID
-   */
   async getRepuestoById(id: number) {
     const repuesto = await this.prisma.repuestos.findUnique({
       where: { id_repuesto: id },
     });
-
     if (!repuesto) {
       throw new NotFoundException(`Repuesto con ID ${id} no encontrado`);
     }
-
     return repuesto;
   }
-
-  /**
-   * Actualizar un repuesto
-   */
   async updateRepuesto(id: number, updateRepuestoDto: UpdateRepuestoDto) {
     await this.getRepuestoById(id);
-
     try {
       return await this.prisma.repuestos.update({
         where: { id_repuesto: id },
@@ -85,13 +61,8 @@ export class RepuestosService {
       throw error;
     }
   }
-
-  /**
-   * Eliminar un repuesto
-   */
   async deleteRepuesto(id: number) {
     await this.getRepuestoById(id);
-
     try {
       return await this.prisma.repuestos.delete({
         where: { id_repuesto: id },
@@ -105,23 +76,14 @@ export class RepuestosService {
       throw error;
     }
   }
-
-  /**
-   * Ajustar stock de un repuesto
-   * cantidad positiva = entrada de stock
-   * cantidad negativa = salida de stock
-   */
   async adjustStock(id: number, adjustStockDto: AdjustStockDto) {
     const repuesto = await this.getRepuestoById(id);
-
     const newStock = repuesto.stock_actual + adjustStockDto.cantidad;
-
     if (newStock < 0) {
       throw new BadRequestException(
         `No hay suficiente stock. Stock actual: ${repuesto.stock_actual}`,
       );
     }
-
     return await this.prisma.repuestos.update({
       where: { id_repuesto: id },
       data: {
@@ -130,4 +92,3 @@ export class RepuestosService {
     });
   }
 }
-

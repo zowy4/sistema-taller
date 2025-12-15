@@ -1,13 +1,4 @@
-/**
- * Servicios API para el Dashboard
- * Funciones limpias y reutilizables para fetching de datos
- */
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-
-/**
- * Interfaz para los KPIs del dashboard
- */
+﻿const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 export interface DashboardKPIs {
   clientes_total: number;
   clientes_activos: number;
@@ -19,10 +10,6 @@ export interface DashboardKPIs {
   stock_bajo: number;
   repuestos_total: number;
 }
-
-/**
- * Interfaz para productos con stock bajo
- */
 export interface StockBajo {
   id_repuesto: number;
   nombre: string;
@@ -30,19 +17,11 @@ export interface StockBajo {
   stock_minimo: number;
   precio_venta: number;
 }
-
-/**
- * Interfaz para ventas de la semana
- */
 export interface VentasSemana {
   dia: string;
   total: number;
   ordenes: number;
 }
-
-/**
- * Obtener KPIs del dashboard
- */
 export async function fetchDashboardKPIs(token: string): Promise<DashboardKPIs> {
   const response = await fetch(`${API_URL}/dashboard/kpis`, {
     headers: {
@@ -50,7 +29,6 @@ export async function fetchDashboardKPIs(token: string): Promise<DashboardKPIs> 
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) {
       throw new Error('UNAUTHORIZED');
@@ -60,13 +38,8 @@ export async function fetchDashboardKPIs(token: string): Promise<DashboardKPIs> 
     }
     throw new Error('Error al obtener KPIs del dashboard');
   }
-
   return response.json();
 }
-
-/**
- * Obtener productos con stock bajo
- */
 export async function fetchStockBajo(token: string): Promise<StockBajo[]> {
   const response = await fetch(`${API_URL}/dashboard/stock-bajo`, {
     headers: {
@@ -74,7 +47,6 @@ export async function fetchStockBajo(token: string): Promise<StockBajo[]> {
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) {
       throw new Error('UNAUTHORIZED');
@@ -84,13 +56,8 @@ export async function fetchStockBajo(token: string): Promise<StockBajo[]> {
     }
     throw new Error('Error al obtener productos con stock bajo');
   }
-
   return response.json();
 }
-
-/**
- * Obtener ventas de la semana
- */
 export async function fetchVentasSemana(token: string): Promise<VentasSemana[]> {
   const response = await fetch(`${API_URL}/dashboard/ventas-semana`, {
     headers: {
@@ -98,7 +65,6 @@ export async function fetchVentasSemana(token: string): Promise<VentasSemana[]> 
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) {
       throw new Error('UNAUTHORIZED');
@@ -108,6 +74,5 @@ export async function fetchVentasSemana(token: string): Promise<VentasSemana[]> 
     }
     throw new Error('Error al obtener ventas de la semana');
   }
-
   return response.json();
 }

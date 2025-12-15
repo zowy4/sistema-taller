@@ -1,12 +1,9 @@
 ﻿'use client';
-
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { fetchServicios } from '@/services/servicios.service';
 import { useServiciosMutations } from '@/hooks/useServiciosMutations';
-
-// Utilidad de formateo de moneda
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('es-DO', {
     style: 'currency',
@@ -15,24 +12,17 @@ const formatCurrency = (amount: number) => {
     maximumFractionDigits: 2,
   }).format(amount);
 };
-
 export default function ServiciosPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  
   const { data: servicios = [], isLoading } = useQuery({
     queryKey: ['servicios'],
     queryFn: () => fetchServicios(token || ''),
     enabled: !!token,
   });
-
   const { toggleEstadoMutation, deleteMutation } = useServiciosMutations();
-
-  // Búsqueda en tiempo real
   const filteredServicios = useMemo(() => {
     if (!searchTerm.trim()) return servicios;
-    
     const search = searchTerm.toLowerCase();
     return servicios.filter(servicio => 
       servicio.nombre.toLowerCase().includes(search) ||
@@ -40,233 +30,189 @@ export default function ServiciosPage() {
       servicio.categoria?.toLowerCase().includes(search)
     );
   }, [servicios, searchTerm]);
-
   const handleToggleEstado = (id: number, activo: boolean) => {
     toggleEstadoMutation.mutate({ id, activo: !activo });
   };
-
   const handleDelete = (id: number, nombre: string) => {
     if (confirm(`¿Estás seguro de eliminar el servicio "${nombre}"?`)) {
       deleteMutation.mutate(id);
     }
   };
-
-  // Estadísticas
-  const stats = useMemo(() => ({
-    total: servicios.length,
-    activos: servicios.filter(s => s.activo).length,
-    inactivos: servicios.filter(s => !s.activo).length,
-    precioPromedio: servicios.length > 0 
-      ? servicios.reduce((sum, s) => sum + s.precio_base, 0) / servicios.length 
-      : 0,
-  }), [servicios]);
-
+  const stats = useMemo(() => {
+    const serviciosConPrecio = servicios.filter(s => s.precio_base != null && !isNaN(s.precio_base));
+    return {
+      total: servicios.length,
+      activos: servicios.filter(s => s.activo).length,
+      inactivos: servicios.filter(s => !s.activo).length,
+      precioPromedio: serviciosConPrecio.length > 0 
+        ? serviciosConPrecio.reduce((sum, s) => sum + s.precio_base, 0) / serviciosConPrecio.length 
+        : 0,
+    };
+  }, [servicios]);
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-      {/* Header con Estadísticas */}
+    <div className="min-h-screen bg-[#0f0f0f] p-6">
+      {}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">Catálogo de Servicios</h2>
-            <p className="text-gray-600 mt-1">Gestión de mano de obra y servicios</p>
+            <h2 className="text-3xl font-black text-white tracking-tight uppercase">Catálogo de Servicios</h2>
+            <p className="text-gray-400 mt-1">Gestión de mano de obra y servicios</p>
           </div>
           <Link
             href="/admin/servicios/new"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 font-medium"
+            className="bg-gradient-to-r from-orange-600 to-orange-500 border border-orange-400/50 hover:from-orange-500 hover:to-orange-400 text-white px-6 py-3 transition-all flex items-center gap-2 font-black uppercase tracking-wide"
           >
-            <span className="text-lg">➕</span>
             Nuevo Servicio
           </Link>
         </div>
-
-        {/* Stats Cards */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
+          <div className="bg-[#1a1a1a] border border-gray-800 p-4">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-gray-500 text-sm">Total Servicios</p>
-                <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
-              </div>
-              <div className="bg-blue-100 p-3 rounded-full">
-                <span className="text-2xl">💼</span>
+                <p className="text-gray-400 text-sm uppercase tracking-wide">Total Servicios</p>
+                <p className="text-2xl font-black text-white font-mono">{stats.total}</p>
               </div>
             </div>
           </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
+          <div className="bg-[#1a1a1a] border border-gray-800 p-4">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-gray-500 text-sm">Activos</p>
-                <p className="text-2xl font-bold text-green-600">{stats.activos}</p>
-              </div>
-              <div className="bg-green-100 p-3 rounded-full">
-                <span className="text-2xl">✅</span>
+                <p className="text-gray-400 text-sm uppercase tracking-wide">Activos</p>
+                <p className="text-2xl font-black text-green-500 font-mono">{stats.activos}</p>
               </div>
             </div>
           </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-gray-500">
+          <div className="bg-[#1a1a1a] border border-gray-800 p-4">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-gray-500 text-sm">Inactivos</p>
-                <p className="text-2xl font-bold text-gray-600">{stats.inactivos}</p>
-              </div>
-              <div className="bg-gray-100 p-3 rounded-full">
-                <span className="text-2xl">⏸️</span>
+                <p className="text-gray-400 text-sm uppercase tracking-wide">Inactivos</p>
+                <p className="text-2xl font-black text-gray-500 font-mono">{stats.inactivos}</p>
               </div>
             </div>
           </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-purple-500">
+          <div className="bg-[#1a1a1a] border border-gray-800 p-4">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-gray-500 text-sm">Precio Promedio</p>
-                <p className="text-2xl font-bold text-purple-600">
+                <p className="text-gray-400 text-sm uppercase tracking-wide">Precio Promedio</p>
+                <p className="text-2xl font-black text-orange-500 font-mono">
                   {formatCurrency(stats.precioPromedio)}
                 </p>
-              </div>
-              <div className="bg-purple-100 p-3 rounded-full">
-                <span className="text-2xl">💰</span>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Barra de búsqueda */}
+        {}
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">🔍</span>
           <input
             type="text"
             placeholder="Buscar por nombre, descripción o categoría..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full pl-4 pr-4 py-3 bg-[#1a1a1a] border border-gray-800 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
           />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              ✕
-            </button>
-          )}
         </div>
       </div>
-
-      {/* Loading State */}
+      {}
       {isLoading && (
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-white p-6 rounded-lg shadow-sm animate-pulse">
+            <div key={i} className="bg-[#1a1a1a] border border-gray-800 p-6 animate-pulse">
               <div className="flex justify-between items-center">
                 <div className="space-y-2 flex-1">
-                  <div className="h-5 bg-gray-200 rounded w-1/3"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-5 bg-gray-800 w-1/3"></div>
+                  <div className="h-4 bg-gray-800 w-1/2"></div>
                 </div>
                 <div className="flex gap-2">
-                  <div className="w-20 h-9 bg-gray-200 rounded"></div>
-                  <div className="w-20 h-9 bg-gray-200 rounded"></div>
+                  <div className="w-20 h-9 bg-gray-800"></div>
+                  <div className="w-20 h-9 bg-gray-800"></div>
                 </div>
               </div>
             </div>
           ))}
         </div>
       )}
-
-      {/* Lista de Servicios */}
+      {}
       {!isLoading && (
         <div className="space-y-4">
           {filteredServicios.length > 0 ? (
             filteredServicios.map((servicio) => (
               <div
                 key={servicio.id_servicio}
-                className={`bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all border-l-4 ${
-                  servicio.activo ? 'border-green-500' : 'border-gray-300'
-                }`}
+                className="bg-[#1a1a1a] border border-gray-800 p-6 hover:bg-[#2d2d2d] transition-all"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-semibold text-gray-800">
+                      <h3 className="text-xl font-black text-white uppercase tracking-tight">
                         {servicio.nombre}
                       </h3>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        className={`px-3 py-1 text-xs font-medium uppercase tracking-wide ${
                           servicio.activo
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-600'
+                            ? 'bg-green-600/20 border border-green-600 text-green-500'
+                            : 'bg-gray-600/20 border border-gray-600 text-gray-500'
                         }`}
                       >
                         {servicio.activo ? 'Activo' : 'Inactivo'}
                       </span>
                       {servicio.categoria && (
-                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                        <span className="px-3 py-1 bg-orange-600/20 border border-orange-600 text-orange-500 text-xs font-mono uppercase">
                           {servicio.categoria}
                         </span>
                       )}
                     </div>
-
                     {servicio.descripcion && (
-                      <p className="text-gray-600 mb-3">{servicio.descripcion}</p>
+                      <p className="text-gray-400 mb-3">{servicio.descripcion}</p>
                     )}
-
                     <div className="flex gap-6 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="text-green-600">💵</span>
-                        <span className="font-medium text-gray-700">
-                          Precio: {formatCurrency(servicio.precio_base)}
+                        <span className="font-mono font-black text-white">
+                          Precio: {servicio.precio_base != null && !isNaN(servicio.precio_base) ? formatCurrency(servicio.precio_base) : 'No definido'}
                         </span>
                       </div>
-                      
                       {servicio.duracion_estimada && (
                         <div className="flex items-center gap-2">
-                          <span className="text-blue-600">⏱️</span>
-                          <span className="text-gray-700">
+                          <span className="text-gray-400">
                             Duración: {servicio.duracion_estimada} min
                           </span>
                         </div>
                       )}
                     </div>
                   </div>
-
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleToggleEstado(servicio.id_servicio, servicio.activo)}
-                      className={`p-2 rounded-lg transition-colors ${
+                      className={`p-2 transition-colors ${
                         servicio.activo
-                          ? 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                          : 'bg-green-100 hover:bg-green-200 text-green-600'
+                          ? 'bg-gray-600/20 border border-gray-600 text-gray-500 hover:bg-gray-600/30'
+                          : 'bg-green-600/20 border border-green-600 text-green-500 hover:bg-green-600/30'
                       }`}
                       title={servicio.activo ? 'Desactivar' : 'Activar'}
                     >
-                      <span className="text-lg">{servicio.activo ? '⏸️' : '▶️'}</span>
+                      {servicio.activo ? 'Desactivar' : 'Activar'}
                     </button>
-
                     <Link
                       href={`/admin/servicios/${servicio.id_servicio}/edit`}
-                      className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition-colors"
+                      className="px-4 py-2 bg-yellow-600/20 border border-yellow-600 text-yellow-500 hover:bg-yellow-600/30 transition-colors font-mono text-sm"
                       title="Editar"
                     >
-                      <span className="text-lg">✏️</span>
+                      Editar
                     </Link>
-
                     <button
                       onClick={() => handleDelete(servicio.id_servicio, servicio.nombre)}
-                      className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors"
+                      className="px-4 py-2 bg-red-600/20 border border-red-600 text-red-500 hover:bg-red-600/30 transition-colors font-mono text-sm"
                       title="Eliminar"
                     >
-                      <span className="text-lg">🗑️</span>
+                      Eliminar
                     </button>
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <div className="bg-white p-12 rounded-lg shadow-sm text-center">
-              <div className="inline-block p-4 bg-gray-100 rounded-full mb-4">
-                <span className="text-6xl">🔍</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            <div className="bg-[#1a1a1a] border border-gray-800 p-12 text-center">
+              <h3 className="text-xl font-black text-white mb-2 uppercase">
                 {searchTerm ? 'No se encontraron servicios' : 'No hay servicios registrados'}
               </h3>
               <p className="text-gray-500">
@@ -281,4 +227,3 @@ export default function ServiciosPage() {
     </div>
   );
 }
-

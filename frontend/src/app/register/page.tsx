@@ -1,12 +1,9 @@
 ﻿'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -16,12 +13,11 @@ export default function RegisterPage() {
     password: '',
     telefono: '',
     direccion: '',
-    empresa: '', // opcional
+    empresa: '', 
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -29,48 +25,37 @@ export default function RegisterPage() {
       [name]: value
     }));
   };
-
-  // Validaciones del formulario
   const validateForm = () => {
     if (!formData.nombre.trim() || !formData.apellido.trim()) {
       setError('El nombre y apellido son requeridos');
       return false;
     }
-
     if (!formData.email.includes('@')) {
       setError('Por favor, introduce un email válido');
       return false;
     }
-
     if (formData.password.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres');
       return false;
     }
-
     if (!formData.telefono.trim()) {
       setError('El teléfono es requerido');
       return false;
     }
-
     if (!formData.direccion.trim()) {
       setError('La dirección es requerida');
       return false;
     }
-
     return true;
   };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-    // Validar formulario antes de enviar
     if (!validateForm()) {
       setLoading(false);
       return;
     }
-
     try {
       const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
@@ -81,11 +66,8 @@ export default function RegisterPage() {
         credentials: 'include',
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
-
       if (!response.ok) {
-        // Manejar diferentes tipos de errores
         switch (response.status) {
           case 409:
             throw new Error('Este email ya está registrado');
@@ -97,60 +79,54 @@ export default function RegisterPage() {
             throw new Error(data.message || 'Error en el registro');
         }
       }
-
       toast.success('¡Registro exitoso! Redirigiendo al login...');
-
       setTimeout(() => {
         router.push('/login');
       }, 2000);
-      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error en el registro');
-      // Scroll hacia el mensaje de error
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
     }
   };
-
   return (
-    <div className="min-h-screen relative flex items-center justify-center px-4 py-12 overflow-hidden">
-      {/* Fondo con Gradiente Animado */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 animate-gradient-x"></div>
-      
-      {/* Círculos decorativos animados */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      
-      {/* Contenedor Principal */}
+    <div className="min-h-screen bg-[#0f0f0f] relative flex items-center justify-center px-4 py-12 overflow-hidden">
+      {}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-20"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=1920&q=80')"
+        }}
+      ></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/60 to-[#0f0f0f]/90"></div>
+      {}
       <div className="relative z-10 w-full max-w-2xl">
-        {/* Card Glassmorphism */}
-        <div className="backdrop-blur-2xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8 sm:p-12">
-          {/* Logo y Header */}
+        {}
+        <div className="bg-[#1a1a1a] border border-gray-800 p-8 sm:p-12">
+          {}
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl mb-6 shadow-lg">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-600 to-orange-500 mb-6 border border-orange-400/50">
               <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
             </div>
-            <h1 className="text-4xl font-bold text-white mb-3">Crear Cuenta</h1>
-            <p className="text-white/80 text-lg">Únete al Portal Corporativo</p>
+            <h1 className="text-4xl font-black text-white mb-3 uppercase tracking-tight">Crear Cuenta</h1>
+            <p className="text-gray-400 text-lg font-mono">Sistema de Gestión Automotriz</p>
           </div>
-
-          {/* Error Message */}
+          {}
           {error && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-2xl backdrop-blur-sm">
-              <p className="text-white text-center font-medium">{error}</p>
+            <div className="mb-6 p-4 bg-red-600/20 border border-red-600">
+              <p className="text-red-500 text-center font-medium">{error}</p>
             </div>
           )}
-
-          {/* Formulario */}
+          {}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Grid de 2 columnas para nombre y apellido */}
+            {}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Nombre */}
+              {}
               <div>
-                <label htmlFor="nombre" className="block text-white font-medium mb-3">
+                <label htmlFor="nombre" className="block text-gray-400 font-medium mb-3 uppercase tracking-wide text-sm">
                   Nombre
                 </label>
                 <input
@@ -160,14 +136,13 @@ export default function RegisterPage() {
                   required
                   value={formData.nombre}
                   onChange={handleInputChange}
-                  className="w-full px-5 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
+                  className="w-full px-5 py-3 bg-[#2d2d2d] border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                   placeholder="Tu nombre"
                 />
               </div>
-
-              {/* Apellido */}
+              {}
               <div>
-                <label htmlFor="apellido" className="block text-white font-medium mb-3">
+                <label htmlFor="apellido" className="block text-gray-400 font-medium mb-3 uppercase tracking-wide text-sm">
                   Apellido
                 </label>
                 <input
@@ -177,15 +152,14 @@ export default function RegisterPage() {
                   required
                   value={formData.apellido}
                   onChange={handleInputChange}
-                  className="w-full px-5 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
+                  className="w-full px-5 py-3 bg-[#2d2d2d] border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                   placeholder="Tu apellido"
                 />
               </div>
             </div>
-
-            {/* Email */}
+            {}
             <div>
-              <label htmlFor="email" className="block text-white font-medium mb-3">
+              <label htmlFor="email" className="block text-gray-400 font-medium mb-3 uppercase tracking-wide text-sm">
                 Correo Electrónico
               </label>
               <input
@@ -196,14 +170,13 @@ export default function RegisterPage() {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-5 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
+                className="w-full px-5 py-3 bg-[#2d2d2d] border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all font-mono"
                 placeholder="correo@ejemplo.com"
               />
             </div>
-
-            {/* Password */}
+            {}
             <div>
-              <label htmlFor="password" className="block text-white font-medium mb-3">
+              <label htmlFor="password" className="block text-gray-400 font-medium mb-3 uppercase tracking-wide text-sm">
                 Contraseña
               </label>
               <div className="relative">
@@ -215,7 +188,7 @@ export default function RegisterPage() {
                   required
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full px-5 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
+                  className="w-full px-5 py-3 bg-[#2d2d2d] border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                   placeholder="Mínimo 6 caracteres"
                 />
                 <button
@@ -236,12 +209,11 @@ export default function RegisterPage() {
                 </button>
               </div>
             </div>
-
-            {/* Grid de 2 columnas para teléfono y empresa */}
+            {}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Teléfono */}
+              {}
               <div>
-                <label htmlFor="telefono" className="block text-white font-medium mb-3">
+                <label htmlFor="telefono" className="block text-gray-400 font-medium mb-3 uppercase tracking-wide text-sm">
                   Teléfono
                 </label>
                 <input
@@ -251,15 +223,14 @@ export default function RegisterPage() {
                   required
                   value={formData.telefono}
                   onChange={handleInputChange}
-                  className="w-full px-5 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
+                  className="w-full px-5 py-3 bg-[#2d2d2d] border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all font-mono"
                   placeholder="Tu teléfono"
                 />
               </div>
-
-              {/* Empresa (Opcional) */}
+              {}
               <div>
-                <label htmlFor="empresa" className="block text-white font-medium mb-3">
-                  Empresa <span className="text-white/60 text-sm">(opcional)</span>
+                <label htmlFor="empresa" className="block text-gray-400 font-medium mb-3 uppercase tracking-wide text-sm">
+                  Empresa <span className="text-gray-500 text-sm">(opcional)</span>
                 </label>
                 <input
                   id="empresa"
@@ -267,15 +238,14 @@ export default function RegisterPage() {
                   type="text"
                   value={formData.empresa}
                   onChange={handleInputChange}
-                  className="w-full px-5 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
+                  className="w-full px-5 py-3 bg-[#2d2d2d] border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                   placeholder="Nombre de empresa"
                 />
               </div>
             </div>
-
-            {/* Dirección */}
+            {}
             <div>
-              <label htmlFor="direccion" className="block text-white font-medium mb-3">
+              <label htmlFor="direccion" className="block text-gray-400 font-medium mb-3 uppercase tracking-wide text-sm">
                 Dirección
               </label>
               <input
@@ -285,20 +255,19 @@ export default function RegisterPage() {
                 required
                 value={formData.direccion}
                 onChange={handleInputChange}
-                className="w-full px-5 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
+                className="w-full px-5 py-3 bg-[#2d2d2d] border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                 placeholder="Tu dirección completa"
               />
             </div>
-
-            {/* Submit Button */}
+            {}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-5 px-6 bg-white text-purple-600 font-bold text-lg rounded-2xl hover:bg-white/90 focus:outline-none focus:ring-4 focus:ring-white/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02] shadow-xl mt-8"
+              className="w-full py-5 px-6 bg-gradient-to-r from-orange-600 to-orange-500 border border-orange-400/50 text-white font-black text-lg hover:from-orange-500 hover:to-orange-400 focus:outline-none focus:ring-4 focus:ring-orange-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all uppercase tracking-wide mt-8"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -308,14 +277,13 @@ export default function RegisterPage() {
                 'Crear Mi Cuenta'
               )}
             </button>
-
-            {/* Link a Login */}
+            {}
             <div className="text-center mt-6">
               <Link
                 href="/login"
-                className="text-white/90 hover:text-white font-medium text-lg transition-colors"
+                className="text-gray-400 hover:text-orange-500 font-medium text-lg transition-colors font-mono"
               >
-                ¿Ya tienes cuenta? <span className="underline">Inicia sesión</span>
+                ¿Ya tienes cuenta? <span className="text-orange-500 underline">Inicia sesión</span>
               </Link>
             </div>
           </form>

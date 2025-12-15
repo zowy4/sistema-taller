@@ -1,11 +1,9 @@
-"use client";
-
+﻿"use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import ErrorAlert from '@/components/ui/ErrorAlert';
-
 export default function NuevoEmpleadoPage() {
   const router = useRouter();
   type FormData = {
@@ -18,7 +16,6 @@ export default function NuevoEmpleadoPage() {
     rol: 'tecnico' | 'recepcionista' | 'supervisor' | 'admin';
     estado: 'activo' | 'inactivo';
   };
-
   const [formData, setFormData] = useState<FormData>({
     nombre: '',
     apellido: '',
@@ -31,15 +28,12 @@ export default function NuevoEmpleadoPage() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
-
     try {
       await api.post('/admin/empleados', formData);
-
       alert('Empleado creado exitosamente');
       router.push('/admin/empleados');
     } catch (err: unknown) {
@@ -49,24 +43,20 @@ export default function NuevoEmpleadoPage() {
       setSaving(false);
     }
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
-
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">➕ Crear Nuevo Empleado</h1>
+          <h1 className="text-3xl font-bold text-gray-900">âž• Crear Nuevo Empleado</h1>
           <p className="text-gray-600 mt-2">Completa el formulario para registrar un nuevo empleado</p>
         </div>
-
         <ErrorAlert message={error} onClose={() => setError(null)} />
-
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -82,7 +72,6 @@ export default function NuevoEmpleadoPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Apellido *
@@ -97,7 +86,6 @@ export default function NuevoEmpleadoPage() {
               />
             </div>
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email *
@@ -111,7 +99,6 @@ export default function NuevoEmpleadoPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Contraseña * (mínimo 6 caracteres)
@@ -126,7 +113,6 @@ export default function NuevoEmpleadoPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Teléfono *
@@ -140,7 +126,6 @@ export default function NuevoEmpleadoPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Dirección
@@ -153,7 +138,6 @@ export default function NuevoEmpleadoPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -172,7 +156,6 @@ export default function NuevoEmpleadoPage() {
                 <option value="admin">Administrador</option>
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Estado *
@@ -189,7 +172,6 @@ export default function NuevoEmpleadoPage() {
               </select>
             </div>
           </div>
-
           <div className="flex gap-4 pt-4">
             <button
               type="submit"

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
+﻿import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { VehiculosService } from './vehiculos.service';
 import { CreateVehiculoDto } from './dto/create-vehiculo.dto';
 import { UpdateVehiculoDto } from './dto/update-vehiculo.dto';
@@ -7,12 +7,10 @@ import { RolesGuard } from '../auth/roles.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
-
 @Controller('vehiculos')
 @UseGuards(AuthGuard('jwt'))
 export class VehiculosController {
   constructor(private readonly vehiculosService: VehiculosService) {}
-
   @Post()
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin', 'supervisor', 'recepcion')
@@ -20,7 +18,6 @@ export class VehiculosController {
   create(@Body() createVehiculoDto: CreateVehiculoDto) {
     return this.vehiculosService.create(createVehiculoDto);
   }
-
   @Get()
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
@@ -28,7 +25,6 @@ export class VehiculosController {
   findAll() {
     return this.vehiculosService.findAll();
   }
-
   @Get(':id')
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
@@ -36,7 +32,6 @@ export class VehiculosController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.vehiculosService.findOne(id);
   }
-
   @Get(':id/historial')
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
@@ -44,7 +39,6 @@ export class VehiculosController {
   getHistorial(@Param('id', ParseIntPipe) id: number) {
     return this.vehiculosService.getHistorial(id);
   }
-
   @Patch(':id')
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin', 'supervisor', 'recepcion')
@@ -52,7 +46,6 @@ export class VehiculosController {
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateVehiculoDto) {
     return this.vehiculosService.update(id, dto);
   }
-
   @Delete(':id')
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin')

@@ -1,14 +1,11 @@
-"use client";
-
+﻿"use client";
 import React from 'react';
-
 type Props = {
   title: string;
   value: React.ReactNode;
   valueClassName?: string;
   className?: string;
 };
-
 export const StatsCard: React.FC<Props> = ({ title, value, valueClassName = '', className = '' }) => {
   return (
     <div className={`p-4 rounded border ${className}`}>
@@ -17,5 +14,4 @@ export const StatsCard: React.FC<Props> = ({ title, value, valueClassName = '', 
     </div>
   );
 };
-
 export default StatsCard;

@@ -1,11 +1,9 @@
-"use client";
-
+﻿"use client";
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import ErrorAlert from '@/components/ui/ErrorAlert';
 import Loader from '@/components/ui/Loader';
-
 interface Factura {
   id_factura: number;
   fecha_factura: string;
@@ -19,17 +17,14 @@ interface Factura {
     vehiculo: { placa: string };
   };
 }
-
 export default function VentasPage() {
   const [facturas, setFacturas] = useState<Factura[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filtro, setFiltro] = useState('todos'); // 'todos' | 'hoy' | 'semana' | 'mes'
-
+  const [filtro, setFiltro] = useState('todos'); 
   useEffect(() => {
     fetchFacturas();
   }, []);
-
   const fetchFacturas = async () => {
     setLoading(true);
     try {
@@ -43,15 +38,12 @@ export default function VentasPage() {
       setLoading(false);
     }
   };
-
   const formatCurrency = (n: number) => 
     new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'USD' }).format(n || 0);
-
   const formatDate = (date: string) => {
     const d = new Date(date);
     return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
   };
-
   const facturasFiltradas = useMemo(() => {
     const ahora = new Date();
     const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
@@ -59,7 +51,6 @@ export default function VentasPage() {
     semanaAtras.setDate(semanaAtras.getDate() - 7);
     const mesAtras = new Date(hoy);
     mesAtras.setMonth(mesAtras.getMonth() - 1);
-
     return facturas.filter(f => {
       const fechaFactura = new Date(f.fecha_factura);
       if (filtro === 'hoy') return fechaFactura >= hoy;
@@ -68,25 +59,20 @@ export default function VentasPage() {
       return true;
     });
   }, [facturas, filtro]);
-
   const totalVentas = useMemo(() => {
     return facturasFiltradas.reduce((sum, f) => sum + (f.monto || 0), 0);
   }, [facturasFiltradas]);
-
   const ventasPagadas = useMemo(() => {
     return facturasFiltradas.filter(f => f.estado_pago === 'pagado').reduce((sum, f) => sum + (f.monto || 0), 0);
   }, [facturasFiltradas]);
-
   const ventasPendientes = useMemo(() => {
     return facturasFiltradas.filter(f => f.estado_pago === 'pendiente').reduce((sum, f) => sum + (f.monto || 0), 0);
   }, [facturasFiltradas]);
-
   if (loading) return <Loader />;
   if (error) return <ErrorAlert message={error} />;
-
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header */}
+      {}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <div>
@@ -100,8 +86,7 @@ export default function VentasPage() {
             ← Volver al Dashboard
           </Link>
         </div>
-
-        {/* Filtros */}
+        {}
         <div className="flex gap-2">
           <button
             onClick={() => setFiltro('todos')}
@@ -131,7 +116,7 @@ export default function VentasPage() {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            Última Semana
+            óšltima Semana
           </button>
           <button
             onClick={() => setFiltro('mes')}
@@ -141,19 +126,17 @@ export default function VentasPage() {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            Último Mes
+            óšltimo Mes
           </button>
         </div>
       </div>
-
-      {/* Estadísticas */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
           <p className="text-green-100 text-sm mb-2">Total Ventas</p>
           <p className="text-3xl font-bold">{formatCurrency(totalVentas)}</p>
           <p className="text-green-100 text-sm mt-2">{facturasFiltradas.length} facturas</p>
         </div>
-
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
           <p className="text-blue-100 text-sm mb-2">Ventas Pagadas</p>
           <p className="text-3xl font-bold">{formatCurrency(ventasPagadas)}</p>
@@ -161,7 +144,6 @@ export default function VentasPage() {
             {facturasFiltradas.filter(f => f.estado_pago === 'pagado').length} facturas
           </p>
         </div>
-
         <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-6 text-white">
           <p className="text-yellow-100 text-sm mb-2">Ventas Pendientes</p>
           <p className="text-3xl font-bold">{formatCurrency(ventasPendientes)}</p>
@@ -170,8 +152,7 @@ export default function VentasPage() {
           </p>
         </div>
       </div>
-
-      {/* Tabla de Ventas */}
+      {}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -196,7 +177,7 @@ export default function VentasPage() {
                   Estado
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Método Pago
+                  Mó©todo Pago
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
@@ -255,8 +236,7 @@ export default function VentasPage() {
           </table>
         </div>
       </div>
-
-      {/* Link a facturas */}
+      {}
       <div className="mt-6 text-center">
         <Link 
           href="/admin/facturas"

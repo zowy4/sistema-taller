@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+﻿import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -16,12 +17,17 @@ import { ProveedoresModule } from './proveedores/proveedores.module';
 import { ComprasModule } from './compras/compras.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { PortalModule } from './portal/portal.module';
+import { LoggerModule } from './common/logger/logger.module';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { LoggerService } from './common/logger/logger.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // Hace que las variables estén disponibles en toda la app
+      isGlobal: true, 
     }),
+    LoggerModule,
     PrismaModule,
     ClientsModule,
     AuthModule,
@@ -38,7 +44,16 @@ import { PortalModule } from './portal/portal.module';
     PortalModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+  ],
 })
-export class AppModule {}
-
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

@@ -1,41 +1,157 @@
 @import "tailwindcss";
 
+/* ==========================================
+   DARK GARAGE - ESTILO INDUSTRIAL AUTOMOTRIZ
+   ========================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Fondos oscuros - Asfalto y Carbono */
+  --bg-asfalto: #1a1a1a;
+  --bg-carbono: #0f0f0f;
+  --bg-taller: #2d2d2d;
+  
+  /* Acentos metálicos */
+  --metal-claro: #e5e7eb;
+  --metal-oscuro: #9ca3af;
+  --acero: #6b7280;
+  
+  /* Naranja de seguridad y amarillo industrial */
+  --naranja-seguridad: #f97316;
+  --amarillo-precaucion: #fbbf24;
+  
+  /* Estados */
+  --verde-activo: #10b981;
+  --rojo-alerta: #ef4444;
+  
+  /* Sombras industriales */
+  --sombra-herramienta: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --sombra-elevada: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
+  
+  /* Gradientes metálicos */
+  --gradiente-metal: linear-gradient(135deg, #4b5563 0%, #1f2937 100%);
+  --gradiente-naranja: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg-carbono);
+  --color-foreground: var(--metal-claro);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-carbono);
+  color: var(--metal-claro);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Animaciones personalizadas */
-@keyframes gradient-x {
+/* Scrollbar industrial */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-carbono);
+  border-left: 1px solid var(--bg-taller);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--acero);
+  border-radius: 2px;
+  border: 2px solid var(--bg-carbono);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--naranja-seguridad);
+}
+
+/* Animaciones sutiles profesionales */
+@keyframes pulse-safety {
   0%, 100% {
-    background-position: 0% 50%;
+    opacity: 1;
   }
   50% {
-    background-position: 100% 50%;
+    opacity: 0.6;
   }
 }
 
-.animate-gradient-x {
-  background-size: 200% 200%;
-  animation: gradient-x 15s ease infinite;
+@keyframes slide-in {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-pulse-safety {
+  animation: pulse-safety 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-in;
+}
+
+/* Overlay oscuro para imágenes */
+.overlay-garage {
+  position: relative;
+}
+
+.overlay-garage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(15, 15, 15, 0.95), rgba(15, 15, 15, 0.3));
+  z-index: 1;
+}
+
+.overlay-garage > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Botones industriales */
+.btn-industrial {
+  background: var(--gradiente-metal);
+  color: var(--metal-claro);
+  border: 1px solid var(--acero);
+  box-shadow: var(--sombra-herramienta);
+  transition: all 0.2s ease;
+}
+
+.btn-industrial:hover {
+  border-color: var(--naranja-seguridad);
+  box-shadow: var(--sombra-elevada), 0 0 0 1px var(--naranja-seguridad);
+  transform: translateY(-1px);
+}
+
+.btn-safety {
+  background: var(--gradiente-naranja);
+  color: white;
+  border: none;
+  box-shadow: var(--sombra-herramienta);
+  transition: all 0.2s ease;
+}
+
+.btn-safety:hover {
+  box-shadow: var(--sombra-elevada), 0 0 20px rgba(249, 115, 22, 0.4);
+  transform: translateY(-1px);
 }

@@ -1,4 +1,3 @@
-import { Controller } from '@nestjs/common';
-
+﻿import { Controller } from '@nestjs/common';
 @Controller('portal')
 export class PortalController {}

@@ -1,8 +1,5 @@
-import type { NextConfig } from "next";
-
+﻿import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
-  output: 'standalone', // Para Docker multi-stage builds
-  /* config options here */
+  output: 'standalone', 
 };
-
 export default nextConfig;

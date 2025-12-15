@@ -1,11 +1,8 @@
-'use client';
-
+﻿'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-
 interface Repuesto {
   id_repuesto: number;
   nombre: string;
@@ -18,7 +15,6 @@ interface Repuesto {
     orden: { fecha_apertura: string };
   }>;
 }
-
 interface Proveedor {
   id_proveedor: number;
   nombre: string;
@@ -29,7 +25,6 @@ interface Proveedor {
     fecha_compra: string;
   }>;
 }
-
 interface Orden {
   id_orden: number;
   fecha_apertura: string;
@@ -41,23 +36,18 @@ interface Orden {
     precio_unitario: number;
   }>;
 }
-
 type ReportType = 'rotacion' | 'proveedores' | 'rentabilidad';
-
 export default function ReportesPage() {
   const router = useRouter();
   const [reportType, setReportType] = useState<ReportType>('rotacion');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [ordenes, setOrdenes] = useState<Orden[]>([]);
-
   useEffect(() => {
     fetchReportData();
   }, []);
-
   const fetchReportData = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -65,31 +55,25 @@ export default function ReportesPage() {
         router.push('/login');
         return;
       }
-
       const headers = { 'Authorization': `Bearer ${token}` };
-
       const [repuestosRes, proveedoresRes, ordenesRes] = await Promise.all([
         fetch(`${API_URL}/repuestos`, { headers }),
         fetch(`${API_URL}/proveedores`, { headers }),
         fetch(`${API_URL}/ordenes`, { headers })
       ]);
-
       if (repuestosRes.status === 401) {
         localStorage.removeItem('token');
         router.push('/login');
         return;
       }
-
       if (!repuestosRes.ok || !proveedoresRes.ok || !ordenesRes.ok) {
         throw new Error('Error al cargar datos para reportes');
       }
-
       const [repData, provData, ordData] = await Promise.all([
         repuestosRes.json(),
         proveedoresRes.json(),
         ordenesRes.json()
       ]);
-
       setRepuestos(repData);
       setProveedores(provData);
       setOrdenes(ordData);
@@ -100,22 +84,18 @@ export default function ReportesPage() {
       setLoading(false);
     }
   };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
   };
-
-  // Reporte de Rotación de Inventario
   const getRotacionInventario = () => {
     return repuestos.map(rep => {
       const totalUsado = rep.ordenes_repuestos?.reduce((sum, or) => sum + or.cantidad, 0) || 0;
       const valorStock = rep.cantidad_existente * rep.precio;
       const rotacion = rep.cantidad_existente > 0 ? (totalUsado / rep.cantidad_existente).toFixed(2) : '0.00';
       const estadoStock = rep.cantidad_existente < rep.stock_minimo ? 'Bajo' : 'Normal';
-
       return {
         ...rep,
         totalUsado,
@@ -125,15 +105,12 @@ export default function ReportesPage() {
       };
     }).sort((a, b) => b.rotacion - a.rotacion);
   };
-
-  // Reporte de Compras por Proveedor
   const getComprasPorProveedor = () => {
     return proveedores.map(prov => {
       const totalCompras = prov.compras?.length || 0;
       const montoTotal = prov.compras?.reduce((sum, c) => sum + c.total, 0) || 0;
       const ultimaCompra = prov.compras?.[prov.compras.length - 1]?.fecha_compra;
       const promedio = totalCompras > 0 ? montoTotal / totalCompras : 0;
-
       return {
         ...prov,
         totalCompras,
@@ -143,22 +120,17 @@ export default function ReportesPage() {
       };
     }).sort((a, b) => b.montoTotal - a.montoTotal);
   };
-
-  // Reporte de Rentabilidad de Servicios
   const getRentabilidadServicios = () => {
     const ordenesCompletas = ordenes.filter(o => o.estado === 'facturada' || o.estado === 'cerrada');
-    
     return ordenesCompletas.map(orden => {
       const costoRepuestos = orden.ordenes_repuestos?.reduce(
         (sum, or) => sum + (or.cantidad * or.precio_unitario), 0
       ) || 0;
       const manoDeObra = orden.total - costoRepuestos;
       const margen = orden.total > 0 ? ((orden.total - costoRepuestos) / orden.total * 100).toFixed(1) : '0.0';
-      
       const diasServicio = orden.fecha_cierre && orden.fecha_apertura
         ? Math.ceil((new Date(orden.fecha_cierre).getTime() - new Date(orden.fecha_apertura).getTime()) / (1000 * 60 * 60 * 24))
         : 0;
-
       return {
         ...orden,
         costoRepuestos,
@@ -168,7 +140,6 @@ export default function ReportesPage() {
       };
     }).sort((a, b) => b.margen - a.margen);
   };
-
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -177,36 +148,31 @@ export default function ReportesPage() {
       day: 'numeric'
     });
   };
-
   if (loading) return (
-    <div className="min-h-screen bg-white p-6 flex items-center justify-center">
+    <div className="min-h-screen bg-[#0f0f0f] p-6 flex items-center justify-center">
       <div className="text-gray-600">Cargando reportes...</div>
     </div>
   );
-
   const rotacionData = getRotacionInventario();
   const proveedoresData = getComprasPorProveedor();
   const rentabilidadData = getRentabilidadServicios();
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+    <div className="min-h-screen bg-[#0f0f0f] p-8">
       <div className="max-w-[1600px] mx-auto">
         <div className="mb-10">
-          <h1 className="text-5xl font-bold text-gray-900 mb-2">📊 Reportes y Análisis</h1>
-          <p className="text-lg text-gray-600">Análisis detallado del rendimiento del taller</p>
+          <h1 className="text-5xl font-bold text-gray-900 mb-2">REPORTES Y ANALISIS</h1>
+          <p className="text-lg text-gray-600">ANALISIS DETALLADO DEL RENDIMIENTO DEL TALLER</p>
         </div>
-
         {error && (
           <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-2xl mb-6 shadow-lg">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">⚠️</span>
+
               <p className="text-lg font-medium">{error}</p>
             </div>
           </div>
         )}
-
-        {/* Report Type Selector */}
-        <div className="flex gap-3 mb-8 bg-white rounded-2xl shadow-lg p-2">
+        {}
+        <div className="flex gap-3 mb-8 bg-[#1a1a1a] border border-gray-800 p-2">
           <button
             onClick={() => setReportType('rotacion')}
             className={`flex-1 px-8 py-4 font-semibold text-lg rounded-xl transition-all duration-200 ${
@@ -215,7 +181,7 @@ export default function ReportesPage() {
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
-            📦 Rotación de Inventario
+            ROTACION DE INVENTARIO
           </button>
           <button
             onClick={() => setReportType('proveedores')}
@@ -225,7 +191,7 @@ export default function ReportesPage() {
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
-            🏢 Compras por Proveedor
+            COMPRAS POR PROVEEDOR
           </button>
           <button
             onClick={() => setReportType('rentabilidad')}
@@ -235,17 +201,16 @@ export default function ReportesPage() {
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
-            💰 Rentabilidad de Servicios
+            RENTABILIDAD DE SERVICIOS
           </button>
         </div>
-
-        {/* Rotación de Inventario Report */}
+        {}
         {reportType === 'rotacion' && (
           <div>
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-8 rounded-2xl mb-8 shadow-xl text-white">
-              <h2 className="text-3xl font-bold mb-3">Análisis de Rotación de Inventario</h2>
+              <h2 className="text-3xl font-bold mb-3">ANALISIS DE ROTACION DE INVENTARIO</h2>
               <p className="text-blue-100 text-lg mb-6">
-                Este reporte muestra qué tan rápido se mueven los repuestos. Una rotación alta indica productos de alta demanda.
+                ESTE REPORTE MUESTRA QUE TAN RAPIDO SE MUEVEN LOS REPUESTOS. UNA ROTACION ALTA INDICA PRODUCTOS DE ALTA DEMANDA.
               </p>
               <div className="grid grid-cols-3 gap-6">
                 <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
@@ -266,25 +231,24 @@ export default function ReportesPage() {
                 </div>
               </div>
             </div>
-
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-[#1a1a1a] border border-gray-800 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full">
-                  <thead className="bg-gradient-to-r from-gray-800 to-gray-900 text-white">
+                  <thead className="bg-[#2d2d2d] border-b border-gray-800">
                     <tr>
-                      <th className="px-8 py-5 text-left text-lg font-semibold">Repuesto</th>
-                      <th className="px-8 py-5 text-left text-lg font-semibold">Categoría</th>
-                      <th className="px-8 py-5 text-right text-lg font-semibold">Stock Actual</th>
-                      <th className="px-8 py-5 text-right text-lg font-semibold">Usado (Total)</th>
-                      <th className="px-8 py-5 text-right text-lg font-semibold">Rotación</th>
-                      <th className="px-8 py-5 text-right text-lg font-semibold">Valor Stock</th>
-                      <th className="px-8 py-5 text-center text-lg font-semibold">Estado</th>
+                      <th className="px-8 py-5 text-left text-lg font-semibold">REPUESTO</th>
+                      <th className="px-8 py-5 text-left text-lg font-semibold">CATEGORIA</th>
+                      <th className="px-8 py-5 text-right text-lg font-semibold">STOCK ACTUAL</th>
+                      <th className="px-8 py-5 text-right text-lg font-semibold">USADO (TOTAL)</th>
+                      <th className="px-8 py-5 text-right text-lg font-semibold">ROTACION</th>
+                      <th className="px-8 py-5 text-right text-lg font-semibold">VALOR STOCK</th>
+                      <th className="px-8 py-5 text-center text-lg font-semibold">ESTADO</th>
                     </tr>
                   </thead>
                   <tbody>
                     {rotacionData.map((rep, index) => (
                       <tr key={rep.id_repuesto} className={`border-b border-gray-200 hover:bg-blue-50 transition-colors ${
-                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                        'hover:bg-[#2d2d2d]'
                       }`}>
                         <td className="px-8 py-5">
                           <Link
@@ -325,14 +289,13 @@ export default function ReportesPage() {
             </div>
           </div>
         )}
-
-        {/* Compras por Proveedor Report */}
+        {}
         {reportType === 'proveedores' && (
           <div>
             <div className="bg-gradient-to-br from-green-500 to-green-600 p-8 rounded-2xl mb-8 shadow-xl text-white">
-              <h2 className="text-3xl font-bold mb-3">Compras por Proveedor</h2>
+              <h2 className="text-3xl font-bold mb-3">COMPRAS POR PROVEEDOR</h2>
               <p className="text-green-100 text-lg mb-6">
-                Análisis de compras realizadas a cada proveedor para identificar relaciones comerciales clave.
+                ANALISIS DE COMPRAS REALIZADAS A CADA PROVEEDOR PARA IDENTIFICAR RELACIONES COMERCIALES CLAVE.
               </p>
               <div className="grid grid-cols-3 gap-6">
                 <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
@@ -353,22 +316,21 @@ export default function ReportesPage() {
                 </div>
               </div>
             </div>
-
             <div className="overflow-x-auto">
               <table className="min-w-full bg-white border rounded">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left">Proveedor</th>
-                    <th className="px-4 py-3 text-left">Empresa</th>
-                    <th className="px-4 py-3 text-right">Compras</th>
-                    <th className="px-4 py-3 text-right">Monto Total</th>
-                    <th className="px-4 py-3 text-right">Promedio/Compra</th>
-                    <th className="px-4 py-3 text-right">Última Compra</th>
+                    <th className="px-4 py-3 text-left">PROVEEDOR</th>
+                    <th className="px-4 py-3 text-left">EMPRESA</th>
+                    <th className="px-4 py-3 text-right">COMPRAS</th>
+                    <th className="px-4 py-3 text-right">MONTO TOTAL</th>
+                    <th className="px-4 py-3 text-right">PROMEDIO/COMPRA</th>
+                    <th className="px-4 py-3 text-right">ULTIMA COMPRA</th>
                   </tr>
                 </thead>
                 <tbody>
                   {proveedoresData.map(prov => (
-                    <tr key={prov.id_proveedor} className="border-t hover:bg-gray-50">
+                    <tr key={prov.id_proveedor} className="border-t border-gray-800 hover:bg-[#2d2d2d]">
                       <td className="px-4 py-3">
                         <Link
                           href={`/admin/proveedores/${prov.id_proveedor}`}
@@ -393,18 +355,17 @@ export default function ReportesPage() {
             </div>
           </div>
         )}
-
-        {/* Rentabilidad de Servicios Report */}
+        {}
         {reportType === 'rentabilidad' && (
           <div>
             <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-8 rounded-2xl mb-8 shadow-xl text-white">
-              <h2 className="text-3xl font-bold mb-3">Rentabilidad de Servicios</h2>
+              <h2 className="text-3xl font-bold mb-3">RENTABILIDAD DE SERVICIOS</h2>
               <p className="text-purple-100 text-lg mb-6">
-                Análisis de márgenes de ganancia en órdenes completadas, considerando costo de repuestos vs. mano de obra.
+                ANALISIS DE MARGENES DE GANANCIA EN ORDENES COMPLETADAS, CONSIDERANDO COSTO DE REPUESTOS VS. MANO DE OBRA.
               </p>
               <div className="grid grid-cols-4 gap-6">
                 <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
-                  <p className="text-purple-100 text-base mb-2">Órdenes Completadas</p>
+                  <p className="text-purple-100 text-base mb-2">ORDENES COMPLETADAS</p>
                   <p className="text-4xl font-bold">{rentabilidadData.length}</p>
                 </div>
                 <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl">
@@ -429,18 +390,17 @@ export default function ReportesPage() {
                 </div>
               </div>
             </div>
-
             <div className="overflow-x-auto">
               <table className="min-w-full bg-white border rounded">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left">Orden</th>
-                    <th className="px-4 py-3 text-right">Total</th>
-                    <th className="px-4 py-3 text-right">Costo Repuestos</th>
-                    <th className="px-4 py-3 text-right">Mano de Obra</th>
-                    <th className="px-4 py-3 text-right">Margen</th>
-                    <th className="px-4 py-3 text-right">Días Servicio</th>
-                    <th className="px-4 py-3 text-center">Estado</th>
+                    <th className="px-4 py-3 text-left">ORDEN</th>
+                    <th className="px-4 py-3 text-right">TOTAL</th>
+                    <th className="px-4 py-3 text-right">COSTO REPUESTOS</th>
+                    <th className="px-4 py-3 text-right">MANO DE OBRA</th>
+                    <th className="px-4 py-3 text-right">MARGEN</th>
+                    <th className="px-4 py-3 text-right">DIAS SERVICIO</th>
+                    <th className="px-4 py-3 text-center">ESTADO</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -474,7 +434,7 @@ export default function ReportesPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right text-gray-600">
-                        {orden.diasServicio} días
+                        {orden.diasServicio} DIAS
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">
@@ -488,22 +448,19 @@ export default function ReportesPage() {
             </div>
           </div>
         )}
-
-        {/* Export Buttons */}
+        {}
         <div className="mt-8 flex gap-4 justify-end">
           <button
-            onClick={() => alert('Función de exportación en desarrollo')}
+            onClick={() => alert('Funcion de exportacion en desarrollo')}
             className="bg-gradient-to-br from-gray-600 to-gray-700 text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 font-semibold text-lg flex items-center gap-3"
           >
-            <span className="text-2xl">📄</span>
-            Exportar PDF
+            EXPORTAR PDF
           </button>
           <button
-            onClick={() => alert('Función de exportación en desarrollo')}
+            onClick={() => alert('Funcion de exportacion en desarrollo')}
             className="bg-gradient-to-br from-green-600 to-green-700 text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 font-semibold text-lg flex items-center gap-3"
           >
-            <span className="text-2xl">📊</span>
-            Exportar Excel
+            EXPORTAR EXCEL
           </button>
         </div>
       </div>

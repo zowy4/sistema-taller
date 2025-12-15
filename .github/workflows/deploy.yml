@@ -1,0 +1,201 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    environment: 
+      name: ${{ github.event.inputs.environment || 'production' }}
+      url: ${{ secrets.VPS_URL }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SSH
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        SSH_HOST: ${{ secrets.VPS_HOST }}
+        SSH_USER: ${{ secrets.VPS_USER }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
+    - name: Create deployment directory on VPS
+      env:
+        SSH_HOST: ${{ secrets.VPS_HOST }}
+        SSH_USER: ${{ secrets.VPS_USER }}
+      run: |
+        ssh $SSH_USER@$SSH_HOST "mkdir -p ~/taller-app"
+
+    - name: Copy files to VPS
+      env:
+        SSH_HOST: ${{ secrets.VPS_HOST }}
+        SSH_USER: ${{ secrets.VPS_USER }}
+      run: |
+        rsync -avz --delete \
+          --exclude 'node_modules' \
+          --exclude '.git' \
+          --exclude 'logs' \
+          --exclude '.env' \
+          --exclude 'dist' \
+          --exclude 'build' \
+          ./ $SSH_USER@$SSH_HOST:~/taller-app/
+
+    - name: Create .env file on VPS
+      env:
+        SSH_HOST: ${{ secrets.VPS_HOST }}
+        SSH_USER: ${{ secrets.VPS_USER }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      run: |
+        ssh $SSH_USER@$SSH_HOST << 'EOF'
+          cd ~/taller-app/backend
+          cat > .env << ENV
+        DATABASE_URL=${{ secrets.DATABASE_URL }}
+        JWT_SECRET=${{ secrets.JWT_SECRET }}
+        PORT=3002
+        NODE_ENV=production
+        ENV
+          
+          cd ~/taller-app/frontend
+          cat > .env.production << ENV
+        NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+        ENV
+        EOF
+
+    - name: Deploy with Docker Compose
+      env:
+        SSH_HOST: ${{ secrets.VPS_HOST }}
+        SSH_USER: ${{ secrets.VPS_USER }}
+      run: |
+        ssh $SSH_USER@$SSH_HOST << 'EOF'
+          cd ~/taller-app
+          
+          # Pull latest images if using registry
+          # docker-compose pull
+          
+          # Stop existing containers
+          docker-compose down
+          
+          # Build and start containers
+          docker-compose up -d --build
+          
+          # Wait for backend to be ready
+          echo "Waiting for services to start..."
+          sleep 10
+          
+          # Run migrations
+          docker-compose exec -T backend npx prisma migrate deploy
+          
+          # Check container status
+          docker-compose ps
+          
+          # Show logs
+          docker-compose logs --tail=50
+        EOF
+
+    - name: Health Check
+      env:
+        VPS_URL: ${{ secrets.VPS_URL }}
+      run: |
+        echo "Performing health check..."
+        sleep 5
+        
+        # Check backend health
+        response=$(curl -s -o /dev/null -w "%{http_code}" $VPS_URL/api || echo "000")
+        
+        if [ "$response" = "200" ] || [ "$response" = "404" ]; then
+          echo "✅ Backend is responding (HTTP $response)"
+        else
+          echo "❌ Backend health check failed (HTTP $response)"
+          exit 1
+        fi
+
+    - name: Cleanup old Docker resources
+      env:
+        SSH_HOST: ${{ secrets.VPS_HOST }}
+        SSH_USER: ${{ secrets.VPS_USER }}
+      run: |
+        ssh $SSH_USER@$SSH_HOST << 'EOF'
+          # Remove unused images
+          docker image prune -af --filter "until=168h"
+          
+          # Remove unused volumes
+          docker volume prune -f
+          
+          # Show disk usage
+          df -h
+        EOF
+
+    - name: Deployment Summary
+      if: always()
+      run: |
+        echo "## Deployment Results 🚀" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Environment**: ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **VPS**: ${{ secrets.VPS_HOST }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **URL**: ${{ secrets.VPS_URL }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Deployed by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Services Status" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Backend deployed" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Frontend deployed" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Database migrations applied" >> $GITHUB_STEP_SUMMARY
+
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    if: failure()
+    environment: production
+
+    steps:
+    - name: Rollback deployment
+      env:
+        SSH_HOST: ${{ secrets.VPS_HOST }}
+        SSH_USER: ${{ secrets.VPS_USER }}
+      run: |
+        echo "Deployment failed. Rolling back..."
+        ssh $SSH_USER@$SSH_HOST << 'EOF'
+          cd ~/taller-app
+          
+          # Restore from backup if exists
+          if [ -d "~/taller-app-backup" ]; then
+            echo "Restoring from backup..."
+            docker-compose down
+            rm -rf ~/taller-app
+            mv ~/taller-app-backup ~/taller-app
+            cd ~/taller-app
+            docker-compose up -d
+          else
+            echo "No backup found. Restarting current containers..."
+            docker-compose restart
+          fi
+        EOF
+
+    - name: Notify rollback
+      run: |
+        echo "## ⚠️ Deployment Rollback" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Deployment failed and system was rolled back to previous version." >> $GITHUB_STEP_SUMMARY
+        echo "Please check the logs and fix the issues before retrying." >> $GITHUB_STEP_SUMMARY

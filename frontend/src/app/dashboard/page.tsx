@@ -1,11 +1,9 @@
 ﻿'use client';
-
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation'; // Usando next/navigation
+import { useRouter } from 'next/navigation'; 
 import { api } from '@/lib/api';
 import Loader from '@/components/ui/Loader';
 import ErrorAlert from '@/components/ui/ErrorAlert';
-
 interface Client {
   id_cliente: number;
   nombre: string;
@@ -13,53 +11,39 @@ interface Client {
   email: string;
   telefono: string;
 }
-
 export default function DashboardPage() {
   const router = useRouter();
-
-  const [clients, setClients] = useState<Client[]>([]); // Para guardar la lista de clientes
-  const [error, setError] = useState<string | null>(null); // Para mostrar errores (ej. 403)
-  const [isLoading, setIsLoading] = useState(true); // Para mostrar "Cargando..."
-  const [userName, setUserName] = useState<string>(''); // Para mostrar el nombre del usuario
-
-  // Función para cerrar sesión
+  const [clients, setClients] = useState<Client[]>([]); 
+  const [error, setError] = useState<string | null>(null); 
+  const [isLoading, setIsLoading] = useState(true); 
+  const [userName, setUserName] = useState<string>(''); 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('token');
-    localStorage.removeItem('user_name'); // Limpiamos también el nombre
+    localStorage.removeItem('user_name'); 
     router.push('/login');
   }, [router]);
-
   useEffect(() => {
   const token = localStorage.getItem('token');
     const storedName = localStorage.getItem('user_name');
-    
     setUserName(storedName || 'Usuario');
-
     if (!token) {
       router.push('/login');
-      return; // Detener la ejecución
+      return; 
     }
-
-    // haya verificado que el usuario está logueado.
-    // Ahora, llamamos a la API protegida.
     const fetchClients = async () => {
       try {
         const data = await api.get<Client[]>('/clientes');
         setClients(data);
-        setError(null); // Limpiar errores previos
+        setError(null); 
       } catch (err: unknown) {
         const message = (err as { message?: string })?.message || 'Ocurrió un error desconocido';
         setError(message);
       } finally {
-        setIsLoading(false); // Dejar de cargar
+        setIsLoading(false); 
       }
     };
-
-    fetchClients(); // Llamar a la función que acabamos de definir
+    fetchClients(); 
   }, [router, handleLogout]);
-
-  // --- Renderizado ---
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-900 text-white p-8">
@@ -67,8 +51,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  // Página principal del Dashboard (una vez que todo ha cargado)
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <header className="flex justify-between items-center mb-10">
@@ -83,11 +65,9 @@ export default function DashboardPage() {
           Cerrar Sesión
         </button>
       </header>
-
       <main>
         <h2 className="text-2xl font-semibold mb-4">Módulo: Lista de Clientes</h2>
-
-        {/* Mostrar el error si existe (ej. Error 403) */}
+        {}
         {error && (
           <>
             <ErrorAlert message={error} />
@@ -96,8 +76,7 @@ export default function DashboardPage() {
             </p>
           </>
         )}
-
-        {/* Mostrar la tabla SOLO si NO hay error */}
+        {}
         {!error && (
           <div className="overflow-x-auto bg-gray-800 rounded-lg shadow-lg">
             <table className="min-w-full">
@@ -118,8 +97,7 @@ export default function DashboardPage() {
                     <td className="px-6 py-4 whitespace-nowrap">{client.telefono}</td>
                   </tr>
                 ))}
-                
-                {/* Mensaje si la tabla está vacía (pero no hay error) */}
+                {}
                 {clients.length === 0 && (
                   <tr>
                     <td colSpan={4} className="px-6 py-4 text-center text-gray-400">

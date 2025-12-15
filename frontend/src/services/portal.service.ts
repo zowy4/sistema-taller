@@ -1,14 +1,4 @@
-/**
- * Servicio API para el Portal del Cliente
- * Endpoints específicos para clientes autenticados
- */
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-
-// ==========================================
-// INTERFACES
-// ==========================================
-
+﻿const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 export interface PerfilCliente {
   id_cliente: number;
   nombre: string;
@@ -18,7 +8,6 @@ export interface PerfilCliente {
   direccion?: string;
   fecha_registro: string;
 }
-
 export interface VehiculoPortal {
   id_vehiculo: number;
   marca: string;
@@ -38,7 +27,6 @@ export interface VehiculoPortal {
     descripcion_problema: string;
   };
 }
-
 export interface OrdenPortal {
   id_orden: number;
   fecha_ingreso: string;
@@ -74,7 +62,6 @@ export interface OrdenPortal {
     estado_pago: string;
   };
 }
-
 export interface FacturaPortal {
   id_factura: number;
   numero_factura: string;
@@ -94,7 +81,6 @@ export interface FacturaPortal {
     };
   };
 }
-
 export interface DashboardSummary {
   vehiculos_count: number;
   ordenes_activas: number;
@@ -102,14 +88,6 @@ export interface DashboardSummary {
   ultimo_servicio?: string;
   total_gastado: number;
 }
-
-// ==========================================
-// FUNCIONES API
-// ==========================================
-
-/**
- * Obtener resumen del dashboard
- */
 export async function fetchDashboardSummary(token: string): Promise<DashboardSummary> {
   const response = await fetch(`${API_URL}/portal/dashboard/summary`, {
     headers: {
@@ -117,19 +95,13 @@ export async function fetchDashboardSummary(token: string): Promise<DashboardSum
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
     if (response.status === 403) throw new Error('FORBIDDEN');
     throw new Error('Error al obtener resumen del dashboard');
   }
-
   return response.json();
 }
-
-/**
- * Obtener perfil del cliente
- */
 export async function fetchMiPerfil(token: string): Promise<PerfilCliente> {
   const response = await fetch(`${API_URL}/portal/perfil`, {
     headers: {
@@ -137,18 +109,12 @@ export async function fetchMiPerfil(token: string): Promise<PerfilCliente> {
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
     throw new Error('Error al obtener perfil');
   }
-
   return response.json();
 }
-
-/**
- * Actualizar perfil del cliente
- */
 export async function updateMiPerfil(
   token: string,
   data: Partial<PerfilCliente>
@@ -161,18 +127,12 @@ export async function updateMiPerfil(
     },
     body: JSON.stringify(data),
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
     throw new Error('Error al actualizar perfil');
   }
-
   return response.json();
 }
-
-/**
- * Obtener mis vehículos
- */
 export async function fetchMisVehiculos(token: string): Promise<VehiculoPortal[]> {
   const response = await fetch(`${API_URL}/portal/vehiculos`, {
     headers: {
@@ -180,18 +140,12 @@ export async function fetchMisVehiculos(token: string): Promise<VehiculoPortal[]
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
-    throw new Error('Error al obtener vehículos');
+    throw new Error('Error al obtener vehó­culos');
   }
-
   return response.json();
 }
-
-/**
- * Obtener historial de un vehículo
- */
 export async function fetchHistorialVehiculo(
   token: string,
   idVehiculo: number
@@ -202,19 +156,13 @@ export async function fetchHistorialVehiculo(
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
-    if (response.status === 404) throw new Error('Vehículo no encontrado');
-    throw new Error('Error al obtener historial del vehículo');
+    if (response.status === 404) throw new Error('Vehó­culo no encontrado');
+    throw new Error('Error al obtener historial del vehó­culo');
   }
-
   return response.json();
 }
-
-/**
- * Obtener mis órdenes de trabajo
- */
 export async function fetchMisOrdenes(
   token: string,
   estado?: string
@@ -222,25 +170,18 @@ export async function fetchMisOrdenes(
   const url = estado 
     ? `${API_URL}/portal/ordenes?estado=${estado}`
     : `${API_URL}/portal/ordenes`;
-
   const response = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
-    throw new Error('Error al obtener órdenes');
+    throw new Error('Error al obtener ó³rdenes');
   }
-
   return response.json();
 }
-
-/**
- * Obtener detalle de una orden
- */
 export async function fetchDetalleOrden(
   token: string,
   idOrden: number
@@ -251,19 +192,13 @@ export async function fetchDetalleOrden(
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
     if (response.status === 404) throw new Error('Orden no encontrada');
     throw new Error('Error al obtener detalle de la orden');
   }
-
   return response.json();
 }
-
-/**
- * Obtener mis facturas
- */
 export async function fetchMisFacturas(
   token: string,
   estadoPago?: string
@@ -271,25 +206,18 @@ export async function fetchMisFacturas(
   const url = estadoPago
     ? `${API_URL}/portal/facturas?estado_pago=${estadoPago}`
     : `${API_URL}/portal/facturas`;
-
   const response = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
     throw new Error('Error al obtener facturas');
   }
-
   return response.json();
 }
-
-/**
- * Descargar PDF de factura
- */
 export async function descargarFacturaPDF(
   token: string,
   idFactura: number
@@ -299,12 +227,10 @@ export async function descargarFacturaPDF(
       'Authorization': `Bearer ${token}`,
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
     if (response.status === 404) throw new Error('Factura no encontrada');
     throw new Error('Error al descargar factura');
   }
-
   return response.blob();
 }

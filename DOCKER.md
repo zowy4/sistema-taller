@@ -1,232 +1,233 @@
-# 🐳 Contenerización con Docker - Sistema Taller
-
-Este proyecto está completamente dockerizado para facilitar el despliegue en cualquier servidor.
-
-## 📦 Arquitectura de Contenedores
-
-El sistema consta de **3 contenedores**:
-
-1. **PostgreSQL** (Base de Datos) - Puerto 5432
-2. **NestJS Backend** (API REST) - Puerto 3002
-3. **Next.js Frontend** (Interfaz Web) - Puerto 3000
+# Sistema de Taller - Docker Setup
 
 ## 🚀 Inicio Rápido
 
-### Requisitos Previos
+### Requisitos previos
+- Docker 20.10+
+- Docker Compose 2.0+
 
-- Docker Desktop instalado ([Descargar aquí](https://www.docker.com/products/docker-desktop))
-- Docker Compose (incluido con Docker Desktop)
-
-### Comandos Principales
-
-#### 1️⃣ Construir y Levantar Todo el Sistema
+### Levantar todo el sistema
 
 ```bash
-docker-compose up --build
-```
+# Construir y levantar todos los servicios
+docker-compose up -d --build
 
-Este comando:
-- ✅ Descarga la imagen de PostgreSQL
-- ✅ Construye la imagen del Backend
-- ✅ Construye la imagen del Frontend
-- ✅ Levanta los 3 contenedores en orden
-- ✅ Ejecuta migraciones de base de datos automáticamente
-
-#### 2️⃣ Detener el Sistema
-
-```bash
-# Detener contenedores (mantiene datos)
-docker-compose down
-
-# Detener Y eliminar volúmenes (borra la BD)
-docker-compose down -v
-```
-
-#### 3️⃣ Ver Logs en Tiempo Real
-
-```bash
-# Todos los servicios
+# Ver logs
 docker-compose logs -f
 
-# Solo backend
+# Ver logs de un servicio específico
 docker-compose logs -f backend
-
-# Solo frontend
 docker-compose logs -f frontend
+docker-compose logs -f postgres
 ```
 
-#### 4️⃣ Reiniciar un Servicio Específico
-
-```bash
-docker-compose restart backend
-docker-compose restart frontend
-```
-
-## 🌐 URLs de Acceso
-
-Una vez levantados los contenedores:
-
+### Acceso a los servicios
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:3002
-- **Base de Datos**: localhost:5432
+- **PostgreSQL**: localhost:5432
 
-## 🔧 Configuración
+### Credenciales por defecto
+- **PostgreSQL**:
+  - Usuario: `postgres`
+  - Password: `zowy3427`
+  - Base de datos: `taller_db`
 
-### Variables de Entorno
+- **Usuario admin del sistema**:
+  - Email: `admin@taller.com`
+  - Password: `admin123`
 
-Edita el archivo `docker-compose.yml` para cambiar:
-
-#### PostgreSQL:
-```yaml
-POSTGRES_USER: postgres
-POSTGRES_PASSWORD: zowy3427  # ⚠️ CAMBIAR EN PRODUCCIÓN
-POSTGRES_DB: taller_db
-```
-
-#### Backend:
-```yaml
-DATABASE_URL: postgresql://postgres:zowy3427@postgres:5432/taller_db
-JWT_SECRET: tu-secreto-super-seguro-cambialo-en-produccion-12345  # ⚠️ CAMBIAR
-JWT_EXPIRATION: 7d
-```
-
-#### Frontend:
-```yaml
-NEXT_PUBLIC_API_URL: http://localhost:3002
-```
-
-## 📝 Notas Importantes
-
-### 🔴 Primer Inicio
-
-En el **primer arranque**, el backend:
-1. Espera a que PostgreSQL esté listo (healthcheck)
-2. Ejecuta migraciones de Prisma automáticamente
-3. Crea todas las tablas necesarias
-
-**Tiempo estimado**: 1-2 minutos
-
-### 💾 Persistencia de Datos
-
-Los datos de PostgreSQL se guardan en un **volumen Docker** llamado `postgres_data`.
-
-- ✅ Los datos persisten aunque detengas los contenedores
-- ❌ Se borran si ejecutas `docker-compose down -v`
-
-### 🔄 Reconstruir Imágenes
-
-Si cambias código en backend o frontend:
+## 🛠️ Comandos útiles
 
 ```bash
-# Reconstruir solo el servicio que cambió
-docker-compose up --build backend
+# Detener todos los servicios
+docker-compose down
 
-# O reconstruir todo
-docker-compose up --build
-```
+# Detener y eliminar volúmenes (¡CUIDADO! Borra la base de datos)
+docker-compose down -v
 
-### 🐛 Solución de Problemas
+# Reconstruir un servicio específico
+docker-compose up -d --build backend
 
-#### El backend no inicia
-```bash
-# Ver logs detallados
-docker-compose logs backend
-
-# Verificar que PostgreSQL esté listo
+# Ver estado de los servicios
 docker-compose ps
+
+# Ejecutar comandos en el backend
+docker-compose exec backend npm run prisma:studio
+docker-compose exec backend npx prisma migrate dev
+
+# Ejecutar comandos en el frontend
+docker-compose exec frontend npm run lint
+
+# Acceder a la shell del contenedor
+docker-compose exec backend sh
+docker-compose exec postgres psql -U postgres -d taller_db
 ```
 
-#### Puerto ya en uso
+## 🔧 Variables de entorno
+
+Crea un archivo `.env` en la raíz del proyecto:
+
+```env
+# Base de datos
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=zowy3427
+POSTGRES_DB=taller_db
+
+# Backend
+DATABASE_URL=postgresql://postgres:zowy3427@postgres:5432/taller_db
+JWT_SECRET=tu-secreto-super-seguro-cambialo-en-produccion-12345
+JWT_EXPIRATION=7d
+
+# Frontend
+NEXT_PUBLIC_API_URL=http://localhost:3002
+```
+
+## 📦 Estructura de contenedores
+
+```
+┌─────────────────┐
+│   Frontend      │  Port 3000
+│   (Next.js)     │  
+└────────┬────────┘
+         │
+         │ HTTP Requests
+         ▼
+┌─────────────────┐
+│   Backend       │  Port 3002
+│   (NestJS)      │  
+└────────┬────────┘
+         │
+         │ Prisma ORM
+         ▼
+┌─────────────────┐
+│   PostgreSQL    │  Port 5432
+│   (Database)    │  
+└─────────────────┘
+```
+
+## 🐛 Troubleshooting
+
+### El backend no se conecta a la base de datos
+```bash
+# Verificar que postgres esté saludable
+docker-compose ps
+
+# Ver logs de postgres
+docker-compose logs postgres
+
+# Reiniciar el backend
+docker-compose restart backend
+```
+
+### Error de migraciones de Prisma
+```bash
+# Ejecutar migraciones manualmente
+docker-compose exec backend npx prisma migrate deploy
+
+# Reset completo (¡CUIDADO! Borra datos)
+docker-compose exec backend npx prisma migrate reset --force
+```
+
+### Frontend no se conecta al backend
+- Verificar que `NEXT_PUBLIC_API_URL` apunte a `http://localhost:3002`
+- El frontend debe hacer requests desde el navegador, no desde el contenedor
+
+### Puerto ya en uso
 ```bash
 # Ver qué está usando el puerto
 netstat -ano | findstr :3000
 netstat -ano | findstr :3002
 netstat -ano | findstr :5432
 
-# Matar el proceso (Windows)
-taskkill /PID <número_de_pid> /F
+# Cambiar puertos en docker-compose.yml
+ports:
+  - "3001:3000"  # Usar puerto 3001 en el host
 ```
 
-#### Error de conexión a base de datos
+## 🌐 Despliegue en VPS
+
+### 1. Instalar Docker en el VPS
 ```bash
-# Reiniciar solo PostgreSQL
-docker-compose restart postgres
-
-# O eliminar todo y empezar de cero
-docker-compose down -v
-docker-compose up --build
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
 ```
 
-## 🎯 Despliegue en Producción
-
-### Cambios Recomendados:
-
-1. **Cambiar credenciales de base de datos**
-2. **Cambiar JWT_SECRET** a un valor aleatorio largo
-3. **Cambiar NEXT_PUBLIC_API_URL** a tu dominio:
-   ```yaml
-   NEXT_PUBLIC_API_URL: https://api.tudominio.com
-   ```
-4. **Agregar SSL/TLS** con un reverse proxy (nginx, traefik)
-
-### Ejemplo con Dominio Real:
-
-```yaml
-environment:
-  NEXT_PUBLIC_API_URL: https://api.taller-sistema.com
+### 2. Clonar el repositorio
+```bash
+git clone https://github.com/tu-usuario/sistema-taller.git
+cd sistema-taller
 ```
 
-## 📊 Comandos Útiles
+### 3. Configurar variables de entorno
+```bash
+cp .env.example .env
+nano .env  # Editar con valores de producción
+```
+
+### 4. Levantar con Docker Compose
+```bash
+docker-compose up -d --build
+```
+
+### 5. Configurar Nginx como reverse proxy
+```nginx
+server {
+    listen 80;
+    server_name api.tudominio.com;
+
+    location / {
+        proxy_pass http://localhost:3002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+server {
+    listen 80;
+    server_name tudominio.com;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+### 6. SSL con Let's Encrypt
+```bash
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d tudominio.com -d api.tudominio.com
+```
+
+## 📊 Monitoreo
 
 ```bash
-# Ver estado de contenedores
-docker-compose ps
-
 # Ver uso de recursos
 docker stats
 
-# Acceder a un contenedor
-docker exec -it taller_backend sh
-docker exec -it taller_postgres psql -U postgres -d taller_db
+# Ver logs en tiempo real
+docker-compose logs -f --tail=100
 
-# Limpiar todo Docker (¡CUIDADO!)
-docker system prune -a --volumes
+# Inspeccionar contenedor
+docker inspect taller_backend
 ```
 
-## 🏗️ Estructura de Archivos Docker
+## 🔄 Actualización
 
+```bash
+# Pull latest changes
+git pull origin main
+
+# Rebuild and restart
+docker-compose up -d --build
+
+# Ver logs para verificar
+docker-compose logs -f
 ```
-sistema_taller/
-├── docker-compose.yml          # Orquestador principal
-├── backend/
-│   ├── Dockerfile             # Imagen del backend
-│   └── .dockerignore          # Archivos a ignorar
-├── frontend/
-│   ├── Dockerfile             # Imagen del frontend
-│   └── .dockerignore          # Archivos a ignorar
-└── DOCKER.md                  # Esta documentación
-```
-
-## ✅ Checklist de Producción
-
-- [ ] Cambiar password de PostgreSQL
-- [ ] Cambiar JWT_SECRET
-- [ ] Configurar dominio real en NEXT_PUBLIC_API_URL
-- [ ] Configurar backup automático de base de datos
-- [ ] Agregar monitoring (Prometheus, Grafana)
-- [ ] Configurar reverse proxy con SSL
-- [ ] Configurar límites de recursos (CPU, RAM)
-- [ ] Configurar restart policies
-
-## 🤝 Soporte
-
-Si encuentras problemas:
-
-1. Revisa los logs: `docker-compose logs -f`
-2. Verifica que todos los contenedores estén corriendo: `docker-compose ps`
-3. Intenta reiniciar: `docker-compose restart`
-4. Como último recurso: `docker-compose down -v && docker-compose up --build`
-
----
-
-**¡Tu sistema está listo para desplegarse en cualquier servidor con Docker! 🚀**

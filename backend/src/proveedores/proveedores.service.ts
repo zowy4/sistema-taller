@@ -1,12 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProveedorDto } from './dto/create-proveedor.dto';
 import { UpdateProveedorDto } from './dto/update-proveedor.dto';
-
 @Injectable()
 export class ProveedoresService {
   constructor(private prisma: PrismaService) {}
-
   async create(createProveedorDto: CreateProveedorDto) {
     try {
       return await this.prisma.proveedores.create({
@@ -26,7 +24,6 @@ export class ProveedoresService {
       throw error;
     }
   }
-
   async findAll() {
     return this.prisma.proveedores.findMany({
       orderBy: { nombre: 'asc' },
@@ -37,14 +34,12 @@ export class ProveedoresService {
       },
     });
   }
-
   async findAllActive() {
     return this.prisma.proveedores.findMany({
       where: { activo: true },
       orderBy: { nombre: 'asc' },
     });
   }
-
   async findOne(id: number) {
     const proveedor = await this.prisma.proveedores.findUnique({
       where: { id_proveedor: id },
@@ -62,14 +57,11 @@ export class ProveedoresService {
         },
       },
     });
-
     if (!proveedor) {
       throw new NotFoundException(`Proveedor con ID ${id} no encontrado`);
     }
-
     return proveedor;
   }
-
   async update(id: number, updateProveedorDto: UpdateProveedorDto) {
     try {
       return await this.prisma.proveedores.update({
@@ -86,7 +78,6 @@ export class ProveedoresService {
       throw error;
     }
   }
-
   async remove(id: number) {
     try {
       return await this.prisma.proveedores.delete({
@@ -99,7 +90,6 @@ export class ProveedoresService {
       throw error;
     }
   }
-
   async toggleActive(id: number) {
     const proveedor = await this.findOne(id);
     return this.update(id, { activo: !proveedor.activo });

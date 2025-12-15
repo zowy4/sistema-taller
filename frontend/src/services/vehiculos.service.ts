@@ -1,9 +1,4 @@
-/**
- * Servicios API para Vehículos
- */
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-
+﻿const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 export interface Vehiculo {
   id_vehiculo: number;
   id_cliente: number;
@@ -24,7 +19,6 @@ export interface Vehiculo {
     telefono: string;
   };
 }
-
 export async function fetchVehiculos(token: string): Promise<Vehiculo[]> {
   const response = await fetch(`${API_URL}/vehiculos`, {
     headers: {
@@ -32,16 +26,13 @@ export async function fetchVehiculos(token: string): Promise<Vehiculo[]> {
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
     if (response.status === 403) throw new Error('FORBIDDEN');
-    throw new Error('Error al obtener vehículos');
+    throw new Error('Error al obtener vehó­culos');
   }
-
   return response.json();
 }
-
 export async function fetchVehiculoById(token: string, id: number): Promise<Vehiculo> {
   const response = await fetch(`${API_URL}/vehiculos/${id}`, {
     headers: {
@@ -49,17 +40,14 @@ export async function fetchVehiculoById(token: string, id: number): Promise<Vehi
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
     if (response.status === 403) throw new Error('FORBIDDEN');
-    if (response.status === 404) throw new Error('Vehículo no encontrado');
-    throw new Error('Error al obtener el vehículo');
+    if (response.status === 404) throw new Error('Vehó­culo no encontrado');
+    throw new Error('Error al obtener el vehó­culo');
   }
-
   return response.json();
 }
-
 export async function fetchHistorialVehiculo(token: string, id: number): Promise<any[]> {
   const response = await fetch(`${API_URL}/vehiculos/${id}/historial`, {
     headers: {
@@ -67,17 +55,14 @@ export async function fetchHistorialVehiculo(token: string, id: number): Promise
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
     if (response.status === 403) throw new Error('FORBIDDEN');
-    if (response.status === 404) throw new Error('Vehículo no encontrado');
+    if (response.status === 404) throw new Error('Vehó­culo no encontrado');
     throw new Error('Error al obtener el historial');
   }
-
   return response.json();
 }
-
 export async function createVehiculo(
   token: string,
   data: Partial<Vehiculo>
@@ -90,16 +75,13 @@ export async function createVehiculo(
     },
     body: JSON.stringify(data),
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
     if (response.status === 403) throw new Error('FORBIDDEN');
-    throw new Error('Error al crear el vehículo');
+    throw new Error('Error al crear el vehó­culo');
   }
-
   return response.json();
 }
-
 export async function updateVehiculo(
   token: string,
   id: number,
@@ -113,17 +95,14 @@ export async function updateVehiculo(
     },
     body: JSON.stringify(data),
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
     if (response.status === 403) throw new Error('FORBIDDEN');
-    if (response.status === 404) throw new Error('Vehículo no encontrado');
-    throw new Error('Error al actualizar el vehículo');
+    if (response.status === 404) throw new Error('Vehó­culo no encontrado');
+    throw new Error('Error al actualizar el vehó­culo');
   }
-
   return response.json();
 }
-
 export async function deleteVehiculo(token: string, id: number): Promise<void> {
   const response = await fetch(`${API_URL}/vehiculos/${id}`, {
     method: 'DELETE',
@@ -132,11 +111,10 @@ export async function deleteVehiculo(token: string, id: number): Promise<void> {
       'Content-Type': 'application/json',
     },
   });
-
   if (!response.ok) {
     if (response.status === 401) throw new Error('UNAUTHORIZED');
     if (response.status === 403) throw new Error('FORBIDDEN');
-    if (response.status === 404) throw new Error('Vehículo no encontrado');
-    throw new Error('Error al eliminar el vehículo');
+    if (response.status === 404) throw new Error('Vehó­culo no encontrado');
+    throw new Error('Error al eliminar el vehó­culo');
   }
 }

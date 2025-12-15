@@ -1,12 +1,4 @@
-/**
- * EJEMPLO: Refactorización de Clientes con Tanstack Query
- * 
- * Este es un ejemplo de cómo refactorizar la página de clientes
- * siguiendo las mismas mejores prácticas del dashboard
- */
-
-'use client';
-
+﻿'use client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -17,20 +9,11 @@ import {
   type Cliente 
 } from '@/services/clientes.service';
 import { useEffect } from 'react';
-
 export default function ClientesPage() {
   const router = useRouter();
   const { user, isLoading: authLoading, logout } = useAuth();
   const queryClient = useQueryClient();
-  
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-  /**
-   * ✅ Query para obtener todos los clientes
-   * - Se ejecuta automáticamente cuando el componente se monta
-   * - Los datos se cachean con la key ['clientes']
-   * - Si navegas a otra página y vuelves, los datos aparecen instantáneamente
-   */
   const {
     data: clientes = [],
     isLoading,
@@ -43,16 +26,9 @@ export default function ClientesPage() {
     enabled: !!token && !authLoading && !!user,
     retry: 1,
   });
-
-  /**
-   * ✅ Mutation para eliminar un cliente
-   * - Optimistic updates: actualiza la UI antes de confirmar con el servidor
-   * - Invalida el caché automáticamente para recargar la lista
-   */
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteCliente(token!, id),
     onSuccess: () => {
-      // Invalida el caché de clientes para que se recargue
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
       alert('Cliente eliminado exitosamente');
     },
@@ -65,16 +41,12 @@ export default function ClientesPage() {
       }
     },
   });
-
-  // Manejo de errores de autenticación
   useEffect(() => {
     if (error?.message === 'UNAUTHORIZED') {
       logout();
       router.push('/login');
     }
   }, [error, logout, router]);
-
-  // ✅ Loading State con Skeleton
   if (isLoading || authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
@@ -92,14 +64,12 @@ export default function ClientesPage() {
       </div>
     );
   }
-
-  // ✅ Error State
   if (isError) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="bg-red-100 border border-red-300 text-red-800 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-2">⚠️ Error al cargar clientes</h2>
+            <h2 className="text-xl font-semibold mb-2"> Error al cargar clientes</h2>
             <p className="mb-4">
               {error?.message === 'UNAUTHORIZED' 
                 ? 'Tu sesión ha expirado. Redirigiendo al login...'
@@ -118,12 +88,10 @@ export default function ClientesPage() {
       </div>
     );
   }
-
-  // ✅ Vista Principal
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Clientes</h1>
           <Link
@@ -133,8 +101,7 @@ export default function ClientesPage() {
             + Nuevo Cliente
           </Link>
         </div>
-
-        {/* Estadísticas Rápidas */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow p-6">
             <p className="text-gray-600 text-sm">Total Clientes</p>
@@ -153,11 +120,10 @@ export default function ClientesPage() {
             </p>
           </div>
         </div>
-
-        {/* Lista de Clientes */}
+        {}
         {clientes.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">
-            <div className="text-6xl mb-4">👥</div>
+            <div className="text-6xl mb-4">‘¥</div>
             <h3 className="text-xl font-semibold mb-2">No hay clientes registrados</h3>
             <p className="text-gray-600 mb-4">Comienza agregando tu primer cliente</p>
             <Link
@@ -188,16 +154,14 @@ export default function ClientesPage() {
                       </span>
                     </div>
                   </div>
-
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <p>📧 {cliente.email}</p>
-                    <p>📱 {cliente.telefono}</p>
-                    {cliente.direccion && <p>📍 {cliente.direccion}</p>}
+                    <p>“§ {cliente.email}</p>
+                    <p>“± {cliente.telefono}</p>
+                    {cliente.direccion && <p>“ {cliente.direccion}</p>}
                     <p className="text-xs text-gray-400">
                       Registrado: {new Date(cliente.fecha_registro).toLocaleDateString('es-ES')}
                     </p>
                   </div>
-
                   <div className="flex gap-2">
                     <Link
                       href={`/admin/clientes/${cliente.id_cliente}`}
@@ -214,7 +178,7 @@ export default function ClientesPage() {
                       disabled={deleteMutation.isPending}
                       className="px-4 bg-red-600 text-white rounded hover:bg-red-700 text-sm disabled:opacity-50"
                     >
-                      {deleteMutation.isPending ? '...' : '🗑️'}
+                      {deleteMutation.isPending ? '...' : '—‘ï¸'}
                     </button>
                   </div>
                 </div>

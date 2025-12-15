@@ -1,13 +1,4 @@
-/**
- * Tipos y Interfaces Centralizadas del Sistema de Taller
- * Todas las interfaces deben importarse desde aquí para mantener consistencia
- */
-
-// ==========================================
-// CLIENTES
-// ==========================================
-
-export interface Cliente {
+﻿export interface Cliente {
   id_cliente: number;
   nombre: string;
   apellido: string;
@@ -17,7 +8,6 @@ export interface Cliente {
   activo: boolean;
   fecha_registro: string;
 }
-
 export interface CreateClienteDto {
   nombre: string;
   apellido: string;
@@ -26,11 +16,6 @@ export interface CreateClienteDto {
   direccion?: string;
   activo?: boolean;
 }
-
-// ==========================================
-// VEHÍCULOS
-// ==========================================
-
 export interface Vehiculo {
   id_vehiculo: number;
   id_cliente: number;
@@ -51,7 +36,6 @@ export interface Vehiculo {
     telefono: string;
   };
 }
-
 export interface CreateVehiculoDto {
   id_cliente: number;
   marca: string;
@@ -63,13 +47,7 @@ export interface CreateVehiculoDto {
   kilometraje?: number;
   tipo_combustible?: string;
 }
-
-// ==========================================
-// ÓRDENES DE TRABAJO
-// ==========================================
-
 export type EstadoOrden = 'pendiente' | 'en_proceso' | 'completada' | 'cancelada';
-
 export interface Orden {
   id_orden: number;
   id_cliente: number;
@@ -104,10 +82,6 @@ export interface Orden {
   repuestos_usados?: RepuestoUsado[];
   factura?: Factura;
 }
-
-/**
- * Interfaz para servicios asignados a órdenes de trabajo
- */
 export interface ServicioAsignado {
   id_servicio_asignado: number;
   id_orden: number;
@@ -115,7 +89,6 @@ export interface ServicioAsignado {
   precio: number;
   servicio: Servicio;
 }
-
 export interface CreateOrdenDto {
   id_cliente: number;
   id_vehiculo: number;
@@ -124,13 +97,7 @@ export interface CreateOrdenDto {
   descripcion_problema: string;
   observaciones?: string;
 }
-
-// ==========================================
-// EMPLEADOS
-// ==========================================
-
 export type EstadoEmpleado = 'activo' | 'inactivo';
-
 export interface Empleado {
   id_empleado: number;
   nombre: string;
@@ -147,7 +114,6 @@ export interface Empleado {
     rol: string;
   };
 }
-
 export interface CreateEmpleadoDto {
   nombre: string;
   apellido: string;
@@ -157,7 +123,6 @@ export interface CreateEmpleadoDto {
   salario: number;
   fecha_contratacion?: string;
 }
-
 export interface UpdateEmpleadoDto {
   nombre?: string;
   apellido?: string;
@@ -167,11 +132,6 @@ export interface UpdateEmpleadoDto {
   salario?: number;
   estado?: EstadoEmpleado;
 }
-
-// ==========================================
-// REPUESTOS
-// ==========================================
-
 export interface Repuesto {
   id_repuesto: number;
   nombre: string;
@@ -191,7 +151,6 @@ export interface Repuesto {
     contacto: string;
   };
 }
-
 export interface CreateRepuestoDto {
   nombre: string;
   descripcion?: string;
@@ -204,7 +163,6 @@ export interface CreateRepuestoDto {
   id_proveedor?: number;
   ubicacion?: string;
 }
-
 export interface StockBajo {
   id_repuesto: number;
   nombre: string;
@@ -213,10 +171,6 @@ export interface StockBajo {
   stock_minimo: number;
   precio_venta: number;
 }
-
-/**
- * Interfaz para repuestos usados en órdenes de trabajo
- */
 export interface RepuestoUsado {
   id: number;
   cantidad: number;
@@ -226,23 +180,13 @@ export interface RepuestoUsado {
   id_repuesto: number;
   repuesto: Repuesto;
 }
-
-/**
- * DTO para crear/agregar repuesto usado a una orden
- */
 export interface CreateRepuestoUsadoDto {
   id_repuesto: number;
   cantidad: number;
   precio_unitario: number;
   subtotal: number;
 }
-
-// ==========================================
-// FACTURAS
-// ==========================================
-
 export type EstadoPago = 'pendiente' | 'pagada' | 'vencida' | 'cancelada';
-
 export interface Factura {
   id_factura: number;
   id_orden: number;
@@ -270,11 +214,6 @@ export interface Factura {
     };
   };
 }
-
-// ==========================================
-// PROVEEDORES
-// ==========================================
-
 export interface Proveedor {
   id_proveedor: number;
   nombre: string;
@@ -289,7 +228,6 @@ export interface Proveedor {
     repuestos: number;
   };
 }
-
 export interface CreateProveedorDto {
   nombre: string;
   empresa?: string;
@@ -298,13 +236,7 @@ export interface CreateProveedorDto {
   direccion?: string;
   notas?: string;
 }
-
-// ==========================================
-// COMPRAS
-// ==========================================
-
 export type EstadoCompra = 'pendiente' | 'completada' | 'cancelada';
-
 export interface CompraRepuesto {
   id_compra_repuesto?: number;
   id_repuesto: number;
@@ -316,7 +248,6 @@ export interface CompraRepuesto {
     codigo: string;
   };
 }
-
 export interface Compra {
   id_compra: number;
   id_proveedor: number;
@@ -330,7 +261,6 @@ export interface Compra {
   };
   compras_repuestos: CompraRepuesto[];
 }
-
 export interface CreateCompraDto {
   id_proveedor: number;
   fecha_compra: string;
@@ -341,11 +271,6 @@ export interface CreateCompraDto {
     precio_unitario: number;
   }>;
 }
-
-// ==========================================
-// SERVICIOS
-// ==========================================
-
 export interface Servicio {
   id_servicio: number;
   nombre: string;
@@ -355,11 +280,6 @@ export interface Servicio {
   categoria?: string;
   activo: boolean;
 }
-
-// ==========================================
-// DASHBOARD
-// ==========================================
-
 export interface DashboardKPIs {
   clientes_total: number;
   clientes_activos: number;
@@ -371,17 +291,11 @@ export interface DashboardKPIs {
   stock_bajo: number;
   repuestos_total: number;
 }
-
 export interface VentasSemana {
   dia: string;
   total: number;
   ordenes: number;
 }
-
-// ==========================================
-// PORTAL CLIENTE
-// ==========================================
-
 export interface PerfilCliente {
   id_cliente: number;
   nombre: string;
@@ -391,7 +305,6 @@ export interface PerfilCliente {
   direccion?: string;
   fecha_registro: string;
 }
-
 export interface VehiculoPortal {
   id_vehiculo: number;
   marca: string;
@@ -411,7 +324,6 @@ export interface VehiculoPortal {
     descripcion_problema: string;
   };
 }
-
 export interface OrdenPortal {
   id_orden: number;
   fecha_ingreso: string;
@@ -447,7 +359,6 @@ export interface OrdenPortal {
     estado_pago: string;
   };
 }
-
 export interface FacturaPortal {
   id_factura: number;
   numero_factura: string;
@@ -467,11 +378,6 @@ export interface FacturaPortal {
     };
   };
 }
-
-// ==========================================
-// AUTENTICACIÓN
-// ==========================================
-
 export interface User {
   id_usuario: number;
   email: string;
@@ -488,12 +394,10 @@ export interface User {
     apellido: string;
   };
 }
-
 export interface LoginCredentials {
   email: string;
   password: string;
 }
-
 export interface RegisterData {
   email: string;
   password: string;
@@ -502,17 +406,11 @@ export interface RegisterData {
   telefono: string;
   direccion?: string;
 }
-
-// ==========================================
-// UTILIDADES
-// ==========================================
-
 export interface ApiError {
   message: string;
   statusCode: number;
   error?: string;
 }
-
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;

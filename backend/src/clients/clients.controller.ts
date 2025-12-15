@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -17,16 +17,10 @@ import { RolesGuard } from '../auth/roles.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
-
 @Controller('clientes')
 @UseGuards(AuthGuard('jwt'))
 export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
-
-  /**
-   * Ruta para CREAR un cliente
-   * POST /clientes
-   */
   @Post()
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin', 'supervisor', 'recepcion')
@@ -34,11 +28,6 @@ export class ClientsController {
   create(@Body() createClientDto: CreateClientDto) {
     return this.clientsService.createClient(createClientDto);
   }
-
-  /**
-   * Ruta para LEER todos los clientes
-   * GET /clientes
-   */
   @Get()
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin', 'supervisor', 'recepcion')
@@ -46,11 +35,6 @@ export class ClientsController {
   findAll() {
     return this.clientsService.getAllClients();
   }
-
-  /**
-   * Ruta para LEER UN cliente por ID
-   * GET /clientes/:id
-   */
   @Get(':id')
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
@@ -58,11 +42,6 @@ export class ClientsController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.clientsService.getClientById(id);
   }
-
-  /**
-   * Ruta para ACTUALIZAR un cliente
-   * PATCH /clientes/:id
-   */
   @Patch(':id')
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin', 'supervisor', 'recepcion')
@@ -70,11 +49,6 @@ export class ClientsController {
   update(@Param('id', ParseIntPipe) id: number, @Body() updateClientDto: UpdateClientDto) {
     return this.clientsService.updateClient(id, updateClientDto);
   }
-
-  /**
-   * Ruta para ELIMINAR un cliente
-   * DELETE /clientes/:id
-   */
   @Delete(':id')
   @UseGuards(RolesGuard, PermissionsGuard)
   @Roles('admin')

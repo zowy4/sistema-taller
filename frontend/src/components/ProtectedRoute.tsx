@@ -1,16 +1,13 @@
 ﻿'use client';
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, ReactNode } from 'react';
-
 interface ProtectedRouteProps {
   children: ReactNode;
   requiredRoles?: string[];
   requiredPermissions?: string[];
   fallback?: ReactNode;
 }
-
 export function ProtectedRoute({ 
   children, 
   requiredRoles = [], 
@@ -19,21 +16,17 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { user, isLoading, hasRole, hasPermission } = useAuth();
   const router = useRouter();
-
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login');
     }
   }, [user, isLoading, router]);
-
   if (isLoading) {
     return <>{fallback}</>;
   }
-
   if (!user) {
-    return null; // El useEffect redirigirá
+    return null; 
   }
-
   if (requiredRoles.length > 0) {
     const hasRequiredRole = requiredRoles.some(role => hasRole(role));
     if (!hasRequiredRole) {
@@ -64,7 +57,6 @@ export function ProtectedRoute({
       );
     }
   }
-
   if (requiredPermissions.length > 0) {
     const hasRequiredPermission = requiredPermissions.some(permission => hasPermission(permission));
     if (!hasRequiredPermission) {
@@ -95,7 +87,5 @@ export function ProtectedRoute({
       );
     }
   }
-
   return <>{children}</>;
 }
-

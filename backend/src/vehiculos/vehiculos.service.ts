@@ -2,11 +2,9 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVehiculoDto } from './dto/create-vehiculo.dto';
 import { UpdateVehiculoDto } from './dto/update-vehiculo.dto';
-
 @Injectable()
 export class VehiculosService {
   constructor(private prisma: PrismaService) {}
-
   async create(createVehiculoDto: CreateVehiculoDto) {
     try {
       return await this.prisma.vehiculos.create({
@@ -22,31 +20,27 @@ export class VehiculosService {
       });
     } catch (error) {
       if (error.code === 'P2002') {
-        throw new BadRequestException('La placa ya está registrada');
+        throw new BadRequestException('La placa ya estó¡ registrada');
       }
       throw error;
     }
   }
-
   async findAll() {
     return this.prisma.vehiculos.findMany({
       include: { cliente: true },
       orderBy: { placa: 'asc' },
     });
   }
-
   async findOne(id: number) {
     const vehiculo = await this.prisma.vehiculos.findUnique({
       where: { id_vehiculo: id },
       include: { cliente: true },
     });
-    if (!vehiculo) throw new NotFoundException('Vehículo no encontrado');
+    if (!vehiculo) throw new NotFoundException('Vehó­culo no encontrado');
     return vehiculo;
   }
-
   async update(id: number, dto: UpdateVehiculoDto) {
     try {
-      // Mapear solo campos permitidos para evitar errores por propiedades desconocidas
       const data: any = {
         ...(dto.placa !== undefined ? { placa: dto.placa } : {}),
         ...(dto.vin !== undefined ? { vin: dto.vin } : {}),
@@ -56,23 +50,20 @@ export class VehiculosService {
         ...(dto.id_cliente !== undefined ? { id_cliente: dto.id_cliente } : {}),
         ...(dto.detalles !== undefined ? { detalles: dto.detalles ?? null } : {}),
       };
-
       return await this.prisma.vehiculos.update({
         where: { id_vehiculo: id },
         data,
       });
     } catch (error) {
       if (error.code === 'P2025') {
-        throw new NotFoundException('Vehículo no encontrado');
+        throw new NotFoundException('Vehó­culo no encontrado');
       }
       if (error.code === 'P2002') {
-        // Conflictos de unicidad (placa, vin, etc.)
-        throw new BadRequestException('Ya existe un registro con los mismos datos únicos (placa o VIN)');
+        throw new BadRequestException('Ya existe un registro con los mismos datos óºnicos (placa o VIN)');
       }
       throw error;
     }
   }
-
   async remove(id: number) {
     try {
       return await this.prisma.vehiculos.delete({
@@ -80,23 +71,18 @@ export class VehiculosService {
       });
     } catch (error) {
       if (error.code === 'P2025') {
-        throw new NotFoundException('Vehículo no encontrado');
+        throw new NotFoundException('Vehó­culo no encontrado');
       }
       throw error;
     }
   }
-
   async getHistorial(id: number) {
-    // Verificar que el vehículo existe
     const vehiculo = await this.prisma.vehiculos.findUnique({
       where: { id_vehiculo: id },
     });
-    
     if (!vehiculo) {
-      throw new NotFoundException('Vehículo no encontrado');
+      throw new NotFoundException('Vehó­culo no encontrado');
     }
-
-    // Obtener todas las órdenes del vehículo con información completa
     const ordenes = await this.prisma.ordenesDeTrabajo.findMany({
       where: { id_vehiculo: id },
       include: {
@@ -129,8 +115,6 @@ export class VehiculosService {
       },
       orderBy: { fecha_apertura: 'desc' },
     });
-
-    // Mapear el resultado para que sea compatible con el frontend
     return ordenes.map(orden => ({
       ...orden,
       tecnico: orden.empleado_responsable,

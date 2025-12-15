@@ -1,13 +1,10 @@
-"use client";
-
+﻿"use client";
 import React from 'react';
-
 type Props = {
   message: string | null | undefined;
   className?: string;
   onClose?: () => void;
 };
-
 export const ErrorAlert: React.FC<Props> = ({ message, className = '', onClose }) => {
   if (!message) return null;
   return (
@@ -21,11 +18,10 @@ export const ErrorAlert: React.FC<Props> = ({ message, className = '', onClose }
           className="text-red-700 hover:text-red-900 font-medium"
           aria-label="Cerrar error"
         >
-          ✕
+          •
         </button>
       )}
     </div>
   );
 };
-
 export default ErrorAlert;

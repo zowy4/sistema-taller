@@ -355,7 +355,7 @@ export default function NuevaOrdenPage() {
                   <div key={s.id_servicio} className="flex justify-between items-center bg-white p-3 rounded border">
                     <div>
                       <p className="font-medium">{s.nombre}</p>
-                      <p className="text-sm text-gray-600">${s.precio_estandar.toFixed(2)}</p>
+                      <p className="text-sm text-gray-600">${s.precio_estandar ? s.precio_estandar.toFixed(2) : '0.00'}</p>
                     </div>
                     <button 
                       onClick={() => agregarServicio(s)} 
@@ -376,7 +376,7 @@ export default function NuevaOrdenPage() {
                   <div key={r.id_repuesto} className="flex justify-between items-center bg-white p-3 rounded border">
                     <div>
                       <p className="font-medium">{r.nombre}</p>
-                      <p className="text-sm text-gray-600">${r.precio_unitario.toFixed(2)} - Stock: {r.cantidad_existente}</p>
+                      <p className="text-sm text-gray-600">${r.precio_unitario ? r.precio_unitario.toFixed(2) : '0.00'} - Stock: {r.cantidad_existente || 0}</p>
                     </div>
                     <button 
                       onClick={() => agregarRepuesto(r)} 

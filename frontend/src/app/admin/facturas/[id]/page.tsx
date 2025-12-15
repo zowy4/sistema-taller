@@ -88,30 +88,41 @@ export default function FacturaDetallePage() {
     });
   };
 
-  const money = (n?: number | null) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'USD' }).format(n || 0);
+  const money = (n?: number | null) => {
+    if (n == null || isNaN(n)) return 'No definido';
+    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'USD' }).format(n);
+  };
 
-  const totalServicios = useMemo(() => (factura?.orden.servicios_asignados || []).reduce((s, it) => s + it.subtotal, 0), [factura]);
-  const totalRepuestos = useMemo(() => (factura?.orden.repuestos_usados || []).reduce((s, it) => s + it.subtotal, 0), [factura]);
+  const totalServicios = useMemo(() => {
+    return (factura?.orden.servicios_asignados || [])
+      .filter(it => it.subtotal != null && !isNaN(it.subtotal))
+      .reduce((s, it) => s + it.subtotal, 0);
+  }, [factura]);
+  const totalRepuestos = useMemo(() => {
+    return (factura?.orden.repuestos_usados || [])
+      .filter(it => it.subtotal != null && !isNaN(it.subtotal))
+      .reduce((s, it) => s + it.subtotal, 0);
+  }, [factura]);
 
   if (loading) return (
-    <div className="min-h-screen p-6">
-      <Loader text="Cargando factura..." />
+    <div className="min-h-screen bg-[#0f0f0f] p-8 flex items-center justify-center">
+      <div className="text-gray-400 font-mono uppercase">CARGANDO FACTURA...</div>
     </div>
   );
   if (error) return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen bg-[#0f0f0f] p-8">
       <div className="max-w-4xl mx-auto">
-        <ErrorAlert message={error} />
-        <button className="text-blue-600 hover:underline" onClick={() => router.back()}>← Volver</button>
+        <div className="bg-red-900/20 border border-red-800 text-red-400 p-4 mb-4 font-mono">{error.toUpperCase()}</div>
+        <button className="text-gray-400 hover:text-white font-mono uppercase" onClick={() => router.back()}>← VOLVER</button>
       </div>
     </div>
   );
   if (!factura) return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen bg-[#0f0f0f] p-8">
       <div className="max-w-4xl mx-auto text-center">
-        <h1 className="text-2xl font-semibold">Factura no encontrada</h1>
-        <div className="mt-4">
-          <Link href="/admin/ordenes" className="text-blue-600 hover:underline">Volver a órdenes</Link>
+        <h1 className="text-3xl font-bold text-white font-mono uppercase">FACTURA NO ENCONTRADA</h1>
+        <div className="mt-6">
+          <Link href="/admin/ordenes" className="text-gray-400 hover:text-white font-mono uppercase">VOLVER A ORDENES</Link>
         </div>
       </div>
     </div>
@@ -120,129 +131,125 @@ export default function FacturaDetallePage() {
   const { orden } = factura;
 
   return (
-    <div className="min-h-screen bg-white p-6">
+    <div className="min-h-screen bg-[#0f0f0f] p-8">
       <div className="max-w-5xl mx-auto">
-        <div className="flex justify-between items-start mb-6">
+        <div className="flex justify-between items-start mb-8">
           <div>
-            <button onClick={() => router.back()} className="text-blue-600 hover:underline text-sm">← Volver</button>
-            <h1 className="text-3xl font-bold mt-1">Factura #{factura.id_factura}</h1>
-            <p className="text-gray-600">Fecha: {formatFecha(factura.fecha_factura)}</p>
+            <button onClick={() => router.back()} className="text-gray-400 hover:text-white font-mono uppercase text-sm mb-3">← VOLVER</button>
+            <h1 className="text-4xl font-bold text-white font-mono uppercase">FACTURA #{factura.id_factura}</h1>
+            <p className="text-gray-400 font-mono mt-2">FECHA: {formatFecha(factura.fecha_factura)}</p>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-600">Método: {factura.metodo_pago || '-'}</div>
-            <div className="text-sm font-semibold mt-1">
-              Estado de pago: <span className={factura.estado_pago === 'pagado' ? 'text-green-700' : 'text-yellow-700'}>{factura.estado_pago}</span>
+            <div className="text-sm text-gray-400 font-mono uppercase">METODO: {factura.metodo_pago || '-'}</div>
+            <div className="text-sm font-semibold mt-2 font-mono">
+              <span className="text-gray-400 uppercase">ESTADO DE PAGO:</span> <span className={factura.estado_pago === 'pagado' ? 'text-green-400' : 'text-yellow-400'}>{factura.estado_pago.toUpperCase()}</span>
             </div>
-            <button onClick={() => window.print()} className="mt-3 px-4 py-2 border rounded hover:bg-gray-50">🖨️ Imprimir</button>
+            <button onClick={() => window.print()} className="mt-4 bg-white text-black px-4 py-2 font-mono uppercase font-bold hover:bg-gray-200">IMPRIMIR</button>
           </div>
         </div>
 
-        {/* Datos del cliente y vehículo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-gray-50 p-4 rounded border">
-            <h2 className="text-lg font-semibold mb-2">Cliente</h2>
-            <div className="text-sm">
-              <div><span className="text-gray-600">Nombre:</span> <span className="font-medium">{orden.cliente.nombre} {orden.cliente.apellido}</span></div>
-              {orden.cliente.email && (<div><span className="text-gray-600">Email:</span> <span>{orden.cliente.email}</span></div>)}
-              {orden.cliente.telefono && (<div><span className="text-gray-600">Teléfono:</span> <span>{orden.cliente.telefono}</span></div>)}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-[#1a1a1a] border border-gray-800 p-6">
+            <h2 className="text-xl font-bold text-white font-mono uppercase mb-4">CLIENTE</h2>
+            <div className="text-sm space-y-2">
+              <div><span className="text-gray-400 font-mono uppercase">NOMBRE:</span> <span className="font-medium text-white font-mono">{orden.cliente.nombre} {orden.cliente.apellido}</span></div>
+              {orden.cliente.email && (<div><span className="text-gray-400 font-mono uppercase">EMAIL:</span> <span className="text-white font-mono">{orden.cliente.email}</span></div>)}
+              {orden.cliente.telefono && (<div><span className="text-gray-400 font-mono uppercase">TELEFONO:</span> <span className="text-white font-mono">{orden.cliente.telefono}</span></div>)}
             </div>
           </div>
-          <div className="bg-gray-50 p-4 rounded border">
-            <h2 className="text-lg font-semibold mb-2">Vehículo</h2>
-            <div className="text-sm">
-              <div><span className="text-gray-600">Placa:</span> <span className="font-medium">{orden.vehiculo.placa}</span></div>
-              <div><span className="text-gray-600">Marca/Modelo:</span> <span>{orden.vehiculo.marca} {orden.vehiculo.modelo}</span></div>
-              {orden.vehiculo.anio && (<div><span className="text-gray-600">Año:</span> <span>{orden.vehiculo.anio}</span></div>)}
+          <div className="bg-[#1a1a1a] border border-gray-800 p-6">
+            <h2 className="text-xl font-bold text-white font-mono uppercase mb-4">VEHICULO</h2>
+            <div className="text-sm space-y-2">
+              <div><span className="text-gray-400 font-mono uppercase">PLACA:</span> <span className="font-medium text-white font-mono">{orden.vehiculo.placa}</span></div>
+              <div><span className="text-gray-400 font-mono uppercase">MARCA/MODELO:</span> <span className="text-white font-mono">{orden.vehiculo.marca} {orden.vehiculo.modelo}</span></div>
+              {orden.vehiculo.anio && (<div><span className="text-gray-400 font-mono uppercase">ANO:</span> <span className="text-white font-mono">{orden.vehiculo.anio}</span></div>)}
             </div>
           </div>
         </div>
 
-        {/* Conceptos */}
-        <div className="bg-white border rounded shadow-sm">
-          <div className="px-4 py-3 border-b bg-gray-50 font-semibold">Detalle</div>
-          <div className="p-4">
-            <div className="mb-4">
-              <h3 className="font-medium mb-2">Servicios</h3>
+        <div className="bg-[#1a1a1a] border border-gray-800">
+          <div className="px-6 py-4 border-b border-gray-800 font-bold text-white font-mono uppercase">DETALLE</div>
+          <div className="p-6">
+            <div className="mb-6">
+              <h3 className="font-bold text-white font-mono uppercase mb-3">SERVICIOS</h3>
               {orden.servicios_asignados.length > 0 ? (
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-100">
+                  <thead className="bg-[#2d2d2d] border-b border-gray-800">
                     <tr>
-                      <th className="text-left px-3 py-2">Servicio</th>
-                      <th className="text-center px-3 py-2">Cant.</th>
-                      <th className="text-right px-3 py-2">Precio</th>
-                      <th className="text-right px-3 py-2">Subtotal</th>
+                      <th className="text-left px-3 py-3 text-gray-400 font-mono uppercase">SERVICIO</th>
+                      <th className="text-center px-3 py-3 text-gray-400 font-mono uppercase">CANT.</th>
+                      <th className="text-right px-3 py-3 text-gray-400 font-mono uppercase">PRECIO</th>
+                      <th className="text-right px-3 py-3 text-gray-400 font-mono uppercase">SUBTOTAL</th>
                     </tr>
                   </thead>
                   <tbody>
                     {orden.servicios_asignados.map((s) => (
-                      <tr key={s.id} className="border-t">
-                        <td className="px-3 py-2">{s.servicio.nombre}</td>
-                        <td className="px-3 py-2 text-center">{s.cantidad}</td>
-                        <td className="px-3 py-2 text-right">{money(s.precio_unitario)}</td>
-                        <td className="px-3 py-2 text-right font-medium">{money(s.subtotal)}</td>
+                      <tr key={s.id} className="border-t border-gray-800">
+                        <td className="px-3 py-3 text-white font-mono">{s.servicio.nombre}</td>
+                        <td className="px-3 py-3 text-center text-gray-400 font-mono">{s.cantidad}</td>
+                        <td className="px-3 py-3 text-right text-gray-400 font-mono">{money(s.precio_unitario)}</td>
+                        <td className="px-3 py-3 text-right font-medium text-white font-mono">{money(s.subtotal)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               ) : (
-                <div className="text-gray-500 text-sm">No hay servicios</div>
+                <div className="text-gray-400 text-sm font-mono uppercase">NO HAY SERVICIOS</div>
               )}
             </div>
 
-            <div className="mb-4">
-              <h3 className="font-medium mb-2">Repuestos</h3>
+            <div className="mb-6">
+              <h3 className="font-bold text-white font-mono uppercase mb-3">REPUESTOS</h3>
               {orden.repuestos_usados.length > 0 ? (
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-100">
+                  <thead className="bg-[#2d2d2d] border-b border-gray-800">
                     <tr>
-                      <th className="text-left px-3 py-2">Repuesto</th>
-                      <th className="text-center px-3 py-2">Cant.</th>
-                      <th className="text-right px-3 py-2">Precio</th>
-                      <th className="text-right px-3 py-2">Subtotal</th>
+                      <th className="text-left px-3 py-3 text-gray-400 font-mono uppercase">REPUESTO</th>
+                      <th className="text-center px-3 py-3 text-gray-400 font-mono uppercase">CANT.</th>
+                      <th className="text-right px-3 py-3 text-gray-400 font-mono uppercase">PRECIO</th>
+                      <th className="text-right px-3 py-3 text-gray-400 font-mono uppercase">SUBTOTAL</th>
                     </tr>
                   </thead>
                   <tbody>
                     {orden.repuestos_usados.map((r) => (
-                      <tr key={r.id} className="border-t">
-                        <td className="px-3 py-2">{r.repuesto.nombre}</td>
-                        <td className="px-3 py-2 text-center">{r.cantidad}</td>
-                        <td className="px-3 py-2 text-right">{money(r.precio_unitario)}</td>
-                        <td className="px-3 py-2 text-right font-medium">{money(r.subtotal)}</td>
+                      <tr key={r.id} className="border-t border-gray-800">
+                        <td className="px-3 py-3 text-white font-mono">{r.repuesto.nombre}</td>
+                        <td className="px-3 py-3 text-center text-gray-400 font-mono">{r.cantidad}</td>
+                        <td className="px-3 py-3 text-right text-gray-400 font-mono">{money(r.precio_unitario)}</td>
+                        <td className="px-3 py-3 text-right font-medium text-white font-mono">{money(r.subtotal)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               ) : (
-                <div className="text-gray-500 text-sm">No hay repuestos</div>
+                <div className="text-gray-400 text-sm font-mono uppercase">NO HAY REPUESTOS</div>
               )}
             </div>
           </div>
 
-          {/* Totales */}
-          <div className="px-4 py-3 border-t bg-gray-50">
+          <div className="px-6 py-4 border-t border-gray-800 bg-[#2d2d2d]">
             <div className="flex justify-end">
-              <div className="w-full md:w-80">
-                <div className="flex justify-between text-sm">
-                  <span>Subtotal servicios</span>
-                  <span>{money(totalServicios)}</span>
+              <div className="w-full md:w-80 space-y-2">
+                <div className="flex justify-between text-sm font-mono">
+                  <span className="text-gray-400 uppercase">SUBTOTAL SERVICIOS</span>
+                  <span className="text-white">{money(totalServicios)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>Subtotal repuestos</span>
-                  <span>{money(totalRepuestos)}</span>
+                <div className="flex justify-between text-sm font-mono">
+                  <span className="text-gray-400 uppercase">SUBTOTAL REPUESTOS</span>
+                  <span className="text-white">{money(totalRepuestos)}</span>
                 </div>
-                <div className="flex justify-between text-lg font-bold mt-2">
-                  <span>Total factura</span>
-                  <span className="text-green-700">{money(factura.monto)}</span>
+                <div className="flex justify-between text-lg font-bold mt-3 font-mono pt-3 border-t border-gray-700">
+                  <span className="text-gray-400 uppercase">TOTAL FACTURA</span>
+                  <span className="text-white">{money(factura.monto)}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Acciones */}
-        <div className="flex gap-3 mt-6">
-          <Link href={`/admin/ordenes/${orden.id_orden}`} className="px-4 py-2 border rounded hover:bg-gray-50">Ver orden</Link>
-          <button onClick={() => window.print()} className="px-4 py-2 border rounded hover:bg-gray-50">Imprimir</button>
+        <div className="flex gap-4 mt-8">
+          <Link href={`/admin/ordenes/${orden.id_orden}`} className="bg-white text-black px-6 py-3 font-mono uppercase font-bold hover:bg-gray-200">VER ORDEN</Link>
+          <button onClick={() => window.print()} className="bg-[#2d2d2d] border border-gray-700 text-white px-6 py-3 font-mono uppercase font-bold hover:bg-[#3d3d3d]">IMPRIMIR</button>
         </div>
       </div>
     </div>

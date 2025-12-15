@@ -1,4 +1,4 @@
-import { 
+﻿import { 
   IsInt, 
   IsString, 
   IsNumber, 
@@ -10,24 +10,19 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { RepuestoCompraDto } from './repuesto-compra.dto';
-
 export class CreateCompraDto {
   @IsInt()
   @Min(1)
   id_proveedor: number;
-
   @IsNumber()
   @Min(0)
   total: number;
-
   @IsOptional()
   @IsString()
-  estado?: string; // 'completada', 'pendiente', 'cancelada'
-
+  estado?: string; 
   @IsOptional()
   @IsString()
   notas?: string;
-
   @IsArray()
   @ArrayMinSize(1, { message: 'Debe incluir al menos un repuesto en la compra' })
   @ValidateNested({ each: true })

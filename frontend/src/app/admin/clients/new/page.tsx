@@ -1,11 +1,8 @@
-"use client";
-
+﻿"use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-
 export default function NewClientPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -18,7 +15,6 @@ export default function NewClientPage() {
     direccion: '',
     empresa: '',
   });
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -26,19 +22,16 @@ export default function NewClientPage() {
       [name]: value
     }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     try {
       const token = localStorage.getItem('token');
       if (!token) {
         router.push('/login');
         return;
       }
-
       const response = await fetch(`${API_URL}/clientes`, {
         method: 'POST',
         headers: {
@@ -47,7 +40,6 @@ export default function NewClientPage() {
         },
         body: JSON.stringify(formData)
       });
-
       if (!response.ok) {
         if (response.status === 401) {
           localStorage.removeItem('token');
@@ -57,8 +49,6 @@ export default function NewClientPage() {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error al crear el cliente');
       }
-
-      // Éxito - redirigir a la lista
       router.push('/admin/clients');
     } catch (err: any) {
       setError(err.message || 'Error al crear el cliente');
@@ -66,35 +56,29 @@ export default function NewClientPage() {
       setLoading(false);
     }
   };
-
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-[#0f0f0f] p-8">
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
+        <div className="mb-8">
           <Link 
             href="/admin/clients" 
-            className="text-blue-600 hover:text-blue-800 mb-4 inline-flex items-center"
+            className="text-gray-400 hover:text-white mb-4 inline-flex items-center font-mono uppercase text-sm"
           >
-            ← Volver a la lista
+            ← VOLVER
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mt-2">Nuevo Cliente</h1>
+          <h1 className="text-4xl font-bold text-white mt-4 font-mono uppercase">NUEVO CLIENTE</h1>
         </div>
-
-        {/* Formulario */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-[#1a1a1a] border border-gray-800 p-8">
           {error && (
-            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div className="mb-6 p-4 bg-red-900/20 border border-red-800 text-red-400 font-mono">
               {error}
             </div>
           )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Nombre */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre <span className="text-red-500">*</span>
+                <label htmlFor="nombre" className="block text-sm font-mono uppercase text-gray-400 mb-2">
+                  NOMBRE <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -103,14 +87,12 @@ export default function NewClientPage() {
                   required
                   value={formData.nombre}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
                 />
               </div>
-
-              {/* Apellido */}
               <div>
-                <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 mb-1">
-                  Apellido <span className="text-red-500">*</span>
+                <label htmlFor="apellido" className="block text-sm font-mono uppercase text-gray-400 mb-2">
+                  APELLIDO <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -119,15 +101,13 @@ export default function NewClientPage() {
                   required
                   value={formData.apellido}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
                 />
               </div>
             </div>
-
-            {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email <span className="text-red-500">*</span>
+              <label htmlFor="email" className="block text-sm font-mono uppercase text-gray-400 mb-2">
+                EMAIL <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
@@ -136,14 +116,12 @@ export default function NewClientPage() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
               />
             </div>
-
-            {/* Teléfono */}
             <div>
-              <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-1">
-                Teléfono <span className="text-red-500">*</span>
+              <label htmlFor="telefono" className="block text-sm font-mono uppercase text-gray-400 mb-2">
+                TELEFONO <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
@@ -152,14 +130,12 @@ export default function NewClientPage() {
                 required
                 value={formData.telefono}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
               />
             </div>
-
-            {/* Dirección */}
             <div>
-              <label htmlFor="direccion" className="block text-sm font-medium text-gray-700 mb-1">
-                Dirección <span className="text-red-500">*</span>
+              <label htmlFor="direccion" className="block text-sm font-mono uppercase text-gray-400 mb-2">
+                DIRECCION <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -168,14 +144,12 @@ export default function NewClientPage() {
                 required
                 value={formData.direccion}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
               />
             </div>
-
-            {/* Empresa (opcional) */}
             <div>
-              <label htmlFor="empresa" className="block text-sm font-medium text-gray-700 mb-1">
-                Empresa (opcional)
+              <label htmlFor="empresa" className="block text-sm font-mono uppercase text-gray-400 mb-2">
+                EMPRESA (OPCIONAL)
               </label>
               <input
                 type="text"
@@ -183,24 +157,22 @@ export default function NewClientPage() {
                 name="empresa"
                 value={formData.empresa}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
               />
             </div>
-
-            {/* Botones */}
-            <div className="flex gap-4 pt-4">
+            <div className="flex gap-4 pt-6">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-white text-black py-3 px-6 font-mono uppercase font-bold hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? 'Creando...' : 'Crear Cliente'}
+                {loading ? 'CREANDO...' : 'CREAR CLIENTE'}
               </button>
               <Link
                 href="/admin/clients"
-                className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 text-center"
+                className="flex-1 bg-[#2d2d2d] border border-gray-700 text-white py-3 px-6 font-mono uppercase font-bold hover:bg-[#3d3d3d] text-center transition-colors"
               >
-                Cancelar
+                CANCELAR
               </Link>
             </div>
           </form>

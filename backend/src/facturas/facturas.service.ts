@@ -2,29 +2,23 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFacturaDto } from './dto/create-factura.dto';
 import { UpdateFacturaDto } from './dto/update-factura.dto';
-
 @Injectable()
 export class FacturasService {
   constructor(private prisma: PrismaService) {}
-
   async create(createFacturaDto: CreateFacturaDto) {
     const orden = await this.prisma.ordenesDeTrabajo.findUnique({
       where: { id_orden: createFacturaDto.id_orden },
       include: { factura: true },
     });
-
     if (!orden) {
       throw new NotFoundException(`Orden con ID ${createFacturaDto.id_orden} no encontrada`);
     }
-
     if (orden.estado !== 'completado') {
       throw new BadRequestException('Solo se pueden facturar órdenes completadas');
     }
-
     if (orden.factura) {
       throw new ConflictException('Esta orden ya tiene una factura generada');
     }
-
     const factura = await this.prisma.facturas.create({
       data: {
         id_orden: createFacturaDto.id_orden,
@@ -52,10 +46,8 @@ export class FacturasService {
         },
       },
     });
-
     return factura;
   }
-
   async facturarOrden(id_orden: number, metodo_pago?: string) {
     const orden = await this.prisma.ordenesDeTrabajo.findUnique({
       where: { id_orden },
@@ -65,34 +57,27 @@ export class FacturasService {
         repuestos_usados: true,
       },
     });
-
     if (!orden) {
       throw new NotFoundException(`Orden con ID ${id_orden} no encontrada`);
     }
-
     if (orden.estado !== 'completado') {
       throw new BadRequestException('Solo se pueden facturar órdenes completadas');
     }
-
     if (orden.factura) {
       throw new ConflictException('Esta orden ya tiene una factura generada');
     }
-
     let monto = orden.total_real;
     if (!monto) {
       const serviciosTotal = await this.prisma.ordenes_Servicios.aggregate({
         where: { id_orden },
         _sum: { subtotal: true },
       });
-
       const repuestosTotal = await this.prisma.ordenes_Repuestos.aggregate({
         where: { id_orden },
         _sum: { subtotal: true },
       });
-
       monto = (serviciosTotal._sum.subtotal || 0) + (repuestosTotal._sum.subtotal || 0);
     }
-
     const factura = await this.prisma.facturas.create({
       data: {
         id_orden,
@@ -120,17 +105,14 @@ export class FacturasService {
         },
       },
     });
-
     if (metodo_pago) {
       await this.prisma.ordenesDeTrabajo.update({
         where: { id_orden },
         data: { estado: 'entregado' },
       });
     }
-
     return factura;
   }
-
   async findAll() {
     return this.prisma.facturas.findMany({
       include: {
@@ -146,7 +128,6 @@ export class FacturasService {
       },
     });
   }
-
   async findOne(id_factura: number) {
     const factura = await this.prisma.facturas.findUnique({
       where: { id_factura },
@@ -170,14 +151,11 @@ export class FacturasService {
         },
       },
     });
-
     if (!factura) {
       throw new NotFoundException(`Factura con ID ${id_factura} no encontrada`);
     }
-
     return factura;
   }
-
   async findByOrden(id_orden: number) {
     const factura = await this.prisma.facturas.findUnique({
       where: { id_orden },
@@ -201,17 +179,13 @@ export class FacturasService {
         },
       },
     });
-
     if (!factura) {
       throw new NotFoundException(`No se encontró factura para la orden ${id_orden}`);
     }
-
     return factura;
   }
-
   async update(id_factura: number, updateFacturaDto: UpdateFacturaDto) {
     await this.findOne(id_factura);
-
     return this.prisma.facturas.update({
       where: { id_factura },
       data: updateFacturaDto,
@@ -225,13 +199,10 @@ export class FacturasService {
       },
     });
   }
-
   async remove(id_factura: number) {
     await this.findOne(id_factura);
-
     return this.prisma.facturas.delete({
       where: { id_factura },
     });
   }
 }
-

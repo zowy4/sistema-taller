@@ -1,4 +1,4 @@
-import { 
+﻿import { 
   Controller, 
   Get, 
   Patch, 
@@ -12,32 +12,26 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PortalService } from './portal.service';
-
 @Controller('portal')
 @UseGuards(AuthGuard('jwt'))
 export class PortalController {
   constructor(private readonly portalService: PortalService) {}
-
-  // Middleware para verificar que el usuario es un cliente
   private ensureCliente(req: any): number {
     if (req.user.rol !== 'cliente') {
       throw new ForbiddenException('Acceso denegado: Solo clientes pueden acceder al portal');
     }
     return req.user.id_cliente;
   }
-
   @Get('dashboard/summary')
   async getDashboardSummary(@Request() req) {
     const idCliente = this.ensureCliente(req);
     return this.portalService.getDashboardSummary(idCliente);
   }
-
   @Get('perfil')
   async getMiPerfil(@Request() req) {
     const idCliente = this.ensureCliente(req);
     return this.portalService.getMiPerfil(idCliente);
   }
-
   @Patch('perfil')
   async updateMiPerfil(
     @Request() req,
@@ -46,13 +40,11 @@ export class PortalController {
     const idCliente = this.ensureCliente(req);
     return this.portalService.updateMiPerfil(idCliente, data);
   }
-
   @Get('vehiculos')
   async getMisVehiculos(@Request() req) {
     const idCliente = this.ensureCliente(req);
     return this.portalService.getMisVehiculos(idCliente);
   }
-
   @Get('vehiculos/:id/historial')
   async getHistorialVehiculo(
     @Request() req,
@@ -61,7 +53,6 @@ export class PortalController {
     const idCliente = this.ensureCliente(req);
     return this.portalService.getHistorialVehiculo(idCliente, idVehiculo);
   }
-
   @Get('ordenes')
   async getMisOrdenes(
     @Request() req,
@@ -70,7 +61,6 @@ export class PortalController {
     const idCliente = this.ensureCliente(req);
     return this.portalService.getMisOrdenes(idCliente, estado);
   }
-
   @Get('ordenes/:id')
   async getDetalleOrden(
     @Request() req,
@@ -79,7 +69,6 @@ export class PortalController {
     const idCliente = this.ensureCliente(req);
     return this.portalService.getDetalleOrden(idCliente, idOrden);
   }
-
   @Get('facturas')
   async getMisFacturas(
     @Request() req,
@@ -88,7 +77,6 @@ export class PortalController {
     const idCliente = this.ensureCliente(req);
     return this.portalService.getMisFacturas(idCliente, estadoPago);
   }
-
   @Get('facturas/:id/pdf')
   async getFacturaPDF(
     @Request() req,

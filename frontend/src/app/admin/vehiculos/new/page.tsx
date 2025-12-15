@@ -1,24 +1,19 @@
-"use client";
-
+﻿"use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
-
 interface Cliente {
   id_cliente: number;
   nombre: string;
   apellido: string;
 }
-
 export default function NuevoVehiculoPage() {
   const router = useRouter();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
   const [form, setForm] = useState({
     placa: '',
     vin: '',
@@ -28,11 +23,9 @@ export default function NuevoVehiculoPage() {
     id_cliente: 0,
     detalles: '',
   });
-
   useEffect(() => {
     fetchClientes();
   }, []);
-
   const fetchClientes = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -63,7 +56,6 @@ export default function NuevoVehiculoPage() {
       setLoading(false);
     }
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     setForm(f => ({
@@ -71,33 +63,26 @@ export default function NuevoVehiculoPage() {
       [name]: (type === 'number' || name === 'id_cliente' || name === 'anio') ? parseInt(value) || 0 : value
     }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
-    
-    // Validación del cliente
     if (!form.id_cliente || form.id_cliente === 0) {
-      setError('Debe seleccionar un cliente válido');
+      setError('Debe seleccionar un cliente valido');
       setSaving(false);
       return;
     }
-    
-    // Validación del año
     if (form.anio < 1900 || form.anio > new Date().getFullYear() + 1) {
-      setError('El año del vehículo no es válido');
+      setError('El año del vehiculo no es valido');
       setSaving(false);
       return;
     }
-    
     try {
       const token = localStorage.getItem('token');
       if (!token) {
         router.push('/login');
         return;
       }
-      // Asegurar que los campos numéricos sean números y limpiar campos opcionales vacíos
       const payload: Partial<{
         placa: string;
         vin: string;
@@ -114,12 +99,9 @@ export default function NuevoVehiculoPage() {
         anio: parseInt(String(form.anio)),
         id_cliente: parseInt(String(form.id_cliente))
       };
-      
-      // Solo incluir detalles si no está vacío
       if (form.detalles && form.detalles.trim()) {
         payload.detalles = form.detalles.trim();
       }
-      
       const res = await fetch(`${API_URL}/vehiculos`, {
         method: 'POST',
         headers: {
@@ -135,13 +117,12 @@ export default function NuevoVehiculoPage() {
       }
       if (!res.ok) {
         const errData = await res.json();
-        // Manejar errores de validación
         if (Array.isArray(errData.message)) {
           throw new Error(errData.message.join(', '));
         }
-        throw new Error(errData.message || 'Error al crear vehículo');
+        throw new Error(errData.message || 'Error al crear vehiculo');
       }
-      alert('✅ Vehículo registrado');
+      alert('Vehiculo registrado exitosamente');
       router.push('/admin/vehiculos');
     } catch (err: any) {
       setError(err.message || 'Error al crear vehículo');
@@ -149,60 +130,59 @@ export default function NuevoVehiculoPage() {
       setSaving(false);
     }
   };
-
   return (
-    <div className="min-h-screen bg-white p-6">
+    <div className="min-h-screen bg-[#0f0f0f] p-8">
       <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
-          <Link href="/admin/vehiculos" className="text-blue-600 hover:underline text-sm">
-            ← Volver a vehículos
+        <div className="mb-8">
+          <Link href="/admin/vehiculos" className="text-gray-400 hover:text-white font-mono uppercase text-sm">
+            ← VOLVER
           </Link>
-          <h2 className="text-2xl font-semibold mt-2">Nuevo Vehículo</h2>
+          <h2 className="text-4xl font-bold text-white mt-4 font-mono uppercase">NUEVO VEHICULO</h2>
         </div>
-        {error && <div className="bg-red-100 text-red-800 p-3 rounded mb-4">{error}</div>}
-        <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded shadow">
-          <div className="space-y-4">
+        {error && <div className="bg-red-900/20 border border-red-800 text-red-400 p-4 mb-6 font-mono">{error}</div>}
+        <form onSubmit={handleSubmit} className="bg-[#1a1a1a] border border-gray-800 p-8">
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-1">Placa *</label>
-              <input type="text" name="placa" value={form.placa} onChange={handleChange} required className="w-full border border-gray-300 rounded px-3 py-2" />
+              <label className="block text-sm font-mono uppercase text-gray-400 mb-2">PLACA *</label>
+              <input type="text" name="placa" value={form.placa} onChange={handleChange} required className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">VIN *</label>
-              <input type="text" name="vin" value={form.vin} onChange={handleChange} required className="w-full border border-gray-300 rounded px-3 py-2" />
+              <label className="block text-sm font-mono uppercase text-gray-400 mb-2">VIN *</label>
+              <input type="text" name="vin" value={form.vin} onChange={handleChange} required className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium mb-1">Marca *</label>
-                <input type="text" name="marca" value={form.marca} onChange={handleChange} required className="w-full border border-gray-300 rounded px-3 py-2" />
+                <label className="block text-sm font-mono uppercase text-gray-400 mb-2">MARCA *</label>
+                <input type="text" name="marca" value={form.marca} onChange={handleChange} required className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Modelo *</label>
-                <input type="text" name="modelo" value={form.modelo} onChange={handleChange} required className="w-full border border-gray-300 rounded px-3 py-2" />
+                <label className="block text-sm font-mono uppercase text-gray-400 mb-2">MODELO *</label>
+                <input type="text" name="modelo" value={form.modelo} onChange={handleChange} required className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Año *</label>
-                <input type="number" name="anio" value={form.anio} onChange={handleChange} required min="1900" max={new Date().getFullYear() + 1} className="w-full border border-gray-300 rounded px-3 py-2" />
+                <label className="block text-sm font-mono uppercase text-gray-400 mb-2">AÑO *</label>
+                <input type="number" name="anio" value={form.anio} onChange={handleChange} required min="1900" max={new Date().getFullYear() + 1} className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Cliente *</label>
-              <select name="id_cliente" value={form.id_cliente} onChange={handleChange} required className="w-full border border-gray-300 rounded px-3 py-2">
-                <option value="0">-- Seleccione un cliente --</option>
+              <label className="block text-sm font-mono uppercase text-gray-400 mb-2">CLIENTE *</label>
+              <select name="id_cliente" value={form.id_cliente} onChange={handleChange} required className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500">
+                <option value="0">-- SELECCIONE UN CLIENTE --</option>
                 {clientes.map(c => (
                   <option key={c.id_cliente} value={c.id_cliente}>{c.nombre} {c.apellido}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Detalles (opcional)</label>
-              <textarea name="detalles" value={form.detalles} onChange={(e) => setForm(f => ({ ...f, detalles: e.target.value }))} rows={3} className="w-full border border-gray-300 rounded px-3 py-2" placeholder="Información adicional del vehículo..."></textarea>
+              <label className="block text-sm font-mono uppercase text-gray-400 mb-2">DETALLES (OPCIONAL)</label>
+              <textarea name="detalles" value={form.detalles} onChange={(e) => setForm(f => ({ ...f, detalles: e.target.value }))} rows={3} className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500" placeholder="INFORMACION ADICIONAL DEL VEHICULO..."></textarea>
             </div>
           </div>
-          <div className="flex gap-3 mt-6">
-            <button type="submit" disabled={saving || clientes.length === 0} className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-              {saving ? 'Guardando...' : 'Registrar Vehículo'}
+          <div className="flex gap-4 mt-8">
+            <button type="submit" disabled={saving || clientes.length === 0} className="flex-1 bg-white text-black px-6 py-3 font-mono uppercase font-bold hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              {saving ? 'GUARDANDO...' : 'REGISTRAR VEHICULO'}
             </button>
-            <Link href="/admin/vehiculos" className="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400 transition-colors inline-block">Cancelar</Link>
+            <Link href="/admin/vehiculos" className="flex-1 bg-[#2d2d2d] border border-gray-700 text-white px-6 py-3 font-mono uppercase font-bold hover:bg-[#3d3d3d] transition-colors text-center">CANCELAR</Link>
           </div>
         </form>
       </div>
