@@ -168,6 +168,17 @@ jobs:
     environment: production
 
     steps:
+    - name: Setup SSH for Rollback
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        SSH_HOST: ${{ secrets.VPS_HOST }}
+        SSH_USER: ${{ secrets.VPS_USER }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
     - name: Rollback deployment
       env:
         SSH_HOST: ${{ secrets.VPS_HOST }}
