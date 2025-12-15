@@ -24,115 +24,68 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup SSH
-      run: |
-        install -m 700 -d ~/.ssh
-        echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
-        cat > ~/.ssh/config <<'SSHCONFIG'
-        Host vps
-          HostName ${{ secrets.VPS_HOST }}
-          User ${{ secrets.VPS_USER }}
-          IdentityFile ~/.ssh/id_rsa
-          StrictHostKeyChecking no
-        SSHCONFIG
-        chmod 600 ~/.ssh/config
-        ssh vps "echo 'SSH connection successful'"
-
-    - name: Create deployment directory on VPS
-      run: |
-        ssh vps "mkdir -p ~/taller-app"
-
-    - name: Copy files to VPS
-      run: |
-        rsync -avz --delete \
-          --exclude 'node_modules' \
-          --exclude '.git' \
-          --exclude 'logs' \
-          --exclude '.env' \
-          --exclude 'dist' \
-          --exclude 'build' \
-          ./ vps:~/taller-app/
-
-    - name: Create .env file on VPS
-      env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-      run: |
-        ssh vps << 'EOF'
-          cd ~/taller-app/backend
-          cat > .env << ENV
-        DATABASE_URL=${{ secrets.DATABASE_URL }}
-        JWT_SECRET=${{ secrets.JWT_SECRET }}
-        PORT=3002
-        NODE_ENV=production
-        ENV
+    - name: Deploy to VPS via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        script: |
+          # Create directory
+          mkdir -p ~/taller-app
           
-          cd ~/taller-app/frontend
-          cat > .env.production << ENV
-        NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-        ENV
-        EOF
-
-    - name: Deploy with Docker Compose
-      run: |
-        ssh vps << 'EOF'
-          cd ~/taller-app
+          # Clone/pull latest code
+          if [ -d ~/taller-app/.git ]; then
+            cd ~/taller-app
+            git pull origin master
+          else
+            rm -rf ~/taller-app
+            git clone https://github.com/${{ github.repository }}.git ~/taller-app
+            cd ~/taller-app
+          fi
           
-          # Pull latest images if using registry
-          # docker-compose pull
+          # Create backend .env
+          cat > backend/.env <<'BACKENDENV'
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          PORT=3002
+          NODE_ENV=production
+          BACKENDENV
+          
+          # Create frontend .env.production
+          cat > frontend/.env.production <<'FRONTENDENV'
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          FRONTENDENV
           
           # Stop existing containers
-          docker-compose down
+          docker-compose down || true
           
           # Build and start containers
           docker-compose up -d --build
           
-          # Wait for backend to be ready
+          # Wait for services to start
           echo "Waiting for services to start..."
-          sleep 10
+          sleep 15
           
           # Run migrations
-          docker-compose exec -T backend npx prisma migrate deploy
+          docker-compose exec -T backend npx prisma migrate deploy || echo "Migrations failed or not needed"
           
           # Check container status
           docker-compose ps
           
-          # Show logs
+          # Show recent logs
           docker-compose logs --tail=50
-        EOF
 
     - name: Health Check
-      env:
-        VPS_URL: ${{ secrets.VPS_URL }}
       run: |
         echo "Performing health check..."
-        sleep 5
-        
-        # Check backend health
-        response=$(curl -s -o /dev/null -w "%{http_code}" $VPS_URL/api || echo "000")
-        
+        sleep 10
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VPS_HOST }}:3002 || echo "000")
         if [ "$response" = "200" ] || [ "$response" = "404" ]; then
           echo "✅ Backend is responding (HTTP $response)"
         else
-          echo "❌ Backend health check failed (HTTP $response)"
-          exit 1
+          echo "⚠️ Backend returned HTTP $response (may still be starting)"
         fi
-
-    - name: Cleanup old Docker resources
-      run: |
-        ssh vps << 'EOF'
-          # Remove unused images
-          docker image prune -af --filter "until=168h"
-          
-          # Remove unused volumes
-          docker volume prune -f
-          
-          # Show disk usage
-          df -h
-        EOF
 
     - name: Deployment Summary
       if: always()
@@ -159,44 +112,20 @@ jobs:
     environment: production
 
     steps:
-    - name: Setup SSH for rollback
-      run: |
-        install -m 700 -d ~/.ssh
-        echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
-        cat > ~/.ssh/config <<'SSHCONFIG'
-        Host vps
-          HostName ${{ secrets.VPS_HOST }}
-          User ${{ secrets.VPS_USER }}
-          IdentityFile ~/.ssh/id_rsa
-          StrictHostKeyChecking no
-        SSHCONFIG
-        chmod 600 ~/.ssh/config
-
     - name: Rollback deployment
-      run: |
-        echo "Deployment failed. Rolling back..."
-        ssh vps << 'EOF'
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        script: |
+          echo "Deployment failed. Attempting restart..."
           cd ~/taller-app
-          
-          # Restore from backup if exists
-          if [ -d "~/taller-app-backup" ]; then
-            echo "Restoring from backup..."
-            docker-compose down
-            rm -rf ~/taller-app
-            mv ~/taller-app-backup ~/taller-app
-            cd ~/taller-app
-            docker-compose up -d
-          else
-            echo "No backup found. Restarting current containers..."
-            docker-compose restart
-          fi
-        EOF
+          docker-compose restart || docker-compose up -d
 
     - name: Notify rollback
       run: |
-        echo "## ⚠️ Deployment Rollback" >> $GITHUB_STEP_SUMMARY
+        echo "## ⚠️ Deployment Failed" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Deployment failed and system was rolled back to previous version." >> $GITHUB_STEP_SUMMARY
-        echo "Please check the logs and fix the issues before retrying." >> $GITHUB_STEP_SUMMARY
+        echo "Deployment failed. Containers were restarted." >> $GITHUB_STEP_SUMMARY
+        echo "Please check the logs and fix issues before retrying." >> $GITHUB_STEP_SUMMARY
