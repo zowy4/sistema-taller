@@ -31,21 +31,35 @@ jobs:
         SSH_USER: ${{ secrets.VPS_USER }}
       run: |
         mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        
+        # Save SSH key
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+        
+        # Add host key to known_hosts
+        ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null
+        chmod 644 ~/.ssh/known_hosts
+        
+        # Create SSH config for easier connection
+        cat > ~/.ssh/config << EOF
+        Host vps
+          HostName $SSH_HOST
+          User $SSH_USER
+          IdentityFile ~/.ssh/id_rsa
+          StrictHostKeyChecking no
+          UserKnownHostsFile ~/.ssh/known_hosts
+        EOF
+        chmod 600 ~/.ssh/config
+        
+        # Test connection
+        ssh vps "echo '✅ SSH connection successful'"
 
     - name: Create deployment directory on VPS
-      env:
-        SSH_HOST: ${{ secrets.VPS_HOST }}
-        SSH_USER: ${{ secrets.VPS_USER }}
       run: |
-        ssh $SSH_USER@$SSH_HOST "mkdir -p ~/taller-app"
+        ssh vps "mkdir -p ~/taller-app"
 
     - name: Copy files to VPS
-      env:
-        SSH_HOST: ${{ secrets.VPS_HOST }}
-        SSH_USER: ${{ secrets.VPS_USER }}
       run: |
         rsync -avz --delete \
           --exclude 'node_modules' \
@@ -54,17 +68,15 @@ jobs:
           --exclude '.env' \
           --exclude 'dist' \
           --exclude 'build' \
-          ./ $SSH_USER@$SSH_HOST:~/taller-app/
+          ./ vps:~/taller-app/
 
     - name: Create .env file on VPS
       env:
-        SSH_HOST: ${{ secrets.VPS_HOST }}
-        SSH_USER: ${{ secrets.VPS_USER }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
         NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
       run: |
-        ssh $SSH_USER@$SSH_HOST << 'EOF'
+        ssh vps << 'EOF'
           cd ~/taller-app/backend
           cat > .env << ENV
         DATABASE_URL=${{ secrets.DATABASE_URL }}
@@ -80,11 +92,8 @@ jobs:
         EOF
 
     - name: Deploy with Docker Compose
-      env:
-        SSH_HOST: ${{ secrets.VPS_HOST }}
-        SSH_USER: ${{ secrets.VPS_USER }}
       run: |
-        ssh $SSH_USER@$SSH_HOST << 'EOF'
+        ssh vps << 'EOF'
           cd ~/taller-app
           
           # Pull latest images if using registry
@@ -128,11 +137,8 @@ jobs:
         fi
 
     - name: Cleanup old Docker resources
-      env:
-        SSH_HOST: ${{ secrets.VPS_HOST }}
-        SSH_USER: ${{ secrets.VPS_USER }}
       run: |
-        ssh $SSH_USER@$SSH_HOST << 'EOF'
+        ssh vps << 'EOF'
           # Remove unused images
           docker image prune -af --filter "until=168h"
           
@@ -168,24 +174,31 @@ jobs:
     environment: production
 
     steps:
-    - name: Setup SSH for Rollback
+    - name: Setup SSH for rollback
       env:
         SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
         SSH_HOST: ${{ secrets.VPS_HOST }}
         SSH_USER: ${{ secrets.VPS_USER }}
       run: |
         mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+        ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null
+        
+        cat > ~/.ssh/config << EOF
+        Host vps
+          HostName $SSH_HOST
+          User $SSH_USER
+          IdentityFile ~/.ssh/id_rsa
+          StrictHostKeyChecking no
+        EOF
+        chmod 600 ~/.ssh/config
 
     - name: Rollback deployment
-      env:
-        SSH_HOST: ${{ secrets.VPS_HOST }}
-        SSH_USER: ${{ secrets.VPS_USER }}
       run: |
         echo "Deployment failed. Rolling back..."
-        ssh $SSH_USER@$SSH_HOST << 'EOF'
+        ssh vps << 'EOF'
           cd ~/taller-app
           
           # Restore from backup if exists
