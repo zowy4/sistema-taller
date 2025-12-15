@@ -24,25 +24,26 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Deploy to VPS via SSH
+    - name: Copy files to VPS
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        source: "."
+        target: "~/taller-app"
+        rm: false
+        strip_components: 0
+        overwrite: true
+
+    - name: Create environment files
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.VPS_USER }}
         key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
         script: |
-          # Create directory
-          mkdir -p ~/taller-app
-          
-          # Clone/pull latest code
-          if [ -d ~/taller-app/.git ]; then
-            cd ~/taller-app
-            git pull origin master
-          else
-            rm -rf ~/taller-app
-            git clone https://github.com/${{ github.repository }}.git ~/taller-app
-            cd ~/taller-app
-          fi
+          cd ~/taller-app
           
           # Create backend .env
           cat > backend/.env <<'BACKENDENV'
@@ -57,24 +58,38 @@ jobs:
           NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
           FRONTENDENV
           
+          echo "✅ Environment files created"
+
+    - name: Deploy with Docker Compose
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        command_timeout: 30m
+        script: |
+          cd ~/taller-app
+          
           # Stop existing containers
-          docker-compose down || true
+          docker-compose down 2>/dev/null || true
           
           # Build and start containers
           docker-compose up -d --build
           
-          # Wait for services to start
-          echo "Waiting for services to start..."
-          sleep 15
+          # Wait for services
+          echo "⏳ Waiting for services to start..."
+          sleep 20
           
           # Run migrations
-          docker-compose exec -T backend npx prisma migrate deploy || echo "Migrations failed or not needed"
+          echo "📦 Running database migrations..."
+          docker-compose exec -T backend npx prisma migrate deploy 2>/dev/null || echo "⚠️ Migrations skipped"
           
-          # Check container status
+          # Show status
+          echo "📊 Container status:"
           docker-compose ps
           
-          # Show recent logs
-          docker-compose logs --tail=50
+          echo "📝 Recent logs:"
+          docker-compose logs --tail=30
 
     - name: Health Check
       run: |
