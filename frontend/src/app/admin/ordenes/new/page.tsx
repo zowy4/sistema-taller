@@ -116,8 +116,8 @@ export default function NuevaOrdenPage() {
         id_servicio: servicio.id_servicio,
         nombre: servicio.nombre,
         cantidad: 1,
-        precio_unitario: servicio.precio_unitario,
-        subtotal: servicio.precio_unitario
+        precio_unitario: servicio.precio_base,
+        subtotal: servicio.precio_base
       }]);
     }
   };
@@ -310,7 +310,7 @@ export default function NuevaOrdenPage() {
                   <div key={s.id_servicio} className="flex justify-between items-center bg-[#2d2d2d] border border-gray-700 p-4">
                     <div>
                       <p className="font-mono text-white font-bold">{s.nombre}</p>
-                      <p className="text-sm text-gray-400 font-mono">${s.precio != null && !isNaN(s.precio) ? s.precio.toFixed(2) : '0.00'}</p>
+                      <p className="text-sm text-gray-400 font-mono">${s.precio_base != null && !isNaN(s.precio_base) ? s.precio_base.toFixed(2) : '0.00'}</p>
                     </div>
                     <button 
                       onClick={() => agregarServicio(s)} 
