@@ -116,8 +116,8 @@ export default function NuevaOrdenPage() {
         id_servicio: servicio.id_servicio,
         nombre: servicio.nombre,
         cantidad: 1,
-        precio_unitario: servicio.precio,
-        subtotal: servicio.precio
+        precio_unitario: servicio.precio_unitario,
+        subtotal: servicio.precio_unitario
       }]);
     }
   };
