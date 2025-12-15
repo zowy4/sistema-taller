@@ -167,7 +167,7 @@ export default function TecnicoDashboard() {
           <div>
             <h1 className="text-4xl font-black text-white tracking-tight">PANEL TECNICO</h1>
             <p className="mt-2 text-lg text-gray-300 font-mono">
-              {user?.nombre} {user?.apellido} - ID: {user?.id_usuario}
+              {user?.nombre} {user?.apellido} - ID: {user?.id}
             </p>
           </div>
           <button
