@@ -25,35 +25,20 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Setup SSH
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-        SSH_HOST: ${{ secrets.VPS_HOST }}
-        SSH_USER: ${{ secrets.VPS_USER }}
       run: |
-        mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
-        
-        # Save SSH key
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        install -m 700 -d ~/.ssh
+        echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        
-        # Add host key to known_hosts
-        ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null
-        chmod 644 ~/.ssh/known_hosts
-        
-        # Create SSH config for easier connection
-        cat > ~/.ssh/config << EOF
+        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+        cat > ~/.ssh/config <<'SSHCONFIG'
         Host vps
-          HostName $SSH_HOST
-          User $SSH_USER
+          HostName ${{ secrets.VPS_HOST }}
+          User ${{ secrets.VPS_USER }}
           IdentityFile ~/.ssh/id_rsa
           StrictHostKeyChecking no
-          UserKnownHostsFile ~/.ssh/known_hosts
-        EOF
+        SSHCONFIG
         chmod 600 ~/.ssh/config
-        
-        # Test connection
-        ssh vps "echo '✅ SSH connection successful'"
+        ssh vps "echo 'SSH connection successful'"
 
     - name: Create deployment directory on VPS
       run: |
@@ -175,24 +160,18 @@ jobs:
 
     steps:
     - name: Setup SSH for rollback
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-        SSH_HOST: ${{ secrets.VPS_HOST }}
-        SSH_USER: ${{ secrets.VPS_USER }}
       run: |
-        mkdir -p ~/.ssh
-        chmod 700 ~/.ssh
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        install -m 700 -d ~/.ssh
+        echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null
-        
-        cat > ~/.ssh/config << EOF
+        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+        cat > ~/.ssh/config <<'SSHCONFIG'
         Host vps
-          HostName $SSH_HOST
-          User $SSH_USER
+          HostName ${{ secrets.VPS_HOST }}
+          User ${{ secrets.VPS_USER }}
           IdentityFile ~/.ssh/id_rsa
           StrictHostKeyChecking no
-        EOF
+        SSHCONFIG
         chmod 600 ~/.ssh/config
 
     - name: Rollback deployment
