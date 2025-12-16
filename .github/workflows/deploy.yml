@@ -96,23 +96,32 @@ jobs:
         script: |
           cd ~/taller-app
           
-          echo "🛑 Stopping existing containers..."
-          docker-compose down 2>/dev/null || true
-          
-          echo "🏗️ Building and starting containers (this may take 5-10 minutes)..."
-          docker-compose up -d --build
+          echo "� Rebuilding and restarting containers..."
+          docker-compose up -d --build --force-recreate
           
           echo "⏳ Waiting for services to start..."
           sleep 30
           
+          echo "� Container status:"
+          docker-compose ps
+          
+          # Verify containers are running
+          if [ $(docker-compose ps -q | wc -l) -eq 0 ]; then
+            echo "⚠️ No containers running, attempting restart..."
+            docker-compose up -d
+            sleep 20
+            docker-compose ps
+          fi
+          
           echo "📦 Running database migrations..."
           docker-compose exec -T backend npx prisma migrate deploy 2>/dev/null || echo "⚠️ Migrations skipped"
           
-          echo "📊 Container status:"
-          docker-compose ps
-          
           echo "📝 Recent logs:"
           docker-compose logs --tail=50
+          
+          # Final verification
+          echo "✅ Deployment completed"
+          docker ps --filter name=taller
 
     - name: Health Check
       run: |
