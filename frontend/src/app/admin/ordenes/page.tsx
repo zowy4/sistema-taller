@@ -2,21 +2,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { fetchOrdenes } from '@/services/ordenes.service';
 import { useOrdenesMutations } from '@/hooks/useOrdenesMutations';
 import { Orden } from '@/types';
 import { formatCurrency, formatShortDate } from '@/lib/formatters';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
 type EstadoFiltro = 'todos' | 'pendiente' | 'en_proceso' | 'completada' | 'cancelada';
 export default function OrdenesPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [search, setSearch] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro>('todos');
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const isRecepcion = user?.rol === 'recepcion';
-  const { data: ordenes = [], isLoading, isError } = useQuery<Orden[]>({
+  const { data: ordenes = [], isLoading, isError, error } = useQuery<Orden[]>({
     queryKey: ['ordenes'],
     queryFn: () => {
       if (!token) throw new Error('No token found');
@@ -26,6 +27,13 @@ export default function OrdenesPage() {
     retry: false,
     refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    if (isError && error?.message === 'UNAUTHORIZED') {
+      logout();
+      router.push('/login');
+    }
+  }, [isError, error, logout, router]);
   const { updateEstadoMutation } = useOrdenesMutations();
   const cambiarEstado = (id: number, estado: 'pendiente' | 'en_proceso' | 'completada' | 'cancelada') => {
     updateEstadoMutation.mutate({ id, estado });
