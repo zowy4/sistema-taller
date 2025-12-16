@@ -224,6 +224,7 @@ export interface Proveedor {
   activo: boolean;
   fecha_alta?: string;
   notas?: string;
+  compras?: Compra[];
   _count?: {
     compras: number;
     repuestos: number;
