@@ -86,8 +86,7 @@ export default function TecnicoInventarioPage() {
     const matchBusqueda = busqueda === '' ||
       repuesto.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
       repuesto.codigo.toLowerCase().includes(busqueda.toLowerCase()) ||
-      (repuesto.descripcion?.toLowerCase().includes(busqueda.toLowerCase())) ||
-      (repuesto.categoria?.toLowerCase().includes(busqueda.toLowerCase()));
+      (repuesto.descripcion?.toLowerCase().includes(busqueda.toLowerCase()));
     const status = getStockStatus(repuesto);
     const matchStock = filtroStock === 'todos' || status === filtroStock;
     return matchBusqueda && matchStock;
@@ -227,9 +226,6 @@ export default function TecnicoInventarioPage() {
                       Repuesto
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Categoría
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Ubicación
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -273,11 +269,6 @@ export default function TecnicoInventarioPage() {
                                 </div>
                               )}
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm text-gray-900">
-                              {repuesto.categoria || '-'}
-                            </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-sm text-gray-900">

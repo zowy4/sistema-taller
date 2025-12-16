@@ -277,9 +277,8 @@ export interface Servicio {
   id_servicio: number;
   nombre: string;
   descripcion?: string;
-  precio_base: number;
-  duracion_estimada?: number;
-  categoria?: string;
+  precio: number;
+  tiempo_estimado?: number;
   activo: boolean;
 }
 export interface DashboardKPIs {

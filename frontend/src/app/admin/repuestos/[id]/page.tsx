@@ -134,26 +134,6 @@ export default function RepuestoDetailPage() {
           </div>
         </div>
 
-        {/* Category */}
-        <div className="bg-[#1a1a1a] border border-gray-800 p-6">
-          <h2 className="text-xl font-black text-white uppercase mb-4">Categoría</h2>
-          <div className="space-y-3">
-            <div>
-              <p className="text-gray-500 text-xs uppercase">Nombre</p>
-              <p className="text-white font-bold">
-                {repuesto.categoria?.nombre || 'Sin categoría'}
-              </p>
-            </div>
-            {repuesto.categoria?.descripcion && (
-              <div>
-                <p className="text-gray-500 text-xs uppercase">Descripción</p>
-                <p className="text-gray-400 text-sm">
-                  {repuesto.categoria.descripcion}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* Description */}

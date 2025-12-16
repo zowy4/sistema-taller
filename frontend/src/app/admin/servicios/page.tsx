@@ -26,8 +26,7 @@ export default function ServiciosPage() {
     const search = searchTerm.toLowerCase();
     return servicios.filter(servicio => 
       servicio.nombre.toLowerCase().includes(search) ||
-      servicio.descripcion?.toLowerCase().includes(search) ||
-      servicio.categoria?.toLowerCase().includes(search)
+      servicio.descripcion?.toLowerCase().includes(search)
     );
   }, [servicios, searchTerm]);
   const handleToggleEstado = (id: number, activo: boolean) => {
@@ -39,13 +38,13 @@ export default function ServiciosPage() {
     }
   };
   const stats = useMemo(() => {
-    const serviciosConPrecio = servicios.filter(s => s.precio_base != null && !isNaN(s.precio_base));
+    const serviciosConPrecio = servicios.filter(s => s.precio != null && !isNaN(s.precio));
     return {
       total: servicios.length,
       activos: servicios.filter(s => s.activo).length,
       inactivos: servicios.filter(s => !s.activo).length,
       precioPromedio: serviciosConPrecio.length > 0 
-        ? serviciosConPrecio.reduce((sum, s) => sum + s.precio_base, 0) / serviciosConPrecio.length 
+        ? serviciosConPrecio.reduce((sum, s) => sum + s.precio, 0) / serviciosConPrecio.length 
         : 0,
     };
   }, [servicios]);
@@ -168,13 +167,13 @@ export default function ServiciosPage() {
                     <div className="flex gap-6 text-sm">
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-black text-white">
-                          Precio: {servicio.precio_base != null && !isNaN(servicio.precio_base) ? formatCurrency(servicio.precio_base) : 'No definido'}
+                          Precio: {servicio.precio != null && !isNaN(servicio.precio) ? formatCurrency(servicio.precio) : 'No definido'}
                         </span>
                       </div>
-                      {servicio.duracion_estimada && (
+                      {servicio.tiempo_estimado && (
                         <div className="flex items-center gap-2">
                           <span className="text-gray-400">
-                            Duración: {servicio.duracion_estimada} min
+                            Duración: {servicio.tiempo_estimado} min
                           </span>
                         </div>
                       )}
