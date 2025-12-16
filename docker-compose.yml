@@ -55,14 +55,14 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3002
+        NEXT_PUBLIC_API_URL: http://78.12.192.211:3002
     container_name: taller_frontend
     restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3002
+      NEXT_PUBLIC_API_URL: http://78.12.192.211:3002
     ports:
       - "3000:3000"
     networks:
