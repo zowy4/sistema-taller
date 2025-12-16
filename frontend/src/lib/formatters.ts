@@ -15,16 +15,20 @@
     maximumFractionDigits: 2,
   }).format(amount);
 }
-export function formatDate(date: string | Date): string {
+export function formatDate(date: string | Date | null | undefined): string {
+  if (!date) return '-';
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) return '-';
   return new Intl.DateTimeFormat('es-DO', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   }).format(dateObj);
 }
-export function formatDateTime(date: string | Date): string {
+export function formatDateTime(date: string | Date | null | undefined): string {
+  if (!date) return '-';
   const dateObj = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) return '-';
   return new Intl.DateTimeFormat('es-DO', {
     year: 'numeric',
     month: 'long',
@@ -34,9 +38,11 @@ export function formatDateTime(date: string | Date): string {
     hour12: true,
   }).format(dateObj);
 }
-export function formatShortDate(date: string | Date): string {
+export function formatShortDate(date: string | Date | null | undefined): string {
+  if (!date) return '-';
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  // Use UTC to avoid timezone hydration mismatches
+  if (isNaN(dateObj.getTime())) return '-';
+  // Use consistent formatting to avoid timezone hydration mismatches
   const year = dateObj.getFullYear();
   const month = String(dateObj.getMonth() + 1).padStart(2, '0');
   const day = String(dateObj.getDate()).padStart(2, '0');
