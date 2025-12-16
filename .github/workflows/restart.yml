@@ -1,0 +1,34 @@
+name: Restart Containers
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for restart'
+        required: false
+        default: 'Manual restart'
+
+jobs:
+  restart:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Restart Docker containers
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        script: |
+          cd ~/taller-app
+          echo "🔄 Restarting containers..."
+          docker-compose up -d
+          
+          echo "⏳ Waiting for services to start..."
+          sleep 10
+          
+          echo "📊 Container status:"
+          docker-compose ps
+          
+          echo "✅ Restart completed"
