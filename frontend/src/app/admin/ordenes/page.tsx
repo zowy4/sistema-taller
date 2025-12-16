@@ -8,7 +8,7 @@ import { useOrdenesMutations } from '@/hooks/useOrdenesMutations';
 import { Orden } from '@/types';
 import { formatCurrency, formatShortDate } from '@/lib/formatters';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
+
 type EstadoFiltro = 'todos' | 'pendiente' | 'en_proceso' | 'completada' | 'cancelada';
 export default function OrdenesPage() {
   const router = useRouter();
