@@ -36,11 +36,11 @@ export function formatDateTime(date: string | Date): string {
 }
 export function formatShortDate(date: string | Date): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateTimeFormat('es-DO', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(dateObj);
+  // Use UTC to avoid timezone hydration mismatches
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${day}/${month}/${year}`;
 }
 export function formatPhone(phone: string): string {
   const cleaned = phone.replace(/\D/g, '');

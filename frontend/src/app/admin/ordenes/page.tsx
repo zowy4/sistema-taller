@@ -163,7 +163,7 @@ export default function OrdenesPage() {
                 <td className="px-4 py-2 text-gray-400">
                   {orden.empleado?.nombre ? `${orden.empleado.nombre} ${orden.empleado.apellido}` : 'Sin asignar'}
                 </td>
-                <td className="px-4 py-2 text-gray-400 font-mono text-sm">{formatShortDate(orden.fecha_ingreso)}</td>
+                <td className="px-4 py-2 text-gray-400 font-mono text-sm" suppressHydrationWarning>{formatShortDate(orden.fecha_ingreso)}</td>
                 <td className="px-4 py-2">
                   <span className={`px-2 py-1 text-xs font-medium uppercase tracking-wide ${getEstadoBadge(orden.estado)}`}>
                     {orden.estado.replace('_', ' ')}
