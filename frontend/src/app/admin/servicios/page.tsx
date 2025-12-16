@@ -155,11 +155,6 @@ export default function ServiciosPage() {
                       >
                         {servicio.activo ? 'Activo' : 'Inactivo'}
                       </span>
-                      {servicio.categoria && (
-                        <span className="px-3 py-1 bg-orange-600/20 border border-orange-600 text-orange-500 text-xs font-mono uppercase">
-                          {servicio.categoria}
-                        </span>
-                      )}
                     </div>
                     {servicio.descripcion && (
                       <p className="text-gray-400 mb-3">{servicio.descripcion}</p>
