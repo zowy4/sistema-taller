@@ -10,11 +10,13 @@ export default function NewInventoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nombre: '',
+    codigo: '',
     descripcion: '',
     unidad_medida: 'unidad',
-    cantidad_existente: 0,
-    precio_unitario: 0,
-    nivel_minimo_alerta: 5
+    stock_actual: 0,
+    stock_minimo: 5,
+    precio_compra: 0,
+    precio_venta: 0
   });
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -54,20 +56,37 @@ export default function NewInventoryPage() {
         )}
         <form onSubmit={handleSubmit} className="bg-[#1a1a1a] border border-gray-800 p-8">
           <div className="space-y-6">
-            <div>
-              <label htmlFor="nombre" className="block text-sm font-mono uppercase text-gray-400 mb-2">
-                NOMBRE <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                id="nombre"
-                name="nombre"
-                required
-                value={formData.nombre}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
-                placeholder="EJ: FILTRO DE ACEITE"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="nombre" className="block text-sm font-mono uppercase text-gray-400 mb-2">
+                  NOMBRE <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="nombre"
+                  name="nombre"
+                  required
+                  value={formData.nombre}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
+                  placeholder="EJ: FILTRO DE ACEITE"
+                />
+              </div>
+              <div>
+                <label htmlFor="codigo" className="block text-sm font-mono uppercase text-gray-400 mb-2">
+                  CODIGO <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="codigo"
+                  name="codigo"
+                  required
+                  value={formData.codigo}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
+                  placeholder="EJ: FIL-001"
+                />
+              </div>
             </div>
             <div>
               <label htmlFor="descripcion" className="block text-sm font-mono uppercase text-gray-400 mb-2">
@@ -104,53 +123,73 @@ export default function NewInventoryPage() {
                 <option value="par">PAR</option>
               </select>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="cantidad_existente" className="block text-sm font-mono uppercase text-gray-400 mb-2">
+                <label htmlFor="stock_actual" className="block text-sm font-mono uppercase text-gray-400 mb-2">
                   STOCK INICIAL <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="number"
-                  id="cantidad_existente"
-                  name="cantidad_existente"
+                  id="stock_actual"
+                  name="stock_actual"
                   required
                   min="0"
                   step="1"
-                  value={formData.cantidad_existente}
+                  value={formData.stock_actual}
                   onChange={handleChange}
                   className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
                 />
               </div>
               <div>
-                <label htmlFor="precio_unitario" className="block text-sm font-mono uppercase text-gray-400 mb-2">
-                  PRECIO UNITARIO <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="number"
-                  id="precio_unitario"
-                  name="precio_unitario"
-                  required
-                  min="0"
-                  step="0.01"
-                  value={formData.precio_unitario}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="nivel_minimo_alerta" className="block text-sm font-mono uppercase text-gray-400 mb-2">
+                <label htmlFor="stock_minimo" className="block text-sm font-mono uppercase text-gray-400 mb-2">
                   STOCK MINIMO <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="number"
-                  id="nivel_minimo_alerta"
-                  name="nivel_minimo_alerta"
+                  id="stock_minimo"
+                  name="stock_minimo"
                   required
                   min="0"
                   step="1"
-                  value={formData.nivel_minimo_alerta}
+                  value={formData.stock_minimo}
                   onChange={handleChange}
                   className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="precio_compra" className="block text-sm font-mono uppercase text-gray-400 mb-2">
+                  PRECIO COMPRA <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="number"
+                  id="precio_compra"
+                  name="precio_compra"
+                  required
+                  min="0"
+                  step="0.01"
+                  value={formData.precio_compra}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label htmlFor="precio_venta" className="block text-sm font-mono uppercase text-gray-400 mb-2">
+                  PRECIO VENTA <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="number"
+                  id="precio_venta"
+                  name="precio_venta"
+                  required
+                  min="0"
+                  step="0.01"
+                  value={formData.precio_venta}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-[#2d2d2d] border border-gray-700 text-white font-mono focus:outline-none focus:border-gray-500"
+                  placeholder="0.00"
                 />
               </div>
             </div>
