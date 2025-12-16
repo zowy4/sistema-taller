@@ -84,12 +84,15 @@ export default function AlertasPage() {
       currency: 'USD'
     }).format(amount);
   };
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
   };
   const getPriorityClass = (cantidad: number, minimo: number) => {
     const ratio = cantidad / minimo;
@@ -296,7 +299,7 @@ export default function AlertasPage() {
                       <p className="text-sm text-gray-400 font-mono">
                         VEHICULO: {orden.vehiculo?.marca?.toUpperCase() || 'N/A'} {orden.vehiculo?.modelo?.toUpperCase() || ''} - {orden.vehiculo?.patente?.toUpperCase() || 'N/A'}
                       </p>
-                      <p className="text-xs text-gray-500 mt-2 font-mono uppercase">
+                      <p className="text-xs text-gray-500 mt-2 font-mono uppercase" suppressHydrationWarning>
                         INGRESO: {formatDate(orden.fecha_ingreso).toUpperCase()}
                       </p>
                     </div>

@@ -109,14 +109,17 @@ export default function CompraDetallePage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day} de ${month} de ${year}, ${hours}:${minutes}`;
   };
 
   const formatCurrency = (amount: number) => {
@@ -183,7 +186,7 @@ export default function CompraDetallePage() {
                   {compra.estado}
                 </span>
               </div>
-              <p className="text-gray-500 mt-2">{formatDate(compra.fecha_compra)}</p>
+              <p className="text-gray-500 mt-2" suppressHydrationWarning>{formatDate(compra.fecha_compra)}</p>
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-600">Total</p>

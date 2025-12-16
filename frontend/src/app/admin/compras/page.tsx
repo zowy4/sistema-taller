@@ -142,7 +142,7 @@ export default function ComprasPage() {
                   {compra.proveedor.nombre}
                   {compra.proveedor.empresa && ` â€¢ ${compra.proveedor.empresa}`}
                 </p>
-                <p className="text-gray-500 text-xs mt-1">
+                <p className="text-gray-500 text-xs mt-1" suppressHydrationWarning>
                   {formatDate(compra.fecha_compra)}
                 </p>
               </div>

@@ -76,11 +76,11 @@ export default function PortalPage() {
     if (!dateString) return '-';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '-';
-    return date.toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
+    const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
   };
   const getEstadoBadge = (estado: string) => {
     const badges: Record<string, { color: string; label: string; icon: string }> = {
@@ -295,12 +295,12 @@ export default function PortalPage() {
                       <div className="grid grid-cols-3 gap-4 text-xs">
                         <div className="bg-[#2d2d2d] border border-gray-800 p-2">
                           <p className="text-gray-500 font-mono uppercase">Ingreso</p>
-                          <p className="font-mono text-white font-bold">{formatDate(orden.fecha_ingreso)}</p>
+                          <p className="font-mono text-white font-bold" suppressHydrationWarning>{formatDate(orden.fecha_ingreso)}</p>
                         </div>
                         {orden.fecha_estimada && (
                           <div className="bg-[#2d2d2d] border border-gray-800 p-2">
                             <p className="text-gray-500 font-mono uppercase">Estimado</p>
-                            <p className="font-mono text-orange-500 font-bold">{formatDate(orden.fecha_estimada)}</p>
+                            <p className="font-mono text-orange-500 font-bold" suppressHydrationWarning>{formatDate(orden.fecha_estimada)}</p>
                           </div>
                         )}
                         {orden.empleado && (
@@ -355,7 +355,7 @@ export default function PortalPage() {
                               {orden.descripcion_problema}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono" suppressHydrationWarning>
                             {formatDate(orden.fecha_entrega || orden.fecha_ingreso)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right">

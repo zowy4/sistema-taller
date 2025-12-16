@@ -40,9 +40,15 @@ export default function VentasPage() {
   };
   const formatCurrency = (n: number) => 
     new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'USD' }).format(n || 0);
-  const formatDate = (date: string) => {
+  const formatDate = (date: string | null | undefined) => {
+    if (!date) return '-';
     const d = new Date(date);
-    return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    if (isNaN(d.getTime())) return '-';
+    const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    return `${day} ${month} ${year}`;
   };
   const facturasFiltradas = useMemo(() => {
     const ahora = new Date();
@@ -197,7 +203,7 @@ export default function VentasPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       #{factura.id_factura}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" suppressHydrationWarning>
                       {formatDate(factura.fecha_factura)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

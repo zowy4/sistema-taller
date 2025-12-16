@@ -140,13 +140,15 @@ export default function ReportesPage() {
       };
     }).sort((a, b) => b.margen - a.margen);
   };
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString?: string | null) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'N/A';
+    const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${year} ${month} ${day}`;
   };
   if (loading) return (
     <div className="min-h-screen bg-[#0f0f0f] p-6 flex items-center justify-center">
@@ -345,7 +347,7 @@ export default function ReportesPage() {
                         {formatCurrency(prov.montoTotal)}
                       </td>
                       <td className="px-4 py-3 text-right">{formatCurrency(prov.promedio)}</td>
-                      <td className="px-4 py-3 text-right text-sm text-gray-600">
+                      <td className="px-4 py-3 text-right text-sm text-gray-600" suppressHydrationWarning>
                         {formatDate(prov.ultimaCompra)}
                       </td>
                     </tr>

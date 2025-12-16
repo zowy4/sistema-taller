@@ -155,7 +155,7 @@ export default function FacturasPage() {
                   <br />
                   <span className="text-xs text-gray-500 font-mono">{factura.orden?.vehiculo.patente}</span>
                 </td>
-                <td className="px-4 py-3 text-gray-400 font-mono">{formatShortDate(factura.fecha_emision)}</td>
+                <td className="px-4 py-3 text-gray-400 font-mono" suppressHydrationWarning>{formatShortDate(factura.fecha_emision)}</td>
                 <td className="px-4 py-3 font-semibold text-white font-mono">{factura.total != null && !isNaN(factura.total) ? formatCurrency(factura.total) : 'NO DEFINIDO'}</td>
                 <td className="px-4 py-3 text-gray-400 font-mono">{factura.metodo_pago || '-'}</td>
                 <td className="px-4 py-3">
