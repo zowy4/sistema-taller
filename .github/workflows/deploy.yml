@@ -96,11 +96,14 @@ jobs:
         script: |
           cd ~/taller-app
           
-          echo "🧹 Cleaning Next.js cache..."
+          echo "🧹 Cleaning caches..."
           rm -rf frontend/.next
+          docker-compose down --rmi all --volumes --remove-orphans || true
+          docker system prune -af --volumes || true
           
-          echo "🔄 Rebuilding and restarting containers..."
-          docker-compose up -d --build --force-recreate --no-cache
+          echo "🔄 Rebuilding containers from scratch..."
+          docker-compose build --no-cache --pull
+          docker-compose up -d --force-recreate
           
           echo "⏳ Waiting for services to start..."
           sleep 30
