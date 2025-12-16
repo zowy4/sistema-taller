@@ -121,7 +121,7 @@ export default function ProveedorDetailPage() {
             <div>
               <p className="text-gray-500 text-xs uppercase">Registrado</p>
               <p className="text-white" suppressHydrationWarning>
-                {formatDate(proveedor.created_at)}
+                {formatDate(proveedor.fecha_alta)}
               </p>
             </div>
           </div>

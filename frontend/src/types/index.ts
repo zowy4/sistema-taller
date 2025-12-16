@@ -222,6 +222,7 @@ export interface Proveedor {
   email: string;
   direccion?: string;
   activo: boolean;
+  fecha_alta?: string;
   notas?: string;
   _count?: {
     compras: number;
