@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { fetchCompras } from '@/services/compras.service';
 import { Compra } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -10,14 +11,14 @@ export default function ComprasPage() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const { token, isLoading: authLoading } = useAuth();
   const { data: compras = [], isLoading, isError } = useQuery<Compra[]>({
     queryKey: ['compras'],
     queryFn: () => {
       if (!token) throw new Error('No token found');
       return fetchCompras(token);
     },
-    enabled: !!token,
+    enabled: !!token && !authLoading,
     retry: false,
     refetchOnWindowFocus: false,
   });

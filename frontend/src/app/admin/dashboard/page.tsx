@@ -21,9 +21,8 @@ interface VentaSemana {
 }
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, isLoading: authLoading, logout } = useAuth();
+  const { user, isLoading: authLoading, logout, token } = useAuth();
   const isRecepcion = user?.rol === 'recepcion';
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const {
     data: kpis,
     isLoading: kpisLoading,

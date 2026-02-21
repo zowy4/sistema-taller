@@ -1,7 +1,9 @@
 ﻿import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, ClassSerializerInterceptor, Reflector } from '@nestjs/common';
 import { LoggerService } from './common/logger/logger.service';
+import helmet from 'helmet';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
   try {
@@ -15,7 +17,21 @@ async function bootstrap() {
     
     logger.log('Creating NestJS application...', 'Bootstrap');
     
-    app.useGlobalPipes(new ValidationPipe());
+    // 1. Seguridad: Sanitización de cabeceras HTTP
+    app.use(helmet());
+    
+    // 2. Validación y Sanitización estricta de Payloads
+    app.useGlobalPipes(new ValidationPipe({
+      whitelist: true, // Elimina campos que no estén en el DTO
+      forbidNonWhitelisted: true, // Lanza error si envían campos no autorizados
+      transform: true, // Transforma automáticamente strings a números/fechas
+    }));
+    
+    // 3. Mapeo de salidas: Excluir datos sensibles (@Exclude)
+    app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+    
+    // 4. Manejo global de excepciones
+    app.useGlobalFilters(new AllExceptionsFilter());
     
     app.enableCors({
       origin: ['http://localhost:3000', 'http://localhost:3001', 'http://78.12.192.211:3000'],

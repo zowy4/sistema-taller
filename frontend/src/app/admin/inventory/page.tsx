@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { fetchRepuestos, getStockStatus, calcularMargenGanancia } from '@/services/repuestos.service';
 import { useRepuestosMutations } from '@/hooks/useRepuestosMutations';
 const formatCurrency = (amount: number) => {
@@ -20,11 +21,11 @@ export default function InventoryPage() {
   const [selectedRepuesto, setSelectedRepuesto] = useState<number | null>(null);
   const [ajusteCantidad, setAjusteCantidad] = useState<string>('');
   const [ajusteMotivo, setAjusteMotivo] = useState('');
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const { token, isLoading: authLoading } = useAuth();
   const { data: repuestos = [], isLoading } = useQuery({
     queryKey: ['repuestos'],
     queryFn: () => fetchRepuestos(token || ''),
-    enabled: !!token,
+    enabled: !!token && !authLoading,
   });
   const { ajustarStockMutation, deleteMutation } = useRepuestosMutations();
   const filteredRepuestos = useMemo(() => {

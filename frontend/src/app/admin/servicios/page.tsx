@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { fetchServicios } from '@/services/servicios.service';
 import { useServiciosMutations } from '@/hooks/useServiciosMutations';
 const formatCurrency = (amount: number) => {
@@ -14,11 +15,11 @@ const formatCurrency = (amount: number) => {
 };
 export default function ServiciosPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const { token, isLoading: authLoading } = useAuth();
   const { data: servicios = [], isLoading } = useQuery({
     queryKey: ['servicios'],
     queryFn: () => fetchServicios(token || ''),
-    enabled: !!token,
+    enabled: !!token && !authLoading,
   });
   const { toggleEstadoMutation, deleteMutation } = useServiciosMutations();
   const filteredServicios = useMemo(() => {

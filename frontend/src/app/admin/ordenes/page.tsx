@@ -12,18 +12,24 @@ import { useAuth } from '@/contexts/AuthContext';
 type EstadoFiltro = 'todos' | 'pendiente' | 'en_proceso' | 'completada' | 'cancelada';
 export default function OrdenesPage() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, token, isLoading: authLoading } = useAuth();
   const [search, setSearch] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro>('todos');
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const isRecepcion = user?.rol === 'recepcion';
+
+  useEffect(() => {
+    if (!authLoading && !token) {
+      router.push('/login');
+    }
+  }, [token, authLoading, router]);
+
   const { data: ordenes = [], isLoading, isError, error } = useQuery<Orden[]>({
     queryKey: ['ordenes'],
     queryFn: () => {
       if (!token) throw new Error('No token found');
       return fetchOrdenes(token);
     },
-    enabled: !!token,
+    enabled: !!token && !authLoading,
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -65,10 +71,15 @@ export default function OrdenesPage() {
       default: return 'bg-gray-600/20 border border-gray-600 text-gray-500';
     }
   };
-  if (!token) {
-    router.push('/login');
-    return null;
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#0f0f0f] p-6 flex items-center justify-center">
+        <div className="text-gray-400">Cargando...</div>
+      </div>
+    );
   }
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] p-6">
       {isLoading && (
