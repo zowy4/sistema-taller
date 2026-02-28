@@ -2,18 +2,19 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import { fetchRepuestoById } from '@/services/repuestos.service';
 
 export default function RepuestoDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = parseInt(params.id as string);
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const { token, isLoading: authLoading } = useAuth();
 
   const { data: repuesto, isLoading } = useQuery({
     queryKey: ['repuesto', id],
     queryFn: () => fetchRepuestoById(token || '', id),
-    enabled: !!token && !!id,
+    enabled: !!token && !!id && !authLoading,
   });
 
   const formatCurrency = (amount: number) => {

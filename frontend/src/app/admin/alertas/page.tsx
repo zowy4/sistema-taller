@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { fetchStockBajo } from '@/services/repuestos.service';
 import { fetchOrdenes } from '@/services/ordenes.service';
 import { Orden } from '@/types';
@@ -43,35 +44,27 @@ async function fetchProveedores(token: string): Promise<Proveedor[]> {
 export default function AlertasPage() {
   const router = useRouter();
   const [filter, setFilter] = useState<AlertFilter>('todos');
-  const [mounted, setMounted] = useState(false);
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { token, isLoading: authLoading } = useAuth();
   const { data: stockBajo = [], isLoading: stockLoading, error: stockError } = useQuery({
     queryKey: ['alertas-stock-bajo'],
     queryFn: () => fetchStockBajo(token!),
-    enabled: !!token,
+    enabled: !!token && !authLoading,
     retry: 1,
   });
   const { data: proveedores = [], isLoading: proveedoresLoading } = useQuery({
     queryKey: ['alertas-proveedores'],
     queryFn: () => fetchProveedores(token!),
-    enabled: !!token,
+    enabled: !!token && !authLoading,
     retry: 1,
   });
   const { data: ordenes = [], isLoading: ordenesLoading } = useQuery({
     queryKey: ['alertas-ordenes'],
     queryFn: () => fetchOrdenes(token!),
-    enabled: !!token,
+    enabled: !!token && !authLoading,
     retry: 1,
   });
   if (stockError && stockError.message === 'UNAUTHORIZED') {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      router.push('/login');
-    }
+    router.push('/login');
   }
   const proveedoresInactivos = proveedores.filter((p: Proveedor) => !p.activo);
   const ordenesPendientes = ordenes.filter((o: Orden) => 
@@ -108,8 +101,8 @@ export default function AlertasPage() {
     return 'NORMAL';
   };
 
-  // Evitar hydration error esperando a que el componente se monte en el cliente
-  if (!mounted || loading) return (
+  // Mostrar cargando mientras se obtienen los datos
+  if (loading || authLoading) return (
     <div className="min-h-screen bg-[#0f0f0f] p-8 flex items-center justify-center">
       <div className="text-gray-400 font-mono uppercase">CARGANDO ALERTAS...</div>
     </div>

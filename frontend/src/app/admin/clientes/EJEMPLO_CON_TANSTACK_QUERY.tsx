@@ -11,9 +11,8 @@ import {
 import { useEffect } from 'react';
 export default function ClientesPage() {
   const router = useRouter();
-  const { user, isLoading: authLoading, logout } = useAuth();
+  const { user, isLoading: authLoading, logout, token } = useAuth();
   const queryClient = useQueryClient();
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const {
     data: clientes = [],
     isLoading,

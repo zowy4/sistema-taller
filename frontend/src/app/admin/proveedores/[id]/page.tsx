@@ -2,18 +2,19 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import { fetchProveedorById } from '@/services/proveedores.service';
 
 export default function ProveedorDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = parseInt(params.id as string);
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const { token, isLoading: authLoading } = useAuth();
 
   const { data: proveedor, isLoading } = useQuery({
     queryKey: ['proveedor', id],
     queryFn: () => fetchProveedorById(token || '', id),
-    enabled: !!token && !!id,
+    enabled: !!token && !!id && !authLoading,
   });
 
   const formatCurrency = (amount: number) => {

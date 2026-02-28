@@ -1,6 +1,7 @@
 ﻿'use client';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { fetchClientes, Cliente } from '@/services/clientes.service';
 import { useClientesMutations } from '@/hooks/useClientesMutations';
 export default function ClientesPageExample() {
@@ -14,7 +15,7 @@ export default function ClientesPageExample() {
     telefono: '',
     direccion: '',
   });
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const { token, isLoading: authLoading } = useAuth();
   const { 
     data: clientes = [], 
     isLoading, 
@@ -23,7 +24,7 @@ export default function ClientesPageExample() {
   } = useQuery({
     queryKey: ['clientes'],
     queryFn: () => fetchClientes(token!),
-    enabled: !!token,
+    enabled: !!token && !authLoading,
     retry: 1,
   });
   const { createMutation, updateMutation, deleteMutation } = useClientesMutations();

@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import {
   fetchMiPerfil,
@@ -13,21 +14,21 @@ import {
 } from '@/services/portal.service';
 export default function PortalPage() {
   const router = useRouter();
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const { token, isLoading: authLoading } = useAuth();
   useEffect(() => {
-    if (!token) {
+    if (!authLoading && !token) {
       toast.error('Sesión expirada', {
         description: 'Por favor, inicia sesión nuevamente',
       });
       router.push('/login');
     }
-  }, [token, router]);
+  }, [token, authLoading, router]);
   const { data: perfil, isLoading: perfilLoading, error: perfilError } = useQuery({
     queryKey: ['portal-perfil'],
     queryFn: async () => {
       return await fetchMiPerfil(token!);
     },
-    enabled: !!token,
+    enabled: !!token && !authLoading,
     retry: 1,
   });
   const { data: vehiculos = [], isLoading: vehiculosLoading, error: vehiculosError } = useQuery({
@@ -35,15 +36,15 @@ export default function PortalPage() {
     queryFn: async () => {
       return await fetchMisVehiculos(token!);
     },
-    enabled: !!token,
+    enabled: !!token && !authLoading,
     retry: 1,
-  });
+  });  
   const { data: ordenes = [], isLoading: ordenesLoading, error: ordenesError } = useQuery({
     queryKey: ['portal-ordenes'],
     queryFn: async () => {
       return await fetchMisOrdenes(token!);
     },
-    enabled: !!token,
+    enabled: !!token && !authLoading,
     retry: 1,
   });
   useEffect(() => {

@@ -2,16 +2,17 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { fetchProveedores } from '@/services/proveedores.service';
 import { useProveedoresMutations } from '@/hooks/useProveedoresMutations';
 export default function ProveedoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEstado, setFilterEstado] = useState<'todos' | 'activos' | 'inactivos'>('todos');
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const { token, isLoading: authLoading } = useAuth();
   const { data: proveedores = [], isLoading } = useQuery({
     queryKey: ['proveedores'],
     queryFn: () => fetchProveedores(token || ''),
-    enabled: !!token,
+    enabled: !!token && !authLoading,
   });
   const { toggleEstadoMutation, deleteMutation } = useProveedoresMutations();
   const filteredProveedores = useMemo(() => {

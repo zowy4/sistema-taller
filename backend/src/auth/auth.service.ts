@@ -25,6 +25,7 @@ export class AuthService {
 				return { 
 					...safe, 
 					_type: 'empleado',
+					rol: safe.rol,
 					permissions,
 					id: safe.id_empleado
 				};
@@ -74,5 +75,52 @@ export class AuthService {
 			return { ...cliente, permissions, _type: 'cliente' };
 		}
 		throw new UnauthorizedException();
+	}
+
+	/**
+	 * Busca o crea un usuario basado en credenciales OAuth (Google, GitHub, etc)
+	 * @param email - Email del usuario OAuth
+	 * @param profile - Perfil del usuario OAuth (firstName, lastName, picture, provider)
+	 * @returns Usuario autenticado con permisos
+	 */
+	async findOrCreateOAuthUser(email: string, profile: { firstName: string; lastName?: string; picture?: string; provider: string }) {
+		try {
+			// Buscar cliente existente
+			let cliente = await this.prisma.clientes.findUnique({ where: { email } });
+			
+			if (!cliente) {
+				// Crear nuevo cliente si no existe
+				this.logger.log(`Creating new OAuth user with email: ${email}`, 'AuthService');
+				cliente = await this.prisma.clientes.create({
+					data: {
+						email,
+						nombre: profile.firstName,
+						apellido: profile.lastName || '',
+						empresa: 'OAuth User',
+						telefono: '',
+						direccion: '',
+						// No se establece contraseña para usuarios OAuth
+						password: null,
+					},
+				});
+			}
+
+			const { password, ...safe } = cliente as any;
+			const permissions = await this.authorizationService.getUserPermissions(safe.id_cliente, 'cliente');
+			
+			this.logger.logAuthentication(safe.id_cliente, `Login via ${profile.provider}`, true);
+
+			return {
+				...safe,
+				_type: 'cliente',
+				rol: 'cliente',
+				permissions,
+				id: safe.id_cliente,
+				id_cliente: safe.id_cliente,
+			};
+		} catch (error) {
+			this.logger.error(`Error in findOrCreateOAuthUser for ${email}`, error, 'AuthService');
+			throw new UnauthorizedException('Error procesando autenticación OAuth');
+		}
 	}
 }

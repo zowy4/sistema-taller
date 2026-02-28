@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { fetchFacturas } from '@/services/facturas.service';
 import { Factura } from '@/types';
 import { formatCurrency, formatShortDate } from '@/lib/formatters';
@@ -10,14 +11,14 @@ export default function FacturasPage() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const { token, isLoading: authLoading } = useAuth();
   const { data: facturas = [], isLoading, isError } = useQuery<Factura[]>({
     queryKey: ['facturas'],
     queryFn: () => {
       if (!token) throw new Error('No token found');
       return fetchFacturas(token);
     },
-    enabled: !!token,
+    enabled: !!token && !authLoading,
     retry: false,
     refetchOnWindowFocus: false,
   });
