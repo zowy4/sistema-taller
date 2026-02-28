@@ -1,4 +1,4 @@
-﻿import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrdenDto } from './dto/create-orden.dto';
 import { UpdateOrdenDto } from './dto/update-orden.dto';
@@ -219,7 +219,7 @@ export class OrdenesService {
       tasaCompletitud: totalOrdenes > 0 ? ((ordenesCompletadas / totalOrdenes) * 100).toFixed(1) : '0',
     };
   }
-  async findOne(id_orden: number) {
+  async findOne(id_orden: number, user?: any) {
     const orden = await this.prisma.ordenesDeTrabajo.findUnique({
       where: { id_orden },
       include: {
@@ -239,9 +239,13 @@ export class OrdenesService {
       },
     });
     if (!orden) throw new NotFoundException('Orden no encontrada');
+    // ABAC / Ownership check: clientes sólo pueden acceder a sus propias órdenes
+    if (user && user.rol === 'cliente' && orden.id_cliente !== user.id_usuario) {
+      throw new ForbiddenException('No tienes permiso para ver esta orden. No es tuya.');
+    }
     return orden;
   }
-  async update(id_orden: number, data: UpdateOrdenDto) {
+  async update(id_orden: number, data: UpdateOrdenDto, user?: any) {
     return this.prisma.ordenesDeTrabajo.update({
       where: { id_orden },
       data: {
@@ -264,8 +268,8 @@ export class OrdenesService {
       },
     });
   }
-  async updateEstado(id_orden: number, estado: string) {
-    const orden = await this.findOne(id_orden);
+  async updateEstado(id_orden: number, estado: string, user?: any) {
+    const orden = await this.findOne(id_orden, user);
     
     // Normalizar estados para aceptar tanto masculino como femenino
     const estadoNormalizado = estado === 'completada' ? 'completado' : 
@@ -277,6 +281,10 @@ export class OrdenesService {
     }
     if (estadoNormalizado === 'entregado' && orden.estado !== 'completado') {
       throw new BadRequestException('Solo se puede marcar como entregado si está completado');
+    }
+    // ABAC: Si quien intenta cambiar el estado es un técnico, sólo puede hacerlo sobre órdenes asignadas a él
+    if (user && user.rol === 'tecnico' && orden.id_empleado_responsable !== user.id_usuario) {
+      throw new ForbiddenException('No tienes permiso para actualizar el estado de esta orden. No estás asignado.');
     }
     let total_real = orden.total_real;
     let fecha_entrega_real = orden.fecha_entrega_real;

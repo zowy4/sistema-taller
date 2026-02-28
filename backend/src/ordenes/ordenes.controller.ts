@@ -32,18 +32,18 @@ export class OrdenesController {
   }
   @Get(':id')
   @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
-  findOne(@Param('id') id: string) {
-    return this.ordenesService.findOne(Number(id));
+  findOne(@Param('id') id: string, @Request() req) {
+    return this.ordenesService.findOne(Number(id), req.user);
   }
   @Patch(':id')
   @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
-  update(@Param('id') id: string, @Body() updateOrdenDto: UpdateOrdenDto) {
-    return this.ordenesService.update(Number(id), updateOrdenDto);
+  update(@Param('id') id: string, @Body() updateOrdenDto: UpdateOrdenDto, @Request() req) {
+    return this.ordenesService.update(Number(id), updateOrdenDto, req.user);
   }
   @Patch(':id/estado')
   @Roles('admin', 'supervisor', 'tecnico', 'recepcion')
-  updateEstado(@Param('id') id: string, @Body() updateEstadoDto: UpdateEstadoOrdenDto) {
-    return this.ordenesService.updateEstado(Number(id), updateEstadoDto.estado);
+  updateEstado(@Param('id') id: string, @Body() updateEstadoDto: UpdateEstadoOrdenDto, @Request() req) {
+    return this.ordenesService.updateEstado(Number(id), updateEstadoDto.estado, req.user);
   }
   @Delete(':id')
   @Roles('admin', 'supervisor')
