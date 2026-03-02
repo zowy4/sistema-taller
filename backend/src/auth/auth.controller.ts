@@ -5,7 +5,7 @@ import { CreateClientDto } from '../clients/dto/create-client.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ClientsService } from '../clients/clients.service';
 import { AuthGuard } from '@nestjs/passport';
-import { Response } from 'express';
+import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {

@@ -1,6 +1,7 @@
 ﻿import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, ClassSerializerInterceptor, Reflector } from '@nestjs/common';
+import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { LoggerService } from './common/logger/logger.service';
 import helmet from 'helmet';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';

@@ -1,5 +1,5 @@
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, VerifyCallback } from 'passport-github2';
+import { Strategy } from 'passport-github2';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -11,14 +11,14 @@ export class GitHubStrategy extends PassportStrategy(Strategy, 'github') {
       clientSecret: configService.get<string>('GITHUB_CLIENT_SECRET'),
       callbackURL: configService.get<string>('GITHUB_CALLBACK_URL') || 'http://localhost:3002/auth/github/callback',
       scope: ['user:email'],
-    });
+    } as any);
   }
 
   async validate(
     accessToken: string,
     refreshToken: string,
     profile: any,
-    done: VerifyCallback,
+    done: any,
   ): Promise<any> {
     const { username, emails, photos } = profile;
     

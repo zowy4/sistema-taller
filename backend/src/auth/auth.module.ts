@@ -23,7 +23,7 @@ import { ConfigModule } from '@nestjs/config';
       signOptions: { expiresIn: '1h' },
     }),
   ],
-  providers: [AuthService, AuthorizationService, JwtStrategy, GoogleStrategy, GitHubStrategy],
+  providers: [AuthService, AuthorizationService, JwtStrategy], // GoogleStrategy, GitHubStrategy commented - require env vars
   controllers: [AuthController],
   exports: [AuthService, AuthorizationService, PassportModule, JwtModule],
 })
