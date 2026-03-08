@@ -2,6 +2,10 @@
 
 Sistema completo para gestión de taller mecánico con NestJS (backend) y Next.js (frontend).
 
+## 🏗️ Arquitectura C4
+
+- Ver diagramas C4 (Niveles 1, 2 y 3): [docs/C4_ARCHITECTURE.md](docs/C4_ARCHITECTURE.md)
+
 ## 🚀 Inicio Rápido
 
 ### Requisitos Previos

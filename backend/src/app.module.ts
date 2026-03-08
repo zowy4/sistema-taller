@@ -18,6 +18,7 @@ import { ComprasModule } from './compras/compras.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { PortalModule } from './portal/portal.module';
 import { LoggerModule } from './common/logger/logger.module';
+import { EncryptionModule } from './common/encryption/encryption.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { LoggerService } from './common/logger/logger.service';
@@ -28,6 +29,7 @@ import { LoggerService } from './common/logger/logger.service';
       isGlobal: true, 
     }),
     LoggerModule,
+    EncryptionModule,
     PrismaModule,
     ClientsModule,
     AuthModule,
