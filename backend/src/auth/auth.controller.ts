@@ -6,6 +6,7 @@ import { RegisterDto } from './dto/register.dto';
 import { ClientsService } from '../clients/clients.service';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
+import { RateLimit } from '../common/rate-limit/rate-limit.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -15,6 +16,7 @@ export class AuthController {
 	) {}
 
 	@Post('login')
+	@RateLimit(5, 60)
 	async login(@Body() dto: LoginDto) {
 		const user = await this.authService.validateUserByEmail(dto.email, dto.password);
 		if (!user) throw new UnauthorizedException('Credenciales inválidas');

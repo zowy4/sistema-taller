@@ -5,6 +5,7 @@ import { Reflector } from '@nestjs/core';
 import { LoggerService } from './common/logger/logger.service';
 import helmet from 'helmet';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { RateLimitGuard } from './common/rate-limit/rate-limit.guard';
 
 async function bootstrap() {
   try {
@@ -33,6 +34,9 @@ async function bootstrap() {
     
     // 4. Manejo global de excepciones
     app.useGlobalFilters(new AllExceptionsFilter());
+
+    // 5. Rate Limiting global: 100 solicitudes por 60 segundos (config por defecto del guard)
+    app.useGlobalGuards(new RateLimitGuard(app.get(Reflector)));
     
     app.enableCors({
       origin: ['http://localhost:3000', 'http://localhost:3001', 'http://78.12.192.211:3000'],
