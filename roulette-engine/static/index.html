@@ -1,0 +1,24 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Motor predictivo 1-20</title>
+<style>body{font-family:sans-serif;max-width:720px;margin:2em auto;padding:0 1em}input{width:100%;padding:.6em;box-sizing:border-box}
+button{padding:.6em 1.2em;margin:.5em .5em .5em 0}.c{display:inline-block;margin:.3em;padding:.8em;border:1px solid #888;border-radius:8px;text-align:center}
+.c b{font-size:1.6em;display:block}#err{color:#c00}</style>
+<h1>Motor predictivo 1-20</h1>
+<p>Ingresa de 10 a 15 números (1-20) separados por coma o espacio:</p>
+<input id="n" value="3 7 7 12 3 7 19 3 7 7 12 3">
+<button onclick="go()">Predecir</button><button onclick="rnd()">Muestra aleatoria</button>
+<p id="err"></p><div id="out"></div>
+<script>
+const $=id=>document.getElementById(id);
+function rnd(){$('n').value=Array.from({length:12},()=>1+Math.floor(Math.random()*20)).join(' ')}
+async function go(){
+ $('err').textContent='';$('out').innerHTML='';
+ const numeros=$('n').value.split(/[\s,;]+/).filter(Boolean).map(Number);
+ const r=await fetch('/predict',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({numeros})});
+ const d=await r.json();
+ if(!r.ok){$('err').textContent=typeof d.detail==='string'?d.detail:'Entrada inválida (10-15 enteros entre 1 y 20)';return}
+ $('out').innerHTML='<h2>Top 5</h2>'+d.predicciones.map(p=>`<div class="c"><b>${p.numero}</b>${p.confianza_pct}%</div>`).join('')+
+ `<p>Par ${d.par_impar.par_pct}% / Impar ${d.par_impar.impar_pct}%<br>1-10: ${d['rangos']['1-10_pct']}% / 11-20: ${d['rangos']['11-20_pct']}%<br>
+ Entropía: ${d.entropia.bits} bits (${(d.entropia.normalizada*100).toFixed(1)}% de aleatoriedad)</p><small>${d.aviso}</small>`;
+}
+</script></html>
