@@ -1,5 +1,7 @@
 from typing import List
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from . import ensemble
 
@@ -29,3 +31,8 @@ def backtest(h: Historial):
         return ensemble.backtest(h.historial, h.ventana)
     except ValueError as e:
         raise HTTPException(422, str(e))
+
+
+@app.get("/", include_in_schema=False)
+def index():
+    return FileResponse(Path(__file__).resolve().parent.parent / "static" / "index.html")

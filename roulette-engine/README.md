@@ -25,6 +25,7 @@ el azar de forma sostenida; el backtest sirve precisamente para comprobarlo. No 
 cd roulette-engine && pip install -r requirements.txt
 pytest
 uvicorn engine.api:app --port 8000
+# Web: abrir http://localhost:8000/
 curl -X POST localhost:8000/predict -H 'content-type: application/json' \
   -d '{"numeros":[3,7,7,12,3,7,19,3,7,7,12,3]}'
 ```
